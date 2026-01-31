@@ -2,6 +2,8 @@
 
 .PHONY: commit push sq
 
+# GIT COMMANDS
+
 com:
 	git add .
 	git commit -a
@@ -21,3 +23,7 @@ sq:
 # Prevent Make from trying to build the number as a target
 %:
 	@:
+
+# BUILD COMMANDS
+
+
