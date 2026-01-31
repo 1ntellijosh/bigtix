@@ -11,7 +11,7 @@ build:
     - image: 1ntellijosh/auth-srv
       context: auth-srv
       docker:
-        dockerfile: deploy/docker/Dockerfile
+        dockerfile: deploy/docker/dev.Dockerfile
       sync:
         manual:
           - src: 'src/**/*.ts'

@@ -26,8 +26,11 @@ sq:
 
 # BUILD COMMANDS
 
-build-auth-image:
-	docker build -f ./auth-srv/deploy/docker/Dockerfile -t 1ntellijosh/auth-srv:latest ./auth-srv
+build-auth-prod-image:
+	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/auth-srv:latest ./auth-srv
+
+build-auth-dev-image:
+	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/auth-srv:latest ./auth-srv
 
 # OPERATIONS COMMANDS
 
