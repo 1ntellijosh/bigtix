@@ -26,4 +26,5 @@ sq:
 
 # BUILD COMMANDS
 
-
+build-auth-image:
+	docker build -f ./auth-srv/deploy/docker/Dockerfile -t 1ntellijosh/auth-srv:latest ./auth-srv
