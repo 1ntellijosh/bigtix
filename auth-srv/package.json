@@ -1,0 +1,21 @@
+{
+  "name": "auth-srv",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node-dev src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "bigtix"
+  },
+  "author": "1ntellijosh",
+  "license": "ISC",
+  "description": "Authorization microservice (Used on BigTix platform)",
+  "dependencies": {
+    "@types/express": "^4.17.21",
+    "express": "^4.19.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.4"
+  }
+}
