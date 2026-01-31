@@ -28,3 +28,18 @@ sq:
 
 build-auth-image:
 	docker build -f ./auth-srv/deploy/docker/Dockerfile -t 1ntellijosh/auth-srv:latest ./auth-srv
+
+# OPERATIONS COMMANDS
+
+mkstart:
+	minikube start --driver=kvm2
+
+mkstop:
+	minikube stop
+
+mkstatus:
+	minikube status
+
+skdev:
+	skaffold dev
+

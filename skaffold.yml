@@ -1,0 +1,18 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - ./ops/k8s/**/*
+build:
+  local:
+    push: false
+  artifacts:
+    - image: 1ntellijosh/auth-srv
+      context: auth-srv
+      docker:
+        dockerfile: deploy/docker/Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
