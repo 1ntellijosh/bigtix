@@ -27,10 +27,10 @@ sq:
 # BUILD COMMANDS
 
 build-auth-prod-image:
-	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/auth-srv:latest ./auth-srv
+	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
 
 build-auth-dev-image:
-	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/auth-srv:latest ./auth-srv
+	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
 
 # OPERATIONS COMMANDS
 
@@ -45,4 +45,16 @@ mkstatus:
 
 skdev:
 	skaffold dev
+
+down:
+	@echo "Deleting Kubernetes resources (ingress, services, deployments)..."
+	-kubectl delete -f ./ops/k8s/ingresses/ --ignore-not-found --timeout=30s
+	-kubectl delete -f ./ops/k8s/deployments/ --ignore-not-found --timeout=60s
+	@echo "Removing app Docker images (intellijosh/*)..."
+	@eval $$(minikube docker-env 2>/dev/null) 2>/dev/null; \
+	IMGS=$$(docker images '1ntellijosh/bigtix-*' -q 2>/dev/null); \
+	[ -z "$$IMGS" ] || docker rmi -f $$IMGS 2>/dev/null || true
+	@echo "Stopping minikube..."
+	-minikube stop 2>/dev/null || true
+	@echo "Down complete."
 

@@ -8,7 +8,7 @@ build:
   local:
     push: false
   artifacts:
-    - image: 1ntellijosh/auth-srv
+    - image: 1ntellijosh/bigtix-auth-srv
       context: auth-srv
       docker:
         dockerfile: deploy/docker/dev.Dockerfile
