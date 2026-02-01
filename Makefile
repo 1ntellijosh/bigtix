@@ -24,37 +24,130 @@ sq:
 %:
 	@:
 
-# BUILD COMMANDS
+# APP DEVELOPMENT COMMANDS
 
-build-auth-prod-image:
-	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
+##
+# APP INIT COMMAND:
+# --------------------------
+# Prerequisites:
+# ---------------
+# - MAKE           - https://www.gnu.org/software/make/
+# - Node.js/NPM    - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+# - Docker         - https://docs.docker.com/get-started/get-docker/#supported-platforms
+# - kubectl  	   - https://kubernetes.io/docs/tasks/tools/
+# - Kind     	   - https://kind.sigs.k8s.io/docs/user/quick-start/#installation
+# - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
+#
+init:
+	@echo "INITIALIZING BIGTIX PROJECT..."
+	$(MAKE) add-local-network-hosts
+	$(MAKE) kstart
+	$(MAKE) init-ingress
+	$(MAKE) wait-ingress
+	$(MAKE) build-dev-images
+	$(MAKE) kload-imgs
+	$(MAKE) apply-deployments
+	$(MAKE) apply-ingress
+	$(MAKE) cluster-status
+	$(MAKE) skdev
 
-build-auth-dev-image:
-	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
+clear:
+	@echo "CLEARING ALL BIGTIX PROJECT APPLICATION RESOURCES..."
+	$(MAKE) clear-dev-images
+	@echo "Deleting Kind cluster (removes cluster and all pods, deployments, services, ingresses)..."
+	-$(MAKE) kstop 2>/dev/null || true
+	@echo "Down complete."
+
+stop:
+	@echo "STOPPING BIGTIX PROJECT..."
+	@echo "Deleting Kind cluster (removes cluster and all pods, deployments, services, ingresses)..."
+	-$(MAKE) kstop 2>/dev/null || true
+	@echo "Down complete."
+
+start:
+	@echo "STARTING BIGTIX PROJECT..."
+	$(MAKE) kstart
+	$(MAKE) init-ingress
+	$(MAKE) wait-ingress
+	$(MAKE) build-dev-images
+	$(MAKE) kload-imgs
+	$(MAKE) apply-deployments
+	$(MAKE) apply-ingress
+	$(MAKE) cluster-status
+	$(MAKE) skdev
 
 # OPERATIONS COMMANDS
 
-mkstart:
-	minikube start --driver=kvm2
+# Add bigtixnetwork.com to /etc/hosts (idempotent; run with: make hosts)
+add-local-network-hosts:
+	@grep -q '# Bigtix project hosts' /etc/hosts || echo '# Bigtix project hosts' | sudo tee -a /etc/hosts > /dev/null
+	@grep -q 'bigtixnetwork.com' /etc/hosts || echo '127.0.0.1 bigtixnetwork.com' | sudo tee -a /etc/hosts > /dev/null
 
-mkstop:
-	minikube stop
+# Load Docker images into Kind cluster
+kload-imgs:
+	kind load docker-image 1ntellijosh/bigtix-auth-srv:latest --name bigtix-cluster
+# Create a new Kind cluster with the config file
+kstart:
+	kind create cluster --name bigtix-cluster --config ./ops/kind/config.yml
+# Get cluster information
+kinfo:
+	kubectl cluster-info --context kind-bigtix-cluster
+# Stop/delete Kind cluster
+kstop:
+	-kind delete cluster --name bigtix-cluster
 
-mkstatus:
-	minikube status
+# App's ingress resource expects an NGINX Ingress Controller to be installed. Kind doesn't ship one, so install it with this:
+init-ingress:
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+# Wait for ingress-nginx controller deployment (pods may not exist yet right after apply)
+wait-ingress:
+	kubectl wait --namespace ingress-nginx --for=condition=available deployment/ingress-nginx-controller --timeout=90s
+	@sleep 10
+
+apply-deployments:
+	kubectl apply -f ./ops/k8s/deployments/auth-depl.yml
+
+# Retry apply (admission webhook can be slow to accept connections after controller is ready)
+apply-ingress:
+	@for i in 1 2 3 4 5 6 7 8; do \
+		echo "Applying ingress (attempt $$i)..."; \
+		kubectl apply -f ./ops/k8s/ingresses/ingress-srv.yml && exit 0; \
+		sleep 8; \
+	done; exit 1
+
+cluster-status:
+	@echo "--------------------------- CLUSTER STATUS ------------------------------"
+	@echo "--- PODS:"
+	kubectl get pods
+	@echo ""
+	@echo "--- SERVICES:"
+	kubectl get svc
+	@echo ""
+	@echo "--- INGRESSES:"
+	kubectl get ingress
+	@echo "-------------------------------------------------------------------------"
 
 skdev:
 	skaffold dev
 
-down:
-	@echo "Deleting Kubernetes resources (ingress, services, deployments)..."
-	-kubectl delete -f ./ops/k8s/ingresses/ --ignore-not-found --timeout=30s
-	-kubectl delete -f ./ops/k8s/deployments/ --ignore-not-found --timeout=60s
-	@echo "Removing app Docker images (intellijosh/*)..."
-	@eval $$(minikube docker-env 2>/dev/null) 2>/dev/null; \
+# BUILD COMMANDS
+
+build-auth-dev-image:
+	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
+
+build-auth-prod-image:
+	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
+
+build-dev-images:
+	$(MAKE) build-auth-dev-image
+
+clear-dev-images:
+	@echo "Removing app Docker images (intellijosh/bigtix-*)..."
 	IMGS=$$(docker images '1ntellijosh/bigtix-*' -q 2>/dev/null); \
 	[ -z "$$IMGS" ] || docker rmi -f $$IMGS 2>/dev/null || true
-	@echo "Stopping minikube..."
-	-minikube stop 2>/dev/null || true
-	@echo "Down complete."
+
+build-prod-images:
+	$(MAKE) build-auth-prod-image
+
 
