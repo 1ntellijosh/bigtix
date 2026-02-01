@@ -54,8 +54,7 @@ init:
 clear:
 	@echo "CLEARING ALL BIGTIX PROJECT APPLICATION RESOURCES..."
 	$(MAKE) clear-dev-images
-	@echo "Deleting Kind cluster (removes cluster and all pods, deployments, services, ingresses)..."
-	-$(MAKE) kstop 2>/dev/null || true
+	-$(MAKE) stop 2>/dev/null || true
 	@echo "Down complete."
 
 stop:

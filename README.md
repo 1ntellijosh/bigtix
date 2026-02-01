@@ -1,37 +1,37 @@
-## Frameworks/Technologies:
+# BigTix
 
-React.js
-Next.js
-Node.js
-Express.js
+BigTix is an e-commerce application for users to buy and sell tickets to events. I am making it to learn microservices/architecture. I want it to simulate real-world e-commerce sites, so it will be deployed to AWS, and run in Kubernetes clusters.
+
+# App specs
 
 ## Languages:
+- Typescript
 
-Typescript
+## Frameworks/Technologies:
+- React.js
+- Next.js
+- Node.js
+- Express.js
 
 ## Database/Cache:
-
-Mongodb
-Redis
+- Mongodb
+- Redis
 
 ## 3rd Party APIs:
+- Stripe (for payments)
 
-Stripe (for payments)
-
-DevOps:
-
-Docker
-Kubernetes
-kind (for local Kubernetes development)
-Skaffold
-Github Actions
-Ansible
+## DevOps:
+- Docker
+- Kubernetes
+- kind (for local Kubernetes development)
+- Skaffold
+- CI/CD (Github Actions)
+- Ansible
 
 # Microservices
 
-## auth
-
-Auth microservice. Used for authorizing users
+## Auth
+Used for authorizing users
 
 ### APIs
 
@@ -42,7 +42,12 @@ Auth microservice. Used for authorizing users
 | `/api/users/signout` | POST | `{}` | Sign out |
 | `/api/users/currentuser` | GET | - | Return info about the user |
 
+
 # PLANS/NOTES:
+
+## Middleware folder
+
+Obviously, all microservices MUST be completely independant from eachother. All assets in the `auth-srv/middleware` folder hold assets that WILL be used by at least 2 services at some point in time. Therefore all these assets will be converted into a shared library, so each service can install and access them.
 
 ## How images will be made/used/deployed on prod and local:
 
