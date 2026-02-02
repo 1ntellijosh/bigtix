@@ -1,9 +1,0 @@
-# ------------------------------------------------------------------------------------------------
-# Development environment variables template for local dev app of BigTix platform microservices E-Commerce project
-# @since dev-vars-tpl--JP
-# ------------------------------------------------------------------------------------------------
-
-JWT_SECRET: secret
-
-HOST_DOMAIN: bigtixnetwork.com
-
