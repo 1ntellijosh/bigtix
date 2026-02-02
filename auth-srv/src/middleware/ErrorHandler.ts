@@ -73,6 +73,6 @@ export class ErrorHandler {
    * @returns {void}
    */
   static logAndHandle5xxError(err: Error, _req: Request, res: Response, _next: NextFunction) {
-    console.error('TODO: Log, handle 5xx errors....', err);
+    // console.error('TODO: Log, handle 5xx errors....', err);
   }
 }

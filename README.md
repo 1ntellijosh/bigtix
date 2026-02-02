@@ -1,6 +1,6 @@
 # BigTix
 
-BigTix is an e-commerce application for users to buy and sell tickets to events. I am making it to learn microservices/architecture. I want it to simulate real-world e-commerce sites, so it will be deployed to AWS, and run in Kubernetes clusters.
+BigTix is an e-commerce application for users to buy and sell tickets to events. I am making it to learn microservices/architecture. I want it to simulate real-world big-traffic e-commerce sites, so it will be deployed to AWS, and run in Kubernetes clusters.
 
 # App specs
 
@@ -12,6 +12,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - Next.js
 - Node.js
 - Express.js
+- Jest
 
 ## Database/Cache:
 - Mongodb
@@ -47,7 +48,7 @@ Used for authorizing users
 
 ## Middleware folder
 
-Obviously, all microservices MUST be completely independant from eachother. All assets in the `auth-srv/middleware` folder are only shared CODE assets, and NEVER data. Middleware holds assets that WILL be used by at least 2 services at some point in time. Therefore all these assets will be converted into a shared library, so each service can install and access them.
+Obviously, all microservices MUST be completely independant from eachother. All assets in the `auth-srv/src/middleware` folder will eventually be shared between all microservices in a shared library. These are only shared CODE assets, and NEVER data, nor code accessing the same database. Middleware holds assets that WILL be used by at least 2 services at some point in time. Therefore all these assets will be converted into a shared library, so each service can install and access them.
 
 ## How images will be made/used/deployed on prod and local:
 

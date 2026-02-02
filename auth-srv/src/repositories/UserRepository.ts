@@ -25,21 +25,6 @@ export class UserRepository implements AbstractRepository {
   }
 
   /**
-   * @inheritdoc
-   */
-  async updateById(id: string, attrs: SavedUserDoc): Promise<SavedUserDoc | null> {
-    // { new: true } means return the updated document
-    return User.findByIdAndUpdate(id, attrs, { new: true });
-  }
-
-  /**
-   * @inheritdoc
-   */
-  async deleteById(attrs: any): Promise<SavedUserDoc | null> {
-    return User.findByIdAndDelete(attrs.id);
-  }
-
-  /**
    * Finds a user by given email
    *
    * @param email  The email of the user to find
@@ -48,6 +33,21 @@ export class UserRepository implements AbstractRepository {
    */
   async findByEmail(email: string): Promise<SavedUserDoc | null> {
     return User.findOne({ email });
+  }
+
+  /**
+   * @inheritdoc
+   */
+  async updateById(id: string, attrs: object): Promise<SavedUserDoc | null> {
+    // { new: true } means return the updated document
+    return User.findByIdAndUpdate(id, attrs, { new: true });
+  }
+
+  /**
+   * @inheritdoc
+   */
+  async deleteById(id: string): Promise<SavedUserDoc | null> {
+    return User.findByIdAndDelete(id);
   }
 
   /**

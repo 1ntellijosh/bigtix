@@ -12,7 +12,7 @@ import { STATUS_CODES } from '../middleware/enums/StatusCodes';
 const router = express.Router();
 const userSvc = new UserService();
 
-router.post('/signin', [ valid.emailInBody('email'), valid.currentPassword('password'), ],
+router.post('/signin', [ valid.emailInBody('email'), valid.currentPasswordInBody('password'), ],
   api.validateRequest,
   api.callAsync(async (req: Request, res: Response) => {
     const { email, password } = req.body;
