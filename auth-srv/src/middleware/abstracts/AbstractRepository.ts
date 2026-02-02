@@ -1,5 +1,6 @@
 /**
- * Abstract repository class for all app data/cache repositories
+ * Abstract repository class for all app data/cache repositories. This is a middleware because all (express)
+ * microservices will share this interface.
  *
  * @since users-service-continued--JP
  */

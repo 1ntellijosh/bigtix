@@ -47,7 +47,7 @@ Used for authorizing users
 
 ## Middleware folder
 
-Obviously, all microservices MUST be completely independant from eachother. All assets in the `auth-srv/middleware` folder hold assets that WILL be used by at least 2 services at some point in time. Therefore all these assets will be converted into a shared library, so each service can install and access them.
+Obviously, all microservices MUST be completely independant from eachother. All assets in the `auth-srv/middleware` folder are only shared CODE assets, and NEVER data. Middleware holds assets that WILL be used by at least 2 services at some point in time. Therefore all these assets will be converted into a shared library, so each service can install and access them.
 
 ## How images will be made/used/deployed on prod and local:
 

@@ -3,7 +3,7 @@ import { promisify } from 'util';
 
 const scryptAsync = promisify(scrypt);
 
-export class Password {
+export class PasswordService {
   /**
    * Hash the given password, and return the hashed password and salt concatenated by a dot
    * @param {string} password

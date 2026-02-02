@@ -3,15 +3,16 @@
  *
  * @since auth-micro-start--JP
  */
-import express from "express";
+import express, { Request, Response } from "express";
 import { APIRequest as api } from '../middleware/APIRequest';
 
 const router = express.Router();
 
-router.get('/currentuser', api.call(async (req, res) => {
-  // App errors, throw new RequestValidationError('Request failed', STATUS_CODES.BAD_REQUEST)
-  console.log('Current user route hit:', req.body);
-  res.send('Hello');
-}));
+/**
+ * Gets the current user data from the jwt in session (if present)
+ */
+router.get('/currentuser', api.getCurrentUser, (req: Request, res: Response) => {
+  res.send({ currentUser: req.currentUser || null });
+});
 
 export { router as currentUserRouter };

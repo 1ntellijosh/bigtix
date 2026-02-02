@@ -4,7 +4,7 @@
  * @since users-service-continued--JP
  */
 import mongoose from "mongoose";
-import { Password } from "../middleware/Password";
+import { PasswordService as passSvc } from "../middleware/PasswordService";
 
 interface NewUserAttrs {
   email: string;
@@ -37,6 +37,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+}, {
+  toJSON: {
+    // Clean up the user object before returning it
+    transform(doc, ret) {
+      const userObj = ret as Record<string, unknown>;
+      userObj.id = userObj._id;
+      delete userObj._id;
+      delete userObj.password;
+      delete userObj.__v;
+    },
+  },
 });
 
 /**
@@ -53,7 +64,7 @@ userSchema.statics.build = (attrs: NewUserAttrs) => {
 // Hash the given password before saving the user document
 userSchema.pre('save', async function() {
   if (this.isModified('password')) {
-    const hashed = await Password.toHash(this.get('password'));
+    const hashed = await passSvc.toHash(this.get('password'));
     this.set('password', hashed);
   }
 });

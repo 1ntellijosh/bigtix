@@ -6,7 +6,7 @@
 import { UserRepository } from './repositories/UserRepository';
 import { SavedUserDoc } from './models/User';
 import { BadRequestError } from './middleware/errors/BadRequestError';
-import { Password } from './middleware/Password';
+import { PasswordService as passSvc } from './middleware/PasswordService';
 import jwt from 'jsonwebtoken';
 import { Request } from 'express';
 
@@ -15,17 +15,6 @@ export class UserService {
 
   constructor() {
     this.userRepo = new UserRepository();
-  }
-
-  /**
-   * Finds a user by given email
-   *
-   * @param {string} email
-   *
-   * @returns {Promise<SavedUserDoc | null>}
-   */
-  async findUserByEmail(email: string): Promise<SavedUserDoc | null> {
-    return this.userRepo.findByEmail(email);
   }
 
   /**
@@ -40,14 +29,14 @@ export class UserService {
    */
   async createAndSignInUser(req: Request, email: string, password: string): Promise<SavedUserDoc> {
     // If the user already exists, throw an error
-    const savedUser = await this.findUserByEmail(email);
+    const savedUser = await this.userRepo.findByEmail(email);
     if (savedUser) throw new BadRequestError('Email already in use');
 
     // Create the user
     const user = await this.userRepo.create({ email, password });
 
     // Sign in the user
-    await this.signIn(req, email, password);
+    this.setJwtInUserSession(req, user);
 
     return user;
   }
@@ -64,7 +53,7 @@ export class UserService {
     const user = await this.userRepo.findByEmail(email);
     if (!user) throw new BadRequestError('Invalid credentials');
 
-    const passwordsMatch = await Password.verifyPassword(user.password, password);
+    const passwordsMatch = await passSvc.verifyPassword(user.password, password);
     if (!passwordsMatch) throw new BadRequestError('Invalid credentials');
 
     this.setJwtInUserSession(req, user);
@@ -82,7 +71,28 @@ export class UserService {
     const userJwt = jwt.sign({
       id: user.id,
       email: user.email,
-    }, 'key'!);
+    }, process.env.JWT_KEY!);
     req.session = { jwt: userJwt };
+  }
+
+  /**
+   * Gets the current user data from the jwt in session (if present)
+   *
+   * @param {Request} req
+   *
+   * @returns {object | null}  The current user data
+   */
+  getCurrentUser(req: Request): { currentUser: SavedUserDoc | null } {
+    if (!('session' in req) || !req.session?.jwt) {
+      return { currentUser: null };
+    }
+  
+    try {
+      const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!);
+  
+      return { currentUser: payload as SavedUserDoc | null };
+    } catch (err) {
+      return { currentUser: null };
+    }
   }
 }

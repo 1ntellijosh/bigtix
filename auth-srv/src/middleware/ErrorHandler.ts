@@ -52,12 +52,13 @@ export class ErrorHandler {
       const resp: ErrorResponse = { errors: err.genResponseErrItemsList() };
       res.status(err.statusCode).json(resp);
 
-      return;
+      return res.end();
     }
 
     // This should never happen, but if it does, we'll handle it with generic 500 error
     const resp: ErrorResponse = { errors: [{ message: err.message }] };
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json(resp);
+    res.end();
   };
 
   /**
