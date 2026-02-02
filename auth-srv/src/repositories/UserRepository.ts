@@ -3,7 +3,7 @@
  *
  * @since users-service-continued--JP
  */
-import { AbstractRepository } from "../middleware/abstracts/AbstractRepository";
+import { AbstractRepository } from "@bigtix/middleware";
 import { User, SavedUserDoc, NewUserAttrs } from "../models/User";
 
 export class UserRepository implements AbstractRepository {

@@ -3,9 +3,9 @@
  *
  * @since users-service-continued--JP
  */
-import { STATUS_CODES } from "../enums/StatusCodes";
+import { STATUS_CODES } from '../enums';
+import { ErrorResponseItem } from '../types';
 import { AbstractRequestError } from "./AbstractRequestError";
-import { ErrorResponseItem } from "../ErrorHandler";
 
 export class BadRequestError extends AbstractRequestError {
   public readonly statusCode: STATUS_CODES = STATUS_CODES.BAD_REQUEST;

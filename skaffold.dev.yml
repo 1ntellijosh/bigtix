@@ -1,0 +1,41 @@
+# Config file for using Skaffold in local development
+# Custom builder so we can use dependencies.paths (only supported for custom).
+# Both images use repo root (.) as build context. Only listed paths trigger rebuilds.
+
+apiVersion: skaffold/v4beta13
+kind: Config
+build:
+  local:
+    push: false
+  artifacts:
+    - image: 1ntellijosh/bigtix-auth-srv
+      context: .
+      custom:
+        buildCommand: docker build -f auth-srv/deploy/docker/dev.Dockerfile -t $IMAGE $BUILD_CONTEXT
+        dependencies:
+          paths:
+            - auth-srv/**/*
+            - packages/*/dist/**/*
+      sync:
+        manual:
+          - src: 'auth-srv/src/**/*.ts'
+            dest: src
+            strip: 'auth-srv/src/'
+    - image: 1ntellijosh/bigtix-client-app
+      context: .
+      custom:
+        buildCommand: docker build -f client/deploy/docker/dev.Dockerfile -t $IMAGE $BUILD_CONTEXT
+        dependencies:
+          paths:
+            - client/**/*
+            - packages/*/dist/**/*
+      sync:
+        manual:
+          - src: 'client/**/*'
+            dest: .
+            strip: 'client/'
+manifests:
+  rawYaml:
+    - ./ops/k8s/**/*
+deploy:
+  kubectl: {}

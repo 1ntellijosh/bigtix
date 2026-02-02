@@ -1,0 +1,17 @@
+{
+  "name": "bigtix",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BigTix platform microservices E-Commerce project",
+  "workspaces": [
+    "packages/*",
+    "auth-srv",
+    "client"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "author": "1ntellijosh",
+  "license": "ISC"
+}

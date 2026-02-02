@@ -1,16 +1,30 @@
 # ------------------------------------------------------------------------------------------------
-# auth-srv PRODUCTION Dockerfile for BigTix platform microservices E-Commerce project
+# PRODUCTION Dockerfile for Authorization microservice of BigTix platform E-Commerce project
 # @since auth-micro-start--JP
+# Build context: repo root (.) so packages/common and packages/middleware can be copied.
 # ------------------------------------------------------------------------------------------------
 
-    FROM node:alpine
+FROM node:alpine
 
 WORKDIR /app
 
-COPY ./package.json .
+# Copy workspace packages (built dist + package.json)
+COPY packages/common/package.json ./packages/common/
+COPY packages/common/dist ./packages/common/dist
+COPY packages/middleware/package.json ./packages/middleware/
+COPY packages/middleware/dist ./packages/middleware/dist
 
+# Copy auth-srv package.json and point workspace deps to local packages
+COPY auth-srv/package.json ./package.json.tmp
+RUN sed 's|"@bigtix/common": "\*"|"@bigtix/common": "file:./packages/common"|g; s|"@bigtix/middleware": "\*"|"@bigtix/middleware": "file:./packages/middleware"|g' ./package.json.tmp > ./package.json && rm ./package.json.tmp
+
+# Install production dependencies only
 RUN npm install --omit=dev
 
-COPY . .
+# Copy auth-srv source and build for production
+COPY auth-srv/src ./src
+COPY auth-srv/tsconfig.json ./tsconfig.json
+RUN npm run build
 
-CMD ["npm", "start"]
+# Run compiled app (no ts-node)
+CMD ["npm", "run", "start:prod"]

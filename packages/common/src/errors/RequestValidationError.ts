@@ -3,19 +3,18 @@
  *
  * @since users-service-continued--JP
  */
-import { STATUS_CODES } from '../enums/StatusCodes';
-import { ValidationError } from 'express-validator';
+import { STATUS_CODES } from '../enums';
+import { ErrorResponseItem, ExpressValidationErrorItem } from '../types';
 import { AbstractRequestError } from "./AbstractRequestError";
-import { ErrorResponseItem } from '../ErrorHandler';
 
 export class RequestValidationError extends AbstractRequestError {
-  public readonly reasons: ValidationError[];
+  public readonly reasons: ExpressValidationErrorItem[];
   public readonly name: string;
   public readonly statusCode: STATUS_CODES = STATUS_CODES.BAD_REQUEST;
 
   constructor(
     message: string,
-    errors: ValidationError[],
+    errors: ExpressValidationErrorItem[],
   ) {
     super(message);
     this.name = 'RequestValidationError';

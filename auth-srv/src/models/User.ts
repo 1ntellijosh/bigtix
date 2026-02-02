@@ -4,7 +4,7 @@
  * @since users-service-continued--JP
  */
 import mongoose from "mongoose";
-import { PasswordService as passSvc } from "../middleware/PasswordService";
+import { PasswordService as passSvc } from "@bigtix/middleware";
 
 interface NewUserAttrs {
   email: string;

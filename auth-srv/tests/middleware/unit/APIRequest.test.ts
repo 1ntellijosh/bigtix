@@ -3,11 +3,11 @@
  *
  * @since tests-start--JP
  */
-import { APIRequest, UserJwtPayload } from '../../../src/middleware/APIRequest';
-import { createMockRequestVars } from './MiddlewareUnitTestHelpers';
+import { APIRequest, UserJwtPayload } from '@bigtix/middleware';
+import { createMockRequestVars } from '@bigtix/middleware';
 import { validationResult, ValidationError } from 'express-validator';
-import { RequestValidationError } from '../../../src/middleware/errors/RequestValidationError';
-import { UnAuthorizedError } from '../../../src/middleware/errors/UnauthorizedError';
+import { RequestValidationError } from '@bigtix/common';
+import { UnAuthorizedError } from '@bigtix/common';
 import jwt from 'jsonwebtoken';
 
 jest.mock('express-validator', () => ({

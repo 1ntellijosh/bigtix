@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------------------------
-# Ansible script for initializing the development environment
+# Ansible script for initializing the development cluster environment
 # @since ansible--JP
 # ------------------------------------------------------------------------------------------------
 
-- name: Initialize the development environment
+- name: Initialize the local development cluster
   hosts: localhost
   vars_prompt:
     - name: jwt_secret
@@ -36,7 +36,7 @@
         dest: "{{ project_root }}/dev-vars.yml"
       when: not dev_vars_stat.stat.exists
 
-    - name: Set up Kind cluster network (add {{ host_domain }} to /etc/hosts)
+    - name: Add {{ host_domain }} domain to /etc/hosts for local development
       block:
         - name: Ensure Bigtix hosts comment in /etc/hosts
           ansible.builtin.lineinfile:

@@ -1,15 +1,25 @@
 # BigTix
 
-BigTix is an e-commerce application for users to buy and sell tickets to events. I am making it to learn microservices/architecture. I want it to simulate real-world big-traffic e-commerce sites, so it will be deployed to AWS, and run in Kubernetes clusters.
+BigTix is an e-commerce application for users to buy and sell tickets to events. A large motivation behind my making this application was so that I could learn microservices architecture. I also wanted to make my own app that simulates real-world, big-traffic e-commerce sites, so it will be deployed to the cloud on an AWS EKS
 
-# App specs
+## App Details/Technologies:
+- Made in microservices architecture
+- Next.js
+    - For server-side rendering
+    - Quicker content loading (especially on mobile)
+    - Better for SEO
+- kubernetes app, will be deployed to AWS EKS cluster
+  - To simulate real-world, big-traffic e-commerce sites on the cloud
+  - kind instead of minikube on local dev
+    - Lighter weigth
+    - Simulates production cluster applications better
 
 ## Languages:
 - Typescript
 
 ## Frameworks/Technologies:
-- React.js
 - Next.js
+- React.js
 - Node.js
 - Express.js
 - Jest
@@ -29,6 +39,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - CI/CD (Github Actions)
 - Ansible
 
+
 # Microservices
 
 ## Auth
@@ -44,16 +55,30 @@ Used for authorizing users
 | `/api/users/currentuser` | GET | - | Return info about the user |
 
 
+## Workflow when adding/changing files in `./packages`
+
+1. **Add/update assets**
+   - If **simply editing/changing existing file,** just make the changes and save
+   - If **added files are shared Express/server-microservice-specific,** add to `packages/middleware/src/`
+   - If **added files will be used by client too,** add to `packages/common/src/`
+2. **If files were added,** add export to the `./packages/**/` folder
+   - If add was made to `packages/middleware/`, update `packages/middleware/src/index.ts`
+   - If add was made to `packages/common/`, update `packages/common/src/index.ts`
+3. **Rebuild** with `make build-shared-packages`
+4. **Use!:** Import from `@bigtix/middleware` or `@bigtix/common`
+
+### Common Issues
+
+- **"Cannot find module '@bigtix/middleware' or type errors:"**: Run `make build-shared-packages` from root to link workspaces, then `make start/dev`
+- **Import errors**: Check that exports are in `packages/*/src/index.ts`
+
 # PLANS/NOTES:
-
-## Middleware folder
-
-Obviously, all microservices MUST be completely independant from eachother. All assets in the `auth-srv/src/middleware` folder will eventually be shared between all microservices in a shared library. These are only shared CODE assets, and NEVER data, nor code accessing the same database. Middleware holds assets that WILL be used by at least 2 services at some point in time. Therefore all these assets will be converted into a shared library, so each service can install and access them.
 
 ## How images will be made/used/deployed on prod and local:
 
 ### LOCAL:
-The service images are built and present on the machine with `make build-dev-images`. They are loaded into the Kind cluster with `make kload-imgs` (so Skaffold doesn't need to push to a registry—images are already on the nodes). Skaffold then runs on these images via `make skdev`. The line `image: 1ntellijosh/bigtix-service-name-srv` in the `ops/k8s/service-name-depl.yml` files stays the same. Images are rebuilt/cleared locally as needed between app versions, so the implicit ":latest" image tag can work.
+Shared packages (`packages/common`, `packages/middleware`) are built with `make build-shared-packages`; then service images are built with `make build-dev-images`. Both `auth-srv` and `client` Dockerfiles copy these packages into the image (repo root is build context), so Skaffold watches the whole repo and will rebuild an image when you change that service’s code or the shared packages. After editing only shared package source, run `make build-shared-packages` so the next Skaffold rebuild picks up the new `dist/`.
+Images are loaded into Kind with `make kload-imgs` (Skaffold uses local images, no push). Run the dev loop with `make dev`. The `image: 1ntellijosh/bigtix-...` in `ops/k8s/deployments/*.yml` stays the same; the implicit `:latest` tag is used.
 
 ### PRODUCTION:
 The service images are built in a Github Actions build workflow, triggered automatically from making a release. The built containers are pushed to either dockerhub or github image repository (doesn't matter right now). Each service's image version/tag will be extracted from the `service-name/deploy/version.json` file in their respective directory using the Github Action's build yaml script.
@@ -64,3 +89,14 @@ Deployments of the built images are triggered in Github Actions by selecting a s
   3. Kubernetes sees the Deployment spec changed and starts a rollout.
   4. The kubelet on each node pulls the image from the registry when it needs to start a new pod (if that tag isn’t already on the node).
   5. Old pods are replaced by new pods running the new image, according to the Deployment’s rollout strategy (e.g. rolling update).
+
+## Production TODOS:
+
+**HTTPS**: Remember setups for production:
+
+1. **Environment:** Set `NODE_ENV=production` for the all microservice environments (and client if applicable)
+2. **TLS at the edge:** Terminate HTTPS at ingress or load balancer (e.g. AWS ALB with ACM, or Kubernetes Ingress with a TLS block and a cert secret).
+   - Traffic to pods can stay HTTP inside the cluster since the proxy handles TLS.
+3. **Client SERVER API URL:** **!!! This probaby won't need to be done, but noted here to check.** Build the client-dpl deployment image with updated `SERVER_API_BASE_URL` var for server side API calls if it's different from `http://ingress-nginx-controller.ingress-nginx.svc.cluster.local` (e.g. `SERVER_API_BASE_URL=http://new-ingress-nginx-service-name.new-ingress-nginx-namespace.svc.cluster.local`).
+
+

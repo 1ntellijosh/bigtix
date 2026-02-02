@@ -3,18 +3,18 @@
  *
  * @since users-service-continued--JP
  */
-import { STATUS_CODES } from "../enums/StatusCodes";
+import { STATUS_CODES } from '../enums';
+import { ErrorResponseItem } from '../types';
 import { AbstractRequestError } from "./AbstractRequestError";
-import { ErrorResponseItem } from "../ErrorHandler";
 
-export class UnAuthorizedError extends AbstractRequestError {
-  public readonly statusCode: STATUS_CODES = STATUS_CODES.UNAUTHORIZED;
+export class NotFoundError extends AbstractRequestError {
+  public readonly statusCode: STATUS_CODES = STATUS_CODES.NOT_FOUND;
   public readonly name: string;
 
   constructor(message: string) {
     super(message);
-    this.name = 'UnAuthorizedError';
-    Object.setPrototypeOf(this, UnAuthorizedError.prototype);
+    this.name = 'NotFoundError';
+    Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 
   /**
@@ -23,7 +23,7 @@ export class UnAuthorizedError extends AbstractRequestError {
    * @returns {ErrorResponseItem[]}
    */
   genResponseErrItemsList(): ErrorResponseItem[] {
-    const error: ErrorResponseItem = { message: "Not logged in" };
+    const error: ErrorResponseItem = { message: 'Not found' };
     return [ error ];
   }
 }

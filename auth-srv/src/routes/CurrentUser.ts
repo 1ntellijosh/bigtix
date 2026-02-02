@@ -4,7 +4,7 @@
  * @since auth-micro-start--JP
  */
 import express, { Request, Response } from "express";
-import { APIRequest as api } from '../middleware/APIRequest';
+import { APIRequest as api } from '@bigtix/middleware';
 
 const router = express.Router();
 

@@ -4,27 +4,8 @@
  * @since users-service-continued--JP
  */
 import { Request, Response, NextFunction } from 'express';
-import { AbstractRequestError } from './errors/AbstractRequestError';
-import { STATUS_CODES } from './enums/StatusCodes';
-
-/**
- * Interface for error response item
- *
- * @since users-service-continued--JP
- */
-export interface ErrorResponseItem {
-  field?: string;
-  message: string;
-}
-
-/**
- * Interface for error response
- *
- * @since users-service-continued--JP
- */
-export interface ErrorResponse {
-  errors: ErrorResponseItem[];
-}
+import { AbstractRequestError } from '@bigtix/common';
+import { STATUS_CODES, ErrorResponse } from '@bigtix/common';
 
 export class ErrorHandler {
   /**
@@ -42,23 +23,26 @@ export class ErrorHandler {
     err: Error | AbstractRequestError,
     _req: Request,
     res: Response,
-    _next: NextFunction
+    next: NextFunction
   ) {
     const statusCode = err instanceof AbstractRequestError ? err.statusCode : STATUS_CODES.INTERNAL_SERVER_ERROR;
 
-    if (statusCode >= 500) ErrorHandler.logAndHandle5xxError(err, _req, res, _next);    
+    if (statusCode >= 500) ErrorHandler.logAndHandle5xxError(err, _req, res);    
     
     if (err instanceof AbstractRequestError) {
-      const resp: ErrorResponse = { errors: err.genResponseErrItemsList() };
+      const resp: ErrorResponse = { 
+        message: err.message,
+        errors: err.genResponseErrItemsList() 
+      };
       res.status(err.statusCode).json(resp);
 
-      return res.end();
+      return next();
     }
 
     // This should never happen, but if it does, we'll handle it with generic 500 error
-    const resp: ErrorResponse = { errors: [{ message: err.message }] };
+    const resp: ErrorResponse = { message: 'Request failed. Please try again.', errors: [{ message: err.message }] };
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json(resp);
-    res.end();
+    next();
   };
 
   /**
@@ -72,7 +56,7 @@ export class ErrorHandler {
    *
    * @returns {void}
    */
-  static logAndHandle5xxError(err: Error, _req: Request, res: Response, _next: NextFunction) {
+  static logAndHandle5xxError(err: Error, _req: Request, res: Response) {
     // console.error('TODO: Log, handle 5xx errors....', err);
   }
 }
