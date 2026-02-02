@@ -1,6 +1,20 @@
 # BigTix
 
-BigTix is an e-commerce application for users to buy and sell tickets to events. I am making it to learn microservices/architecture. I want it to simulate real-world big-traffic e-commerce sites, so it will be deployed to AWS, and run in Kubernetes clusters.
+BigTix is an e-commerce application for users to buy and sell tickets to events. A large motivation behind my making this application was so that I could learn microservices architecture. I also wanted to make my own app that simulates real-world, big-traffic e-commerce sites, so it will be deployed to the cloud on an AWS EKS
+
+## Important Details/Technologies:
+- Made in microservices architecture
+- Next.js
+    - For server-side rendering
+    - Quicker content loading (especially on mobile)
+    - Better for SEO
+- kubernetes app, will be deployed to AWS EKS cluster
+  - To simulate real-world, big-traffic e-commerce sites on the cloud
+  - kind instead of minikube on local dev
+    - Wanted to learn
+    - Lighter weigth
+    - Simulates production cluster applications better
+  
 
 # App specs
 
@@ -8,8 +22,8 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - Typescript
 
 ## Frameworks/Technologies:
-- React.js
 - Next.js
+- React.js
 - Node.js
 - Express.js
 - Jest
