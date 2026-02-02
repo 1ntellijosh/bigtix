@@ -1,0 +1,55 @@
+# ------------------------------------------------------------------------------------------------
+# Ansible script for initializing the development environment
+# @since ansible--JP
+# ------------------------------------------------------------------------------------------------
+
+- name: Initialize the development environment
+  hosts: localhost
+  vars_prompt:
+    - name: jwt_secret
+      prompt: "JWT secret key (used for jwt-secret in cluster)"
+      private: true
+
+  vars:
+    project_root: "{{ playbook_dir }}/../.."
+    host_domain: bigtixnetwork.com   # default; overridden from dev-vars.yml when file exists
+
+  tasks:
+    - name: Check if dev-vars.yml exists
+      ansible.builtin.stat:
+        path: "{{ project_root }}/dev-vars.yml"
+      register: dev_vars_stat
+
+    - name: Load dev-vars.yml when present (so host_domain can come from file)
+      ansible.builtin.include_vars:
+        file: "{{ project_root }}/dev-vars.yml"
+      when: dev_vars_stat.stat.exists
+
+    - name: Set host_domain from loaded dev-vars.yml
+      ansible.builtin.set_fact:
+        host_domain: "{{ HOST_DOMAIN | default(host_domain) }}"
+      when: dev_vars_stat.stat.exists
+
+    - name: Generate dev-vars.yml from template
+      ansible.builtin.template:
+        src: "{{ project_root }}/ops/templates/dev-vars.yml-tpl"
+        dest: "{{ project_root }}/dev-vars.yml"
+      when: not dev_vars_stat.stat.exists
+
+    - name: Set up Kind cluster network (add {{ host_domain }} to /etc/hosts)
+      block:
+        - name: Ensure Bigtix hosts comment in /etc/hosts
+          ansible.builtin.lineinfile:
+            path: /etc/hosts
+            line: "# Bigtix project hosts"
+            state: present
+            create: true
+          become: true
+
+        - name: Ensure {{ host_domain }} resolves to 127.0.0.1 in /etc/hosts
+          ansible.builtin.lineinfile:
+            path: /etc/hosts
+            line: "127.0.0.1 {{ host_domain }}"
+            state: present
+            create: true
+          become: true

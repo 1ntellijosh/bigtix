@@ -2,6 +2,7 @@
 
 .PHONY: commit push sq
 
+
 # GIT COMMANDS
 
 com:
@@ -24,6 +25,7 @@ sq:
 %:
 	@:
 
+
 # APP DEVELOPMENT COMMANDS
 
 ##
@@ -32,25 +34,25 @@ sq:
 # Prerequisites:
 # ---------------
 # - MAKE           - https://www.gnu.org/software/make/
+# - Ansible        - https://docs.ansible.com/ansible/latest/installation/index.html
+#
+init:
+	@command -v ansible-playbook >/dev/null 2>&1 || { echo "Ansible not found. Install with: pip3 install --user ansible  or  sudo apt install ansible"; exit 127; }
+	ansible-playbook ./ops/Ansible/dev-init.yml -K
+
+##
+# LOCAL APP RUNNING COMMANDS:
+# --------------------------
+# Prerequisites:
+# ---------------
+# - MAKE           - https://www.gnu.org/software/make/
+# - Ansible        - https://docs.ansible.com/ansible/latest/installation/index.html
 # - Node.js/NPM    - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 # - Docker         - https://docs.docker.com/get-started/get-docker/#supported-platforms
 # - kubectl  	   - https://kubernetes.io/docs/tasks/tools/
 # - Kind     	   - https://kind.sigs.k8s.io/docs/user/quick-start/#installation
 # - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
 #
-init:
-	@echo "INITIALIZING BIGTIX PROJECT..."
-	$(MAKE) add-local-network-hosts
-	$(MAKE) kstart
-	$(MAKE) init-ingress
-	$(MAKE) wait-ingress
-	$(MAKE) build-dev-images
-	$(MAKE) kload-imgs
-	$(MAKE) apply-deployments
-	$(MAKE) apply-ingress
-	$(MAKE) cluster-status
-	$(MAKE) skdev
-
 clear:
 	@echo "CLEARING ALL BIGTIX PROJECT APPLICATION RESOURCES..."
 	$(MAKE) clear-dev-images
@@ -73,7 +75,15 @@ start:
 	$(MAKE) apply-deployments
 	$(MAKE) apply-ingress
 	$(MAKE) cluster-status
-	$(MAKE) skdev
+	$(MAKE) inject
+	$(MAKE) dev
+
+dev:
+	skaffold dev
+
+inject:
+	ansible-playbook ./ops/Ansible/local-secret-inject.yml
+
 
 # OPERATIONS COMMANDS
 
@@ -88,9 +98,6 @@ kload-imgs:
 # Create a new Kind cluster with the config file
 kstart:
 	kind create cluster --name bigtix-cluster --config ./ops/kind/config.yml
-# Get cluster information
-kinfo:
-	kubectl cluster-info --context kind-bigtix-cluster
 # Stop/delete Kind cluster
 kstop:
 	-kind delete cluster --name bigtix-cluster
@@ -125,10 +132,13 @@ cluster-status:
 	@echo ""
 	@echo "--- INGRESSES:"
 	kubectl get ingress
+	@echo ""
+	@echo "--- SECRETS:"
+	kubectl get secrets
+	@echo ""
+	kubectl cluster-info --context kind-bigtix-cluster
 	@echo "-------------------------------------------------------------------------"
 
-skdev:
-	skaffold dev
 
 # BUILD COMMANDS
 
