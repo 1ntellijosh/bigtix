@@ -4,11 +4,11 @@
  * @since tests-start--JP
  */
 import { jest } from '@jest/globals';
-import { ErrorHandler } from '../../../middleware/ErrorHandler';
+import { ErrorHandler } from '../../../src/middleware/ErrorHandler';
 import { ValidationError } from 'express-validator';
-import { ServerError } from '../../../middleware/errors/ServerError';
-import { RequestValidationError } from '../../../middleware/errors/RequestValidationError';
-import { NotFoundError } from '../../../middleware/errors/NotFoundError';
+import { ServerError } from '../../../src/middleware/errors/ServerError';
+import { RequestValidationError } from '../../../src/middleware/errors/RequestValidationError';
+import { NotFoundError } from '../../../src/middleware/errors/NotFoundError';
 import { createMockRequestVars } from './MiddlewareUnitTestHelpers';
 
 describe('ErrorHandler', () => {
