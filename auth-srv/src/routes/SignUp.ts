@@ -17,7 +17,7 @@ const userSvc = new UserService();
  *
  * @throws {BadRequestError}  If email is already in use
  */
-router.post('/signup', [ valid.emailInBody('email'), valid.newPassword('password'), ],
+router.post('/signup', [ valid.emailInBody('email'), valid.newPasswordInBody('password'), ],
   api.validateRequest,
   api.callAsync(async (req: Request, res: Response) => {
     const { email, password } = req.body;

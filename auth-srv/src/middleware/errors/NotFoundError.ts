@@ -7,14 +7,14 @@ import { STATUS_CODES } from "../enums/StatusCodes";
 import { AbstractRequestError } from "./AbstractRequestError";
 import { ErrorResponseItem } from "../ErrorHandler";
 
-export class NotfoundError extends AbstractRequestError {
+export class NotFoundError extends AbstractRequestError {
   public readonly statusCode: STATUS_CODES = STATUS_CODES.NOT_FOUND;
   public readonly name: string;
 
   constructor(message: string) {
     super(message);
     this.name = 'NotFoundError';
-    Object.setPrototypeOf(this, NotfoundError.prototype);
+    Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 
   /**

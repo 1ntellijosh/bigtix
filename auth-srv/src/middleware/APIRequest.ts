@@ -4,7 +4,7 @@ import { RequestValidationError } from './errors/RequestValidationError';
 import { UnAuthorizedError } from './errors/UnauthorizedError';
 import jwt from 'jsonwebtoken';
 
-interface UserJwtPayload {
+export interface UserJwtPayload {
   id: string;
   email: string;
   iat: number;

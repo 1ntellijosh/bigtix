@@ -1,6 +1,5 @@
 /**
  * Library of API helper functions/assets
- * TODO: Add this to node_modules library when this is added to project
  *
  * @since users-service-continued--JP
  */
@@ -13,7 +12,7 @@ import { body } from 'express-validator';
  */
 export class APIValidation {
   /**
-   * Validates given email string
+   * Validates given email string in body field
    *
    * @param {string} email  The email in body field to validate
    *
@@ -24,29 +23,29 @@ export class APIValidation {
   }
 
   /**
-   * Validates given password string (for new users signing up)
+   * Validates given password string (for new users signing up) in body field
    *
    * @param {string} passwordField  The password in body field to validate
    *
    * @returns {ValidationChain}
    */
-  static newPassword(passwordField: string) {
+  static newPasswordInBody(passwordField: string) {
     return body(passwordField)
       .trim()
-      .isLength({ min: 8 }).matches(/\d/).withMessage('Password must be at least 8 characters long and contain at least one number')
+      .isLength({ min: 8, max: 20 }).matches(/\d/).withMessage('Password must be at least 8 characters and no more than 20 characters')
       .matches('[A-Z]').withMessage('Password must contain at least one capital letter')
       .matches('[a-z]').withMessage('Password must contain at least one lowercase letter')
       .matches('[0-9]').withMessage('Password must contain at least one number')
   }
 
   /**
-   * Validates given password string (for existing users)
+   * Validates given password string (for existing users) in body field
    *
    * @param {string} passwordField  The password in body field to validate
    *
    * @returns {ValidationChain}
    */
-  static currentPassword(passwordField: string) {
+  static currentPasswordInBody(passwordField: string) {
     return body(passwordField).trim().notEmpty().withMessage('Password is required');
   }
 }

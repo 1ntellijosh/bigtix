@@ -87,11 +87,6 @@ inject-local-secrets:
 
 # OPERATIONS COMMANDS
 
-# Add bigtixnetwork.com to /etc/hosts (idempotent; run with: make hosts)
-add-local-network-hosts:
-	@grep -q '# Bigtix project hosts' /etc/hosts || echo '# Bigtix project hosts' | sudo tee -a /etc/hosts > /dev/null
-	@grep -q 'bigtixnetwork.com' /etc/hosts || echo '127.0.0.1 bigtixnetwork.com' | sudo tee -a /etc/hosts > /dev/null
-
 # Load Docker images into Kind cluster
 kload-imgs:
 	kind load docker-image 1ntellijosh/bigtix-auth-srv:latest --name bigtix-cluster
