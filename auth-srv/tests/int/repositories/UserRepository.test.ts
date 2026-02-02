@@ -3,9 +3,7 @@
  *
  * @since tests-start--JP
  */
-import mongoose from 'mongoose';
-import { UserRepository } from '../../../repositories/UserRepository';
-import { SavedUserDoc } from '../../../models/User';
+import { UserRepository } from '../../../src/repositories/UserRepository';
 
 const userRepo = new UserRepository();
 

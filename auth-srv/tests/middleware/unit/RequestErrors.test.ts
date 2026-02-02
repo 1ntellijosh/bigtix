@@ -4,13 +4,13 @@
  * @since tests-start--JP
  */
 import { ValidationError } from 'express-validator';
-import { ServerError } from '../../../middleware/errors/ServerError';
-import { RequestValidationError } from '../../../middleware/errors/RequestValidationError';
-import { NotFoundError } from '../../../middleware/errors/NotFoundError';
-import { BadRequestError } from '../../../middleware/errors/BadRequestError';
-import { UnAuthorizedError } from '../../../middleware/errors/UnauthorizedError';
-import { DatabaseConnectionError } from '../../../middleware/errors/DatabaseConnectionError';
-import { AbstractRequestError } from '../../../middleware/errors/AbstractRequestError';
+import { ServerError } from '../../../src/middleware/errors/ServerError';
+import { RequestValidationError } from '../../../src/middleware/errors/RequestValidationError';
+import { NotFoundError } from '../../../src/middleware/errors/NotFoundError';
+import { BadRequestError } from '../../../src/middleware/errors/BadRequestError';
+import { UnAuthorizedError } from '../../../src/middleware/errors/UnauthorizedError';
+import { DatabaseConnectionError } from '../../../src/middleware/errors/DatabaseConnectionError';
+import { AbstractRequestError } from '../../../src/middleware/errors/AbstractRequestError';
 
 describe('RequestError', () => {
   it('should create a RequestValidationError with correct fields', () => {

@@ -3,7 +3,7 @@
  *
  * @since tests-start--JP
  */
-import { PasswordService } from '../../../middleware/PasswordService';
+import { PasswordService } from '../../../src/middleware/PasswordService';
 
 describe('PasswordService', () => {
   it('returns a hashed password', async () => {

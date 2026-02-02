@@ -4,7 +4,7 @@
  * @since tests-start--JP
  */
 import request from 'supertest';
-import { authApp } from '../../../App';
+import { authApp } from '../../../src/App';
 
 const validEmail = 'someguy@someemail.com';
 const validPassword = 'Password1';
