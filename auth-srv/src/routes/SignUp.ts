@@ -3,7 +3,7 @@
  *
  * @since users-service-continued--JP
  */
-import express from "express";
+import express, { Request, Response } from "express";
 import { APIValidation as valid } from '../middleware/APIValidation';
 import { APIRequest as api } from '../middleware/APIRequest';
 import { STATUS_CODES } from '../middleware/enums/StatusCodes';
@@ -17,8 +17,9 @@ const userSvc = new UserService();
  *
  * @throws {BadRequestError}  If email is already in use
  */
-router.post('/signup', [ valid.emailInBody('email'), valid.passwordInBody('password'), ],
-  api.call(async (req, res) => {
+router.post('/signup', [ valid.emailInBody('email'), valid.newPassword('password'), ],
+  api.validateRequest,
+  api.callAsync(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     const newUser = await userSvc.createAndSignInUser(req, email, password);

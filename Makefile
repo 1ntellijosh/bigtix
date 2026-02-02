@@ -54,19 +54,19 @@ init:
 # - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
 #
 clear:
-	@echo "CLEARING ALL BIGTIX PROJECT APPLICATION RESOURCES..."
+	@echo "CLEARING ALL LOCAL BIGTIX PROJECT APPLICATION RESOURCES..."
 	$(MAKE) clear-dev-images
 	-$(MAKE) stop 2>/dev/null || true
 	@echo "Down complete."
 
 stop:
-	@echo "STOPPING BIGTIX PROJECT..."
+	@echo "STOPPING LOCAL BIGTIX PROJECT..."
 	@echo "Deleting Kind cluster (removes cluster and all pods, deployments, services, ingresses)..."
 	-$(MAKE) kstop 2>/dev/null || true
 	@echo "Down complete."
 
 start:
-	@echo "STARTING BIGTIX PROJECT..."
+	@echo "STARTING LOCAL BIGTIX PROJECT..."
 	$(MAKE) kstart
 	$(MAKE) init-ingress
 	$(MAKE) wait-ingress
@@ -75,13 +75,13 @@ start:
 	$(MAKE) apply-deployments
 	$(MAKE) apply-ingress
 	$(MAKE) cluster-status
-	$(MAKE) inject
+	$(MAKE) inject-local-secrets
 	$(MAKE) dev
 
 dev:
 	skaffold dev
 
-inject:
+inject-local-secrets:
 	ansible-playbook ./ops/Ansible/local-secret-inject.yml
 
 

@@ -4,13 +4,16 @@
  * @since users-service-continued--JP
  */
 import express from "express";
-import { APIRequest as api } from '../middleware/APIRequest';
 
 const router = express.Router();
 
-router.post('/signout', api.call(async (req, res) => {
-  console.log('Sign out route hit:', req.body);
-  res.send('Sign out');
-}));
+/**
+ * Signs out the current user
+ */
+router.post('/signout', (req, res) => {
+  req.session = null;
+
+  res.send({});
+});
 
 export { router as signOutRouter };

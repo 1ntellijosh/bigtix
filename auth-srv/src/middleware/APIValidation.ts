@@ -24,18 +24,29 @@ export class APIValidation {
   }
 
   /**
-   * Validates given password string
+   * Validates given password string (for new users signing up)
    *
    * @param {string} passwordField  The password in body field to validate
    *
    * @returns {ValidationChain}
    */
-  static passwordInBody(passwordField: string) {
+  static newPassword(passwordField: string) {
     return body(passwordField)
       .trim()
       .isLength({ min: 8 }).matches(/\d/).withMessage('Password must be at least 8 characters long and contain at least one number')
       .matches('[A-Z]').withMessage('Password must contain at least one capital letter')
       .matches('[a-z]').withMessage('Password must contain at least one lowercase letter')
       .matches('[0-9]').withMessage('Password must contain at least one number')
+  }
+
+  /**
+   * Validates given password string (for existing users)
+   *
+   * @param {string} passwordField  The password in body field to validate
+   *
+   * @returns {ValidationChain}
+   */
+  static currentPassword(passwordField: string) {
+    return body(passwordField).trim().notEmpty().withMessage('Password is required');
   }
 }

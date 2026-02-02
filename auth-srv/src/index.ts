@@ -31,6 +31,10 @@ app.use('/api/users', signUpRouter);
 app.use(errHandler.prepareErrResp);
 
 (async () => {
+  if (!process.env.JWT_KEY) {
+    throw new Error('JWT_KEY is not defined');
+  }
+
   await mongoose.connect('mongodb://auth-mongo-srv:27017/auth').catch((err) => {
     throw new DatabaseConnectionError('auth-srv failed to connect to database: ' + err.message);
   });
