@@ -44,4 +44,15 @@ export const AuthAPIs: { [key: string]: (body?: any, config?: Record<string, any
   getCurrentUser: function (config: Record<string, any> = {}): Promise<Response> {
     return HttpService.get('/api/users/currentuser', config);
   },
+
+  /**
+   * Signs out the current user
+   *
+   * @param {Record<string, any>} config  The config for the request
+   *
+   * @returns {Promise<Response>}
+   */
+  signOutUser: function (config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.post('/api/users/signout', config);
+  },
 };

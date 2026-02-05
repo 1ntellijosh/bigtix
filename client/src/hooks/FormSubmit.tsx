@@ -6,7 +6,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { APIError } from "@bigtix/common";
-import type { ErrorResponseItem } from "@bigtix/common";
 
 export default (
   apiMethod: () => Promise<Response>,

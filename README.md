@@ -23,6 +23,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - Node.js
 - Express.js
 - Jest
+- Material UI
 
 ## Database/Cache:
 - Mongodb
@@ -39,6 +40,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - CI/CD (Github Actions)
 - Ansible
 
+---
 
 # Microservices
 
@@ -72,6 +74,8 @@ Used for authorizing users
 - **"Cannot find module '@bigtix/middleware' or type errors:"**: Run `make build-shared-packages` from root to link workspaces, then `make start/dev`
 - **Import errors**: Check that exports are in `packages/*/src/index.ts`
 
+---
+
 # PLANS/NOTES:
 
 ## How images will be made/used/deployed on prod and local:
@@ -99,4 +103,5 @@ Deployments of the built images are triggered in Github Actions by selecting a s
    - Traffic to pods can stay HTTP inside the cluster since the proxy handles TLS.
 3. **Client SERVER API URL:** **!!! This probaby won't need to be done, but noted here to check.** Build the client-dpl deployment image with updated `SERVER_API_BASE_URL` var for server side API calls if it's different from `http://ingress-nginx-controller.ingress-nginx.svc.cluster.local` (e.g. `SERVER_API_BASE_URL=http://new-ingress-nginx-service-name.new-ingress-nginx-namespace.svc.cluster.local`).
 
+---
 
