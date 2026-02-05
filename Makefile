@@ -38,7 +38,7 @@ sq:
 #
 init:
 	@command -v ansible-playbook >/dev/null 2>&1 || { echo "Ansible not found. Install with: pip3 install --user ansible  or  sudo apt install ansible"; exit 127; }
-	ansible-playbook ./ops/Ansible/dev-init.yml -K
+	ansible-playbook ./ops/Ansible/init.yml -K
 
 ##
 # LOCAL APP RUNNING COMMANDS:
@@ -57,45 +57,56 @@ clear:
 	@echo "CLEARING ALL LOCAL BIGTIX PROJECT APPLICATION RESOURCES..."
 	$(MAKE) clear-dev-images
 	-$(MAKE) stop 2>/dev/null || true
-	@echo "Down complete."
+	@echo "Clear complete."
 
 stop:
 	@echo "STOPPING LOCAL BIGTIX PROJECT..."
 	@echo "Deleting Kind cluster (removes cluster and all pods, deployments, services, ingresses)..."
 	-$(MAKE) kstop 2>/dev/null || true
-	@echo "Down complete."
+	@echo "Stop complete."
 
 start:
 	@echo "STARTING LOCAL BIGTIX PROJECT..."
 	$(MAKE) kstart
 	$(MAKE) init-ingress
 	$(MAKE) wait-ingress
+	$(MAKE) build-shared-packages
 	$(MAKE) build-dev-images
 	$(MAKE) kload-imgs
 	$(MAKE) apply-deployments
 	$(MAKE) apply-ingress
-	$(MAKE) cluster-status
 	$(MAKE) inject-local-secrets
+	$(MAKE) cluster-status
 	$(MAKE) dev
 
 dev:
-	skaffold dev
+	@echo "Running development environment (skaffold)..."
+	@skaffold dev -f skaffold.dev.yml
 
 inject-local-secrets:
 	ansible-playbook ./ops/Ansible/local-secret-inject.yml
 
 
-# OPERATIONS COMMANDS
+##
+# KIND COMMANDS:
+# --------------------------
 
 # Load Docker images into Kind cluster
 kload-imgs:
 	kind load docker-image 1ntellijosh/bigtix-auth-srv:latest --name bigtix-cluster
+	kind load docker-image 1ntellijosh/bigtix-client-app:latest --name bigtix-cluster
+
 # Create a new Kind cluster with the config file
 kstart:
 	kind create cluster --name bigtix-cluster --config ./ops/kind/config.yml
+
 # Stop/delete Kind cluster
 kstop:
 	-kind delete cluster --name bigtix-cluster
+
+##
+# KUBECTL COMMANDS:
+# --------------------------
 
 # App's ingress resource expects an NGINX Ingress Controller to be installed. Kind doesn't ship one, so install it with this:
 init-ingress:
@@ -131,20 +142,40 @@ cluster-status:
 	@echo "--- SECRETS:"
 	kubectl get secrets
 	@echo ""
+	@echo "--- NAMESPACES:"
+	kubectl get namespaces
+	@echo ""
 	kubectl cluster-info --context kind-bigtix-cluster
 	@echo "-------------------------------------------------------------------------"
 
 
-# BUILD COMMANDS
+##
+# BUILD COMMANDS:
+# --------------------------
 
 build-auth-dev-image:
-	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
+	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest .
 
 build-auth-prod-image:
-	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest ./auth-srv
+	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest .
+
+build-client-dev-image:
+	docker build -f ./client/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-client-app:latest .
+
+build-client-prod-image:
+	docker build -f ./client/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-client-app:latest .
 
 build-dev-images:
 	$(MAKE) build-auth-dev-image
+	$(MAKE) build-client-dev-image
+
+bs:
+	$(MAKE) build-shared-packages
+build-shared-packages:
+	@echo "Building shared packages..."
+	npm install
+	cd packages/common && npm run build
+	cd packages/middleware && npm run build
 
 clear-dev-images:
 	@echo "Removing app Docker images (intellijosh/bigtix-*)..."

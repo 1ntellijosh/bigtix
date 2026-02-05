@@ -5,7 +5,7 @@
  */
 import { authApp } from './App';
 import mongoose from 'mongoose';
-import { DatabaseConnectionError } from './middleware/errors/DatabaseConnectionError';
+import { DatabaseConnectionError } from '@bigtix/common';
 
 const PORT = process.env.PORT || 3000;
 

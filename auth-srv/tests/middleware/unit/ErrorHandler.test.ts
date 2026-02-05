@@ -4,12 +4,12 @@
  * @since tests-start--JP
  */
 import { jest } from '@jest/globals';
-import { ErrorHandler } from '../../../src/middleware/ErrorHandler';
+import { ErrorHandler } from '@bigtix/middleware';
 import { ValidationError } from 'express-validator';
-import { ServerError } from '../../../src/middleware/errors/ServerError';
-import { RequestValidationError } from '../../../src/middleware/errors/RequestValidationError';
-import { NotFoundError } from '../../../src/middleware/errors/NotFoundError';
-import { createMockRequestVars } from './MiddlewareUnitTestHelpers';
+import { ServerError } from '@bigtix/common';
+import { RequestValidationError } from '@bigtix/common';
+import { NotFoundError } from '@bigtix/common';
+import { createMockRequestVars } from '@bigtix/middleware';
 
 describe('ErrorHandler', () => {
   it('returns a 500 error for a generic error', () => {

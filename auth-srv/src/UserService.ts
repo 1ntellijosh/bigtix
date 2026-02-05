@@ -5,8 +5,8 @@
  */
 import { UserRepository } from './repositories/UserRepository';
 import { SavedUserDoc } from './models/User';
-import { BadRequestError } from './middleware/errors/BadRequestError';
-import { PasswordService as passSvc } from './middleware/PasswordService';
+import { BadRequestError } from '@bigtix/common';
+import { PasswordService as passSvc } from '@bigtix/middleware';
 import jwt from 'jsonwebtoken';
 import { Request } from 'express';
 
@@ -51,10 +51,10 @@ export class UserService {
    */
   async signIn(req: Request, email: string, password: string): Promise<SavedUserDoc> {
     const user = await this.userRepo.findByEmail(email);
-    if (!user) throw new BadRequestError('Invalid credentials');
+    if (!user) throw new BadRequestError('Email not found');
 
     const passwordsMatch = await passSvc.verifyPassword(user.password, password);
-    if (!passwordsMatch) throw new BadRequestError('Invalid credentials');
+    if (!passwordsMatch) throw new BadRequestError('Password is incorrect');
 
     this.setJwtInUserSession(req, user);
 

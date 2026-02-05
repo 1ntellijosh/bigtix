@@ -3,8 +3,8 @@
  *
  * @since users-service-continued--JP
  */
-import { STATUS_CODES } from "../enums/StatusCodes";
-import { ErrorResponseItem } from "../ErrorHandler";
+import { STATUS_CODES } from '../enums';
+import { ErrorResponseItem } from '../types';
 
 export abstract class AbstractRequestError extends Error {
   abstract statusCode: STATUS_CODES;

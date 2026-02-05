@@ -4,9 +4,9 @@
  * @since users-service-continued--JP
  */
 import express, { Request, Response } from "express";
-import { APIValidation as valid } from '../middleware/APIValidation';
-import { APIRequest as api } from '../middleware/APIRequest';
-import { STATUS_CODES } from '../middleware/enums/StatusCodes';
+import { APIValidation as valid } from '@bigtix/middleware';
+import { APIRequest as api } from '@bigtix/middleware';
+import { STATUS_CODES } from '@bigtix/common';
 import { UserService } from '../UserService';
 
 const router = express.Router();

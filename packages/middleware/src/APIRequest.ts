@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { RequestValidationError } from './errors/RequestValidationError';
-import { UnAuthorizedError } from './errors/UnauthorizedError';
+import { RequestValidationError, UnAuthorizedError } from '@bigtix/common';
 import jwt from 'jsonwebtoken';
 
 export interface UserJwtPayload {
@@ -14,6 +13,9 @@ declare global {
   namespace Express {
     interface Request {
       currentUser?: UserJwtPayload;
+      session: {
+        jwt?: string;
+      } | null | undefined;
     }
   }
 }
@@ -69,10 +71,11 @@ export class APIRequest {
    */
   static getCurrentUser(req: Request, _res: Response, next: NextFunction) {
     // If no jwt in session, api will simply have currentUser undefined
-    if (!('session' in req) || !req.session?.jwt) return next();
+    const session = req.session as { jwt?: string } | undefined;
+    if (!session?.jwt) return next();
   
     try {
-      const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!) as UserJwtPayload;
+      const payload = jwt.verify(session.jwt, process.env.JWT_KEY!) as UserJwtPayload;
   
       req.currentUser = payload;
     } catch (err) {}

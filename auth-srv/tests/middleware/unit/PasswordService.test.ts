@@ -3,7 +3,7 @@
  *
  * @since tests-start--JP
  */
-import { PasswordService } from '../../../src/middleware/PasswordService';
+import { PasswordService } from '@bigtix/middleware';
 
 describe('PasswordService', () => {
   it('returns a hashed password', async () => {

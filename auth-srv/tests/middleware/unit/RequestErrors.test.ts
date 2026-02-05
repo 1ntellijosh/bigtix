@@ -4,13 +4,13 @@
  * @since tests-start--JP
  */
 import { ValidationError } from 'express-validator';
-import { ServerError } from '../../../src/middleware/errors/ServerError';
-import { RequestValidationError } from '../../../src/middleware/errors/RequestValidationError';
-import { NotFoundError } from '../../../src/middleware/errors/NotFoundError';
-import { BadRequestError } from '../../../src/middleware/errors/BadRequestError';
-import { UnAuthorizedError } from '../../../src/middleware/errors/UnauthorizedError';
-import { DatabaseConnectionError } from '../../../src/middleware/errors/DatabaseConnectionError';
-import { AbstractRequestError } from '../../../src/middleware/errors/AbstractRequestError';
+import { ServerError } from '@bigtix/common';
+import { RequestValidationError } from '@bigtix/common';
+import { NotFoundError } from '@bigtix/common';
+import { BadRequestError } from '@bigtix/common';
+import { UnAuthorizedError } from '@bigtix/common';
+import { DatabaseConnectionError } from '@bigtix/common';
+import { AbstractRequestError } from '@bigtix/common';
 
 describe('RequestError', () => {
   it('should create a RequestValidationError with correct fields', () => {
