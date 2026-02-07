@@ -49,6 +49,13 @@ build:
             strip: 'client/'
 manifests:
   rawYaml:
-    - ./ops/k8s/**/*
+    - ./ops/k8s/deployments/auth-depl.yml
+    - ./ops/k8s/deployments/auth-mongo-depl.yml
+    - ./ops/k8s/deployments/client-depl.yml
+    - ./ops/k8s/deployments/tickets-depl.yml
+    - ./ops/k8s/deployments/tickets-mongo-depl.yml
+    - ./ops/k8s/ingresses/ingress-srv.yml
+    # RabbitMQ is applied by setup-cluster.yml only to speed up cluster setup;
+    # including it here ALSO would break skaffold sync
 deploy:
   kubectl: {}
