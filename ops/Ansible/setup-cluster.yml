@@ -1,0 +1,202 @@
+# ------------------------------------------------------------------------------------------------
+# Ansible script for setting up local cluster environment for BigTix E-Commerse platform development 
+# @since ansible--JP
+# ------------------------------------------------------------------------------------------------
+
+
+- name: Setup local cluster environment for BigTix E-Commerse platform development
+  hosts: localhost
+
+  vars:
+    project_root: "{{ playbook_dir }}/../.."
+    # Official RabbitMQ image (Bitnami chart incompatible: init container expects Bitnami paths)
+    rabbitmq_image_registry: "docker.io"
+    rabbitmq_image_repository: "rabbitmq"
+    rabbitmq_image_tag: "3.13-management"
+    rabbitmq_image: "{{ rabbitmq_image_registry }}/{{ rabbitmq_image_repository }}:{{ rabbitmq_image_tag }}"
+
+  tasks:
+    - name: Check if dev-vars.yml exists
+      ansible.builtin.stat:
+        path: "{{ project_root }}/dev-vars.yml"
+      register: dev_vars_stat
+
+    - name: Fail when dev-vars.yml is missing (run dev-init first)
+      ansible.builtin.assert:
+        that: dev_vars_stat.stat.exists
+        fail_msg: "dev-vars.yml not found. Run 'make init' so dev-init.yml creates it first."
+      when: not dev_vars_stat.stat.exists
+
+    - name: Load dev-vars.yml (get JWT_SECRET etc.)
+      ansible.builtin.include_vars:
+        file: "{{ project_root }}/dev-vars.yml"
+
+    - name: Initialize the local development cluster
+      ansible.builtin.shell: >
+        make kstart
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Apply ingress-nginx controller deployment
+      ansible.builtin.shell: >
+        make init-ingress
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Wait for ingress-nginx controller deployment (pods may not exist yet right after apply)
+      ansible.builtin.shell: >
+        make wait-ingress
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Create messaging namespace if missing
+      ansible.builtin.shell: >
+        make add-messaging-namespace
+      args:
+        chdir: "{{ project_root }}"
+
+    # Avoid docker-credential-desktop not in PATH for docker pull
+    - name: Ensure temp Docker config dir for Helm (no credsStore)
+      ansible.builtin.file:
+        path: "{{ project_root }}/.ansible-docker-config"
+        state: directory
+        mode: '0700'
+
+    - name: Write minimal Docker config (no credential helper)
+      ansible.builtin.copy:
+        content: '{}'
+        dest: "{{ project_root }}/.ansible-docker-config/config.json"
+        mode: '0600'
+
+    # Pre-pull RabbitMQ image and load into Kind (using official rabbitmq image; Bitnami Hub repo has no tags)
+    - name: Check if RabbitMQ image exists locally
+      ansible.builtin.shell: docker image inspect {{ rabbitmq_image }}
+      register: rabbitmq_image_local
+      failed_when: false
+      changed_when: false
+      environment:
+        DOCKER_CONFIG: "{{ project_root }}/.ansible-docker-config"
+
+    - name: Pull RabbitMQ image when not present locally
+      ansible.builtin.shell: docker pull {{ rabbitmq_image }}
+      when: rabbitmq_image_local.rc != 0
+      environment:
+        DOCKER_CONFIG: "{{ project_root }}/.ansible-docker-config"
+
+    - name: Load RabbitMQ image into Kind cluster
+      ansible.builtin.shell: >
+        kind load docker-image {{ rabbitmq_image }} --name bigtix-cluster
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Create RabbitMQ auth secret in messaging namespace
+      ansible.builtin.shell: >
+        kubectl create secret generic rabbitmq-auth -n messaging
+        --from-literal=password={{ (RABBITMQ_PASSWORD | default('bigtix-dev-rabbitmq')) | quote }}
+        --dry-run=client -o yaml
+        | kubectl apply -f -
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Apply RabbitMQ Deployment and Service in messaging namespace
+      ansible.builtin.shell: >
+        kubectl apply -f {{ project_root }}/ops/k8s/deployments/rabbitmq-depl.yml
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Set the RabbitMQ URL fact (from dev-vars password)
+      ansible.builtin.set_fact:
+        rabbitmq_url: "amqp://user:{{ RABBITMQ_PASSWORD | default('bigtix-dev-rabbitmq') }}@rabbitmq.messaging.svc.cluster.local:5672"
+
+    - name: Inject RabbitMQ URL into deployments namespace secrets
+      ansible.builtin.shell: >
+        kubectl create secret generic rabbitmq-url
+        --from-literal=RABBITMQ_URL={{ rabbitmq_url | quote }}
+        --dry-run=client -o yaml
+        | kubectl apply -f -
+      args:
+        chdir: "{{ project_root }}"
+      register: rabbitmq_url_result
+      changed_when: "'configured' in rabbitmq_url_result.stdout or 'created' in rabbitmq_url_result.stdout"
+
+    - name: Set jwt_secret from dev-vars.yml
+      ansible.builtin.set_fact:
+        jwt_secret: "{{ JWT_SECRET }}"
+
+    - name: Create Kubernetes secret jwt-secret from dev-vars.yml
+      ansible.builtin.shell: >
+        kubectl create secret generic jwt-secret
+        --from-literal=JWT_KEY={{ jwt_secret }}
+        --dry-run=client -o yaml
+        | kubectl apply -f -
+      args:
+        chdir: "{{ project_root }}"
+      register: jwt_secret_result
+      changed_when: "'configured' in jwt_secret_result.stdout or 'created' in jwt_secret_result.stdout"
+    
+    - name: Build shared packages
+      ansible.builtin.shell: >
+        make build-shared-packages
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Build local dev images
+      ansible.builtin.shell: >
+        make build-dev-images
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Load images into Kind cluster
+      ansible.builtin.shell: >
+        make kload-imgs
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Apply deployments
+      ansible.builtin.shell: >
+        make apply-deployments
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Apply ingress
+      ansible.builtin.shell: >
+        make apply-ingress
+      args:
+        chdir: "{{ project_root }}"
+
+    - name: Wait for RabbitMQ pod to be ready
+      ansible.builtin.shell: >
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=rabbitmq -n messaging --timeout=300s
+      args:
+        chdir: "{{ project_root }}"
+      register: rabbitmq_wait
+      failed_when: false
+
+    - name: Show RabbitMQ pod status and logs when wait timed out
+      ansible.builtin.shell: >
+        kubectl get pods -l app.kubernetes.io/name=rabbitmq -n messaging -o wide;
+        kubectl describe pod -l app.kubernetes.io/name=rabbitmq -n messaging;
+        kubectl logs -l app.kubernetes.io/name=rabbitmq -n messaging --tail=80 --all-containers 2>/dev/null || true
+      args:
+        chdir: "{{ project_root }}"
+      when: rabbitmq_wait.rc != 0
+      register: rabbitmq_diag
+      changed_when: false
+      failed_when: false
+
+    - name: Emit RabbitMQ diagnostic output
+      ansible.builtin.debug:
+        var: rabbitmq_diag.stdout_lines
+      when: rabbitmq_wait.rc != 0
+
+    - name: Fail if RabbitMQ pod did not become ready
+      ansible.builtin.fail:
+        msg: "RabbitMQ pod did not become ready within 300s. Check the diagnostic output above (describe + logs)."
+      when: rabbitmq_wait.rc != 0
+
+    - name: Cluster setup complete
+      ansible.builtin.debug:
+        msg:
+          - "Cluster setup complete. Run 'make dev' to start the development environment."
+          - "To open RabbitMQ management UI: kubectl port-forward svc/rabbitmq -n messaging 15672:15672 (then http://localhost:15672)"
+

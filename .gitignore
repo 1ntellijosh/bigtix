@@ -1,6 +1,7 @@
 node_modules
 **/node_modules
 dev-vars.yml
+.ansible-docker-config
 
 # Build output (TypeScript, etc.)
 **/dist

@@ -7,3 +7,5 @@ JWT_SECRET: {{ jwt_secret }}
 
 HOST_DOMAIN: {{ host_domain }}
 
+RABBITMQ_PASSWORD: "{{ rabbitmq_password | default('bigtix-dev-rabbitmq') }}"
+

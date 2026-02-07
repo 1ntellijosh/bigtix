@@ -51,6 +51,7 @@ init:
 # - Docker         - https://docs.docker.com/get-started/get-docker/#supported-platforms
 # - kubectl  	   - https://kubernetes.io/docs/tasks/tools/
 # - Kind     	   - https://kind.sigs.k8s.io/docs/user/quick-start/#installation
+# - Helm     	   - https://helm.sh/docs/intro/install/ (for RabbitMQ in setup-cluster)
 # - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
 #
 clear:
@@ -67,24 +68,11 @@ stop:
 
 start:
 	@echo "STARTING LOCAL BIGTIX PROJECT..."
-	$(MAKE) kstart
-	$(MAKE) init-ingress
-	$(MAKE) wait-ingress
-	$(MAKE) build-shared-packages
-	$(MAKE) build-dev-images
-	$(MAKE) kload-imgs
-	$(MAKE) apply-deployments
-	$(MAKE) apply-ingress
-	$(MAKE) inject-local-secrets
-	$(MAKE) cluster-status
-	$(MAKE) dev
+	ansible-playbook ./ops/Ansible/setup-cluster.yml
 
 dev:
 	@echo "Running development environment (skaffold)..."
 	@skaffold dev -f skaffold.dev.yml
-
-inject-local-secrets:
-	ansible-playbook ./ops/Ansible/local-secret-inject.yml
 
 
 ##
@@ -128,6 +116,13 @@ apply-ingress:
 		kubectl apply -f ./ops/k8s/ingresses/ingress-srv.yml && exit 0; \
 		sleep 8; \
 	done; exit 1
+
+# Create messaging namespace (for RabbitMQ etc.) if missing; idempotent
+add-messaging-namespace:
+	kubectl create namespace messaging --dry-run=client -o yaml | kubectl apply -f -
+# Port-forward RabbitMQ for management UI in browser at localhost:15672
+rabbit-management:
+	kubectl port-forward svc/rabbitmq -n messaging 15672:15672
 
 cluster-status:
 	@echo "--------------------------- CLUSTER STATUS ------------------------------"
