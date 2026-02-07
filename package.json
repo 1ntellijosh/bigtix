@@ -6,7 +6,8 @@
   "workspaces": [
     "packages/*",
     "auth-srv",
-    "client"
+    "client",
+    "tickets-srv"
   ],
   "scripts": {
     "build": "npm run build --workspaces",

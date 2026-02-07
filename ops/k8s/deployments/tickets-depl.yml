@@ -1,29 +1,29 @@
 # ------------------------------------------------------------------------------------------------
-# auth-srv k8s deployment file for BigTix platform microservices E-Commerce project
-# @since auth-micro-start--JP
+# tickets-srv k8s deployment file for BigTix platform microservices E-Commerce project
+# @since tickets-srv--JP
 # ------------------------------------------------------------------------------------------------
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-dpl
+  name: tickets-dpl
 spec:
   replicas: 1 # for now
   selector:
     matchLabels:
-      app: auth
+      app: tickets
   template:
     metadata:
       labels:
-        app: auth
+        app: tickets
     spec:
       containers:
-        - name: auth
-          image: 1ntellijosh/bigtix-auth-srv
+        - name: tickets
+          image: 1ntellijosh/bigtix-tickets-srv
           imagePullPolicy: IfNotPresent
           env:
             - name: MONGO_URI
-              value: mongodb://auth-mongo-srv:27017/auth
+              value: mongodb://tickets-mongo-srv:27017/tickets
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:
@@ -35,12 +35,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-srv
+  name: tickets-srv
 spec:
   selector:
-    app: auth
+    app: tickets
   ports:
-    - name: auth
+    - name: tickets
       protocol: TCP
       port: 3000
       targetPort: 3000

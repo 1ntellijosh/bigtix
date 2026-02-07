@@ -5,14 +5,18 @@
  */
 import express, { Request, Response } from "express";
 import { APIRequest as api } from '@bigtix/middleware';
-import { APIValidation as valid } from '@bigtix/middleware';
+import { body } from 'express-validator';
 import { UserService } from '../UserService';
 import { STATUS_CODES } from '@bigtix/common';
 
 const router = express.Router();
 const userSvc = new UserService();
 
-router.post('/signin', [ valid.emailInBody('email'), valid.currentPasswordInBody('password'), ],
+router.post('/signin',
+  [ 
+    body('email').isEmail().withMessage('Invalid email'),
+    body('password').trim().notEmpty().withMessage('Password is required'),
+  ],
   api.validateRequest,
   api.callAsync(async (req: Request, res: Response) => {
     const { email, password } = req.body;

@@ -56,6 +56,23 @@ Used for authorizing users
 | `/api/users/signout` | POST | `{}` | Sign out |
 | `/api/users/currentuser` | GET | - | Return info about the user |
 
+## Tickets
+Used for listing, creating, and managing event tickets.
+
+### APIs
+
+| Route | Method | Body | Purpose |
+|-------|--------|------|---------|
+| `/api/tickets` | GET | - | Retrieve all tickets |
+| `/api/tickets/:id` | GET | - | Retrieve ticket with specific ID |
+| `/api/tickets/serial-number/:serialNumber` | GET | - | Retrieve ticket with specific serial number |
+| `/api/tickets/event/:eventId` | GET | - | Retrieve all tickets from a specific event ID |
+| `/api/tickets/user/:userId` | GET | - | Retrieve all tickets from a specific user ID |
+| `/api/tickets/create` | POST | `{ title: string, price: number, userId: string, description: string, serialNumber: string, eventId: string }` | Create ticket(s) (auth required) |
+| `/api/tickets` | PUT | `{ id: string, title: string, price: number, description: string }` | Update a ticket |
+---
+
+# FAQs/Instructions
 
 ## Workflow when adding/changing files in `./packages`
 

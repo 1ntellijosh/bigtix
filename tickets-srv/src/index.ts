@@ -1,9 +1,9 @@
 /**
- * Main entry point for auth microservice (auth-srv) setup and running
+ * Main entry point for tickets microservice (tickets-srv) setup and running
  *
- * @since auth-micro-start--JP
+ * @since tickets-srv--JP
  */
-import { authApp } from './App';
+import { tickApp } from './App';
 import mongoose from 'mongoose';
 import { DatabaseConnectionError } from '@bigtix/common';
 
@@ -13,16 +13,15 @@ const PORT = process.env.PORT || 3000;
   if (!process.env.JWT_KEY) {
     throw new Error('JWT_KEY is not defined');
   }
-
   if (!process.env.MONGO_URI) {
     throw new Error('MONGO_URI is not defined');
   }
 
   await mongoose.connect(process.env.MONGO_URI).catch((err) => {
-    throw new DatabaseConnectionError('auth-srv failed to connect to database: ' + err.message);
+    throw new DatabaseConnectionError('tickets-srv failed to connect to database: ' + err.message);
   });
 
-  authApp.listen(PORT, () => {
-    console.log(`Auth service listening on port ${PORT}...`);
+  tickApp.listen(PORT, () => {
+    console.log(`Tickets service listening on port ${PORT}...`);
   });
 })();
