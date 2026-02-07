@@ -21,6 +21,19 @@ build:
           - src: 'auth-srv/src/**/*.ts'
             dest: src
             strip: 'auth-srv/src/'
+    - image: 1ntellijosh/bigtix-tickets-srv
+      context: .
+      custom:
+        buildCommand: docker build -f tickets-srv/deploy/docker/dev.Dockerfile -t $IMAGE $BUILD_CONTEXT
+        dependencies:
+          paths:
+            - tickets-srv/**/*
+            - packages/*/dist/**/*
+      sync:
+        manual:
+          - src: 'tickets-srv/src/**/*.ts'
+            dest: src
+            strip: 'tickets-srv/src/'
     - image: 1ntellijosh/bigtix-client-app
       context: .
       custom:

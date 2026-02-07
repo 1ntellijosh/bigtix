@@ -6,7 +6,6 @@
 
 export * from './ErrorHandler';
 export * from './APIRequest';
-export * from './APIValidation';
 export * from './PasswordService';
 export * from './AbstractRepository';
-export * from './MiddlewareUnitTestHelpers';
+export * from './MiddlewareTestHelpers';

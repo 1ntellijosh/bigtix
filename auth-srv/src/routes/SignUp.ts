@@ -4,7 +4,7 @@
  * @since users-service-continued--JP
  */
 import express, { Request, Response } from "express";
-import { APIValidation as valid } from '@bigtix/middleware';
+import { body } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
 import { STATUS_CODES } from '@bigtix/common';
 import { UserService } from '../UserService';
@@ -17,7 +17,15 @@ const userSvc = new UserService();
  *
  * @throws {BadRequestError}  If email is already in use
  */
-router.post('/signup', [ valid.emailInBody('email'), valid.newPasswordInBody('password'), ],
+router.post('/signup',
+  [ body('email').isEmail().withMessage('Invalid email'),
+    body('password')
+      .trim()
+      .isLength({ min: 8, max: 20 }).matches(/\d/).withMessage('Password must be at least 8 characters and no more than 20 characters')
+      .matches('[A-Z]').withMessage('Password must contain at least one capital letter')
+      .matches('[a-z]').withMessage('Password must contain at least one lowercase letter')
+      .matches('[0-9]').withMessage('Password must contain at least one number')
+  ],
   api.validateRequest,
   api.callAsync(async (req: Request, res: Response) => {
     const { email, password } = req.body;

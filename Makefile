@@ -95,6 +95,7 @@ inject-local-secrets:
 kload-imgs:
 	kind load docker-image 1ntellijosh/bigtix-auth-srv:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-client-app:latest --name bigtix-cluster
+	kind load docker-image 1ntellijosh/bigtix-tickets-srv:latest --name bigtix-cluster
 
 # Create a new Kind cluster with the config file
 kstart:
@@ -159,6 +160,12 @@ build-auth-dev-image:
 build-auth-prod-image:
 	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest .
 
+build-tickets-dev-image:
+	docker build -f ./tickets-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-tickets-srv:latest .
+
+build-tickets-prod-image:
+	docker build -f ./tickets-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-tickets-srv:latest .
+
 build-client-dev-image:
 	docker build -f ./client/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-client-app:latest .
 
@@ -168,6 +175,7 @@ build-client-prod-image:
 build-dev-images:
 	$(MAKE) build-auth-dev-image
 	$(MAKE) build-client-dev-image
+	$(MAKE) build-tickets-dev-image
 
 bs:
 	$(MAKE) build-shared-packages
@@ -184,5 +192,6 @@ clear-dev-images:
 
 build-prod-images:
 	$(MAKE) build-auth-prod-image
-
+	$(MAKE) build-tickets-prod-image
+	$(MAKE) build-client-prod-image
 

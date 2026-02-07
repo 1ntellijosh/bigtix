@@ -94,7 +94,7 @@ export class APIRequest {
    * @returns {void}
    */
   static authIsRequired(req: Request, _res: Response, next: NextFunction) {
-    if (!req.currentUser) throw new UnAuthorizedError('Not authenticated');
+    if (!req.currentUser) throw new UnAuthorizedError('Not authenticated (from APIRequest.authIsRequired)');
 
     next();
   }
