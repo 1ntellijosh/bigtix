@@ -12,6 +12,18 @@ import { TicketService } from '../TicketService';
 const router = express.Router();
 const ticketSvc = new TicketService();
 
+/**** Event usage example
+
+import { EventPublisher } from '@bigtix/middleware';
+import { TicketEventFactory, EventTypesEnum } from './events/TicketEventFactory';
+...
+
+const factory = new TicketEventFactory(EventTypesEnum.TICKET_CREATED);
+const publisher = new EventPublisher(factory);
+await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_CREATED, { ticketId, eventId, userId, price, description, serialNumber, title });
+
+****/
+
 /**
  * Creates a new ticket
  *

@@ -24,6 +24,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - Express.js
 - Jest
 - Material UI
+- RabbitMQ
 
 ## Database/Cache:
 - Mongodb
@@ -35,7 +36,8 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 ## DevOps:
 - Docker
 - Kubernetes
-- kind (for local Kubernetes development)
+- kind
+- Helm
 - Skaffold
 - CI/CD (Github Actions)
 - Ansible
@@ -70,6 +72,7 @@ Used for listing, creating, and managing event tickets.
 | `/api/tickets/user/:userId` | GET | - | Retrieve all tickets from a specific user ID |
 | `/api/tickets/create` | POST | `{ title: string, price: number, userId: string, description: string, serialNumber: string, eventId: string }` | Create ticket(s) (auth required) |
 | `/api/tickets` | PUT | `{ id: string, title: string, price: number, description: string }` | Update a ticket |
+
 ---
 
 # FAQs/Instructions
@@ -121,4 +124,3 @@ Deployments of the built images are triggered in Github Actions by selecting a s
 3. **Client SERVER API URL:** **!!! This probaby won't need to be done, but noted here to check.** Build the client-dpl deployment image with updated `SERVER_API_BASE_URL` var for server side API calls if it's different from `http://ingress-nginx-controller.ingress-nginx.svc.cluster.local` (e.g. `SERVER_API_BASE_URL=http://new-ingress-nginx-service-name.new-ingress-nginx-namespace.svc.cluster.local`).
 
 ---
-
