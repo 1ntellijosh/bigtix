@@ -197,8 +197,6 @@ export class HttpService {
       ? `${SERVER_API_BASE.replace(/\/$/, '')}${url.startsWith('/') ? url : `/${url}`}`
       : url;
 
-    console.log('baseUrl', baseUrl);
-
     return baseUrl;
   }
 }

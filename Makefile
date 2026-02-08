@@ -51,6 +51,7 @@ init:
 # - Docker         - https://docs.docker.com/get-started/get-docker/#supported-platforms
 # - kubectl  	   - https://kubernetes.io/docs/tasks/tools/
 # - Kind     	   - https://kind.sigs.k8s.io/docs/user/quick-start/#installation
+# - Helm     	   - https://helm.sh/docs/intro/install/ (for RabbitMQ in setup-cluster)
 # - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
 #
 clear:
@@ -67,16 +68,7 @@ stop:
 
 start:
 	@echo "STARTING LOCAL BIGTIX PROJECT..."
-	$(MAKE) kstart
-	$(MAKE) init-ingress
-	$(MAKE) wait-ingress
-	$(MAKE) build-shared-packages
-	$(MAKE) build-dev-images
-	$(MAKE) kload-imgs
-	$(MAKE) apply-deployments
-	$(MAKE) apply-ingress
-	$(MAKE) inject-local-secrets
-	$(MAKE) cluster-status
+	ansible-playbook ./ops/Ansible/setup-cluster.yml
 	$(MAKE) dev
 
 dev:
@@ -120,6 +112,8 @@ wait-ingress:
 
 apply-deployments:
 	kubectl apply -f ./ops/k8s/deployments/auth-depl.yml
+	kubectl apply -f ./ops/k8s/deployments/tickets-depl.yml
+	kubectl apply -f ./ops/k8s/deployments/client-depl.yml
 
 # Retry apply (admission webhook can be slow to accept connections after controller is ready)
 apply-ingress:
@@ -128,6 +122,14 @@ apply-ingress:
 		kubectl apply -f ./ops/k8s/ingresses/ingress-srv.yml && exit 0; \
 		sleep 8; \
 	done; exit 1
+
+# Create messaging namespace (for RabbitMQ etc.) if missing; idempotent
+add-messaging-namespace:
+	kubectl create namespace messaging --dry-run=client -o yaml | kubectl apply -f -
+# Port-forward RabbitMQ for management UI in browser
+# - Go to http://localhost:15672 to view RabbitMQ management UI
+rabbit-management:
+	kubectl port-forward svc/rabbitmq -n messaging 15672:15672
 
 cluster-status:
 	@echo "--------------------------- CLUSTER STATUS ------------------------------"

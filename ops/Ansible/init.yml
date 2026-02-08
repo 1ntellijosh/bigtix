@@ -10,6 +10,10 @@
       prompt: "JWT secret key (used for jwt-secret in cluster)"
       private: true
 
+    - name: rabbitmq_password
+      prompt: "RabbitMQ password (used for RabbitMQ in cluster)"
+      private: true
+
   vars:
     project_root: "{{ playbook_dir }}/../.."
     host_domain: bigtixnetwork.com   # default; overridden from dev-vars.yml when file exists
