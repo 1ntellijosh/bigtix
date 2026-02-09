@@ -8,9 +8,23 @@ import { body } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
 import { STATUS_CODES } from '@bigtix/common';
 import { UserService } from '../UserService';
+// import { EventPublisher } from '@bigtix/middleware';
+// import { AuthEventFactory } from '../events/AuthEventFactory';
+// import { EventTypesEnum } from '@bigtix/middleware';
 
 const router = express.Router();
 const userSvc = new UserService();
+
+/**** Event usage example
+
+import { EventPublisher } from '@bigtix/middleware';
+import { AuthEventFactory, EventTypesEnum } from './events/AuthEventFactory';
+...
+const factory = new AuthEventFactory(EventTypesEnum.USER_CREATED);
+const publisher = new EventPublisher(factory);
+await publisher.publishEvent('auth-srv.user-events', EventTypesEnum.USER_CREATED, { userId: newUser.id, email });
+
+****/
 
 /**
  * Signs up a new user

@@ -51,7 +51,7 @@ init:
 # - Docker         - https://docs.docker.com/get-started/get-docker/#supported-platforms
 # - kubectl  	   - https://kubernetes.io/docs/tasks/tools/
 # - Kind     	   - https://kind.sigs.k8s.io/docs/user/quick-start/#installation
-# - Helm     	   - https://helm.sh/docs/intro/install/ (for RabbitMQ in setup-cluster)
+# - Helm     	   - https://helm.sh/docs/intro/install/
 # - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
 #
 clear:
