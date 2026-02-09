@@ -9,6 +9,7 @@ import { createSignedInUserCookie } from '@bigtix/middleware';
 import { Ticket, SavedTicketDoc, NewTicketAttrs } from '../../../src/models/Ticket';
 import { Event } from '../../../src/models/Event';
 import mongoose from 'mongoose';
+import { EventPublisher } from '@bigtix/middleware';
 
 const validTitle = 'some title!!!!!';
 const validPrice = 10.00;
@@ -48,51 +49,47 @@ describe('Update ticket routes tests', () => {
   });
 
   it('returns a 400 if the ticket id is not a valid MongoDB ID', async () => {
-    await request(tickApp).put('/api/tickets').send({
-      id: 'not-a-valid-id',
+    await request(tickApp).put('/api/tickets/not-a-valid-id').send({
       title: validTitle,
       price: validPrice,
-      description: validDescription,
+      description: validDescription
     }).expect(400);
   });
 
   it('can not be accessed if the user is not signed in', async () => {
-    await request(tickApp).put('/api/tickets').send({
-      id: savedTicket.id,
+    await request(tickApp).put(`/api/tickets/${savedTicket.id}`).send({
       title: validTitle,
       price: validPrice,
-      description: validDescription,
+      description: validDescription
     }).expect(401);
   });
 
   it('returns a 404 if the ticket is not found by id', async () => {
     const invalidId = new mongoose.Types.ObjectId().toString();
     await request(tickApp)
-      .put('/api/tickets')
+      .put(`/api/tickets/${invalidId}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send({
-        id: invalidId,
         title: validTitle,
         price: validPrice,
-        description: validDescription,
+        description: validDescription
       }).expect(404);
   });
 
   it('returns a 401 if the user is not the owner of the ticket', async () => {
     await request(tickApp)
-      .put('/api/tickets')
+      .put(`/api/tickets/${savedTicket.id}`)
       .set('Cookie', createSignedInUserCookie('not-the-owner-id'))
       .send({
-        id: savedTicket.id,
         title: validTitle,
         price: validPrice,
-        description: validDescription,
+        description: validDescription
       }).expect(401);
   });
 
   it('returns the updated ticket if it is found by id', async () => {
     const response = await request(tickApp)
-      .put('/api/tickets')
+      .put(`/api/tickets/${savedTicket.id}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send({
         id: savedTicket.id,
@@ -105,5 +102,19 @@ describe('Update ticket routes tests', () => {
     expect(response.body.title).toBe(validTitle);
     expect(response.body.price).toBe(validPrice);
     expect(response.body.description).toBe(validDescription);
+  });
+
+  it('publishes updated ticket event to the event bus', async () => {
+    const pubSpy = jest.spyOn(EventPublisher.prototype, 'publishEvent').mockResolvedValue(undefined);
+    await request(tickApp)
+      .put(`/api/tickets/${savedTicket.id}`)
+      .set('Cookie', createSignedInUserCookie(validUserId))
+      .send({
+        id: savedTicket.id,
+        title: validTitle,
+        price: validPrice,
+        description: validDescription,
+      });
+    expect(pubSpy).toHaveBeenCalled();
   });
 });
