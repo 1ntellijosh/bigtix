@@ -3,8 +3,8 @@
  *
  * @since event-bus-start--JP
  */
-import { publishEvent, connectToRabbitMQ } from './RabbitConnectModule';
-import { EventTypesEnum } from './enums/EventsEnums';
+import { connectToRabbitMQ } from './RabbitConnectModule';
+import { EventTypesEnum, EXCHANGE_NAME } from './enums/EventsEnums';
 import { AbstractEventFactory } from './factories/AbstractEventFactory';
 import { EventDataValidators } from './validators/EventDataValidators';
 
@@ -27,14 +27,16 @@ export class EventPublisher {
       if (!channel) throw new Error('Failed to connect to RabbitMQ');
 
       await channel.assertQueue(queueName, { durable: true });
-
       const envelope = this.eventFactory.setData(data as any).buildEvent();
 
       if (!this.isValidEventData(eventType, envelope.data)) throw new Error('Invalid event data: ' + JSON.stringify(envelope.data));
 
-      console.log('[EventPublisher] publishing validated event: ', eventType, envelope.data);
+      console.log(
+        '[EventPublisher] in pod ' + process.env.RABBITMQ_CLIENT_ID + ' publishing validated event: ',
+        eventType, envelope.data
+      );
 
-      await publishEvent(envelope);
+      await channel.publish(EXCHANGE_NAME, eventType, Buffer.from(JSON.stringify(envelope)), { persistent: true });
 
     } catch (error) {
       // TODO: Log the error to a file or database

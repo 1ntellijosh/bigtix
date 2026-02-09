@@ -8,7 +8,7 @@ import { json } from "body-parser";
 import cookieSession from 'cookie-session';
 import { createTicketRouter } from './routes/CreateTicket';
 import { getTicketsRouter } from './routes/GetTickets';
-import { updateTicketsRouter } from './routes/UpdateTickets';
+import { updateTicketsRouter } from './routes/UpdateTicket';
 import { ErrorHandler as errHandler } from '@bigtix/middleware';
 
 const app = express();

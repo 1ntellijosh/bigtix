@@ -6,7 +6,6 @@
  */
 import amqplib from 'amqplib';
 import { EXCHANGE_NAME } from './enums/EventsEnums';
-import { EventEnvelope } from './contracts/EventContracts';
 
 let connection: amqplib.ChannelModel | null = null;
 let channel: amqplib.Channel | null = null;
@@ -18,6 +17,8 @@ let channel: amqplib.Channel | null = null;
  */
 async function connectToRabbitMQ(): Promise<amqplib.Channel> {
   if (!process.env.RABBITMQ_URL) throw new Error('RABBITMQ_URL is not set');
+
+  if (!process.env.RABBITMQ_CLIENT_ID) throw new Error('RABBITMQ_CLIENT_ID is not set');
 
   if (!connection) connection = await amqplib.connect(process.env.RABBITMQ_URL!);
 
@@ -54,23 +55,4 @@ function getChannel(): amqplib.Channel {
   return channel;
 }
 
-/**
- * Publish an event to the RabbitMQ server.
- *
- * @param {EventEnvelope} event  The event to publish
- *
- * @returns {Promise<void>}
- */
-async function publishEvent(event: EventEnvelope): Promise<void> {
-  if (!channel) throw new Error('Channel not initialized');
-
-  await channel.publish(
-    EXCHANGE_NAME,
-    event.metadata.eventType,
-    Buffer.from(JSON.stringify(event)),
-    { persistent: true } // So the event is persisted to the disk if the rabbitmq server crashes
-  );
-}
-
-export { connectToRabbitMQ,
-  disconnectFromRabbitMQ, getChannel, publishEvent };
+export { connectToRabbitMQ, disconnectFromRabbitMQ, getChannel };

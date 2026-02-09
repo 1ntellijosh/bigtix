@@ -29,6 +29,10 @@ spec:
                 secretKeyRef:
                   name: jwt-secret
                   key: JWT_KEY
+            - name: RABBITMQ_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name # This will be the pod name
             - name: RABBITMQ_URL
               valueFrom:
                 secretKeyRef:
