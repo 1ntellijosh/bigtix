@@ -90,7 +90,10 @@ export class EventConsumer {
           const handler = eventType ? this.handlers.get(eventType) : undefined;
 
           // Diagnostic: log every message received (helps confirm messages reach this service)
-          console.log('[EventConsumer] message received', { queueName, eventType, hasHandler: !!handler, data: envelope.data });
+          console.log(
+            '[EventConsumer] in pod ' + process.env.RABBITMQ_CLIENT_ID + ' received message:',
+            { queueName, eventType, hasHandler: !!handler, data: envelope.data }
+          );
 
           if (eventType && !this.isValidEventData(eventType, envelope.data)) {
             // Data does not match contract; ack to avoid redelivery, skip handler

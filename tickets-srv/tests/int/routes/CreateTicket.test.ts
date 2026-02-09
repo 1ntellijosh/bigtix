@@ -9,6 +9,7 @@ import { createSignedInUserCookie } from '@bigtix/middleware';
 import { Ticket, SavedTicketDoc } from '../../../src/models/Ticket';
 import { Event } from '../../../src/models/Event';
 import mongoose from 'mongoose';
+import { EventPublisher } from '@bigtix/middleware';
 
 const validTitle = 'some title!!!!!';
 const validPrice = 10.00;
@@ -23,7 +24,7 @@ const validEvent = {
 };
 let validEventId: string;
 
-describe('Sign up route tests', () => {
+describe('Create ticket routes tests', () => {
   beforeEach(async () => {
     const event = await Event.build(validEvent).save();
     validEventId = event.id;
@@ -130,6 +131,7 @@ describe('Sign up route tests', () => {
       .expect(401);
   });
 
+
   it('returns array with each ticket\'s id, title and price after successful creation', async () => {
     let tickets: SavedTicketDoc[] = await Ticket.find({});
     expect(tickets.length).toBe(0);
@@ -153,5 +155,26 @@ describe('Sign up route tests', () => {
     expect(tickets[0].description).toBe(validDescription);
     expect(tickets[0].serialNumber).toBe(validSerialNumber);
     expect(tickets[0].eventId).toBe(validEventId);
+  });
+
+  it('publishes created ticket event to the event bus', async () => {
+    let tickets: SavedTicketDoc[] = await Ticket.find({});
+    expect(tickets.length).toBe(0);
+
+    // Spy on the prototype method - the mock class has publishEvent on prototype
+    const pubSpy = jest.spyOn(EventPublisher.prototype, 'publishEvent').mockResolvedValue(undefined);
+
+    const response = await request(tickApp)
+      .post('/api/tickets/create')
+      .set('Cookie', createSignedInUserCookie(new mongoose.Types.ObjectId().toString()))
+      .send({
+        title: validTitle,
+        price: validPrice,
+        description: validDescription,
+        serialNumber: validSerialNumber,
+        eventId: validEventId,
+      }).expect(201);
+
+    expect(pubSpy).toHaveBeenCalled();
   });
 });

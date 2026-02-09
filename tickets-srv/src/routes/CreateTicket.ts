@@ -8,21 +8,13 @@ import { body } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
 import { STATUS_CODES, BadRequestError } from '@bigtix/common';
 import { TicketService } from '../TicketService';
+import { EventPublisher } from '@bigtix/middleware';
+import { TicketEventFactory } from '../events/TicketEventFactory';
+import { EventTypesEnum } from '@bigtix/middleware';
+
 
 const router = express.Router();
 const ticketSvc = new TicketService();
-
-/**** Event usage example
-
-import { EventPublisher } from '@bigtix/middleware';
-import { TicketEventFactory, EventTypesEnum } from './events/TicketEventFactory';
-...
-
-const factory = new TicketEventFactory(EventTypesEnum.TICKET_CREATED);
-const publisher = new EventPublisher(factory);
-await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_CREATED, { ticketId, eventId, userId, price, description, serialNumber, title });
-
-****/
 
 /**
  * Creates a new ticket
@@ -41,7 +33,7 @@ router.post('/tickets/create', [
     body('price').isFloat({ min: 10 }).withMessage('Price must be a valid number and at least $10'),
     body('description').trim().notEmpty().withMessage('Description is required'),
     body('serialNumber').trim().notEmpty().withMessage('Serial number is required'),
-    body('eventId').trim().notEmpty().isMongoId().withMessage('Event ID is required'),
+    body('eventId').trim().notEmpty().withMessage('Event ID is required'),
   ],
   api.validateRequest,
   api.getCurrentUser,
@@ -50,9 +42,21 @@ router.post('/tickets/create', [
     const { title, price, description, serialNumber, eventId } = req.body;
     const userId = req.currentUser!.id;
 
-    const createdTickets = await ticketSvc.createTicket(title, price, userId, description, serialNumber, eventId);
+    const createdTicket = await ticketSvc.createTicket(title, price, userId, description, serialNumber, eventId);
 
-    res.status(STATUS_CODES.CREATED).send(createdTickets);
+    const factory = new TicketEventFactory(EventTypesEnum.TICKET_CREATED);
+    const publisher = new EventPublisher(factory);
+    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_CREATED, {
+      ticketId: createdTicket.id,
+      eventId,
+      userId,
+      price,
+      description,
+      serialNumber,
+      title,
+    });
+
+    res.status(STATUS_CODES.CREATED).send(createdTicket);
   })
 );
 
