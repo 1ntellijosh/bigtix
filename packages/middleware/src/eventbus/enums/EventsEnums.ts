@@ -9,6 +9,7 @@ export const EXCHANGE_NAME = 'bigtix.main.eventbus';
 export enum SourceServiceEnum {
   AUTH_SRV = 'auth-srv',
   TICKETS_SRV = 'tickets-srv',
+  ORDERS_SRV = 'orders-srv',
 }
 
 export enum EventTypesEnum {
@@ -25,4 +26,6 @@ export enum EventTypesEnum {
   TICKET_SOLD = 'ticket.sold',
   TICKET_CANCELLED = 'ticket.cancelled',
   TICKET_REFUNDED = 'ticket.refunded',
+  ORDER_CREATED = 'order.created',
+  ORDER_STATUS_CHANGED = 'order.status.changed',
 }

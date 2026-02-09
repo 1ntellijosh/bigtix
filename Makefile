@@ -88,6 +88,7 @@ kload-imgs:
 	kind load docker-image 1ntellijosh/bigtix-auth-srv:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-client-app:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-tickets-srv:latest --name bigtix-cluster
+	kind load docker-image 1ntellijosh/bigtix-orders-srv:latest --name bigtix-cluster
 
 # Create a new Kind cluster with the config file
 kstart:
@@ -113,6 +114,7 @@ wait-ingress:
 apply-deployments:
 	kubectl apply -f ./ops/k8s/deployments/auth-depl.yml
 	kubectl apply -f ./ops/k8s/deployments/tickets-depl.yml
+	kubectl apply -f ./ops/k8s/deployments/orders-depl.yml
 	kubectl apply -f ./ops/k8s/deployments/client-depl.yml
 
 # Retry apply (admission webhook can be slow to accept connections after controller is ready)
@@ -168,6 +170,12 @@ build-tickets-dev-image:
 build-tickets-prod-image:
 	docker build -f ./tickets-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-tickets-srv:latest .
 
+build-orders-dev-image:
+	docker build -f ./orders-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-orders-srv:latest .
+
+build-orders-prod-image:
+	docker build -f ./orders-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-orders-srv:latest .
+
 build-client-dev-image:
 	docker build -f ./client/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-client-app:latest .
 
@@ -178,6 +186,7 @@ build-dev-images:
 	$(MAKE) build-auth-dev-image
 	$(MAKE) build-client-dev-image
 	$(MAKE) build-tickets-dev-image
+	$(MAKE) build-orders-dev-image
 
 bs:
 	$(MAKE) build-shared-packages
@@ -196,4 +205,5 @@ build-prod-images:
 	$(MAKE) build-auth-prod-image
 	$(MAKE) build-tickets-prod-image
 	$(MAKE) build-client-prod-image
+	$(MAKE) build-orders-prod-image
 

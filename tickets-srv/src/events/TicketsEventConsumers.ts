@@ -6,7 +6,7 @@
 import { EventConsumerMap, EventTypesEnum, UserIdentityData, UserActivationStatusData } from '@bigtix/middleware';
 
 /**
- * 'auth-srv.user-events' queue...
+ * 'tickets-srv.user-events' queue...
  */
 export const TicketsUserEventConsumers: Partial<EventConsumerMap> = {
   [EventTypesEnum.USER_CREATED]: async (envelope) => {

@@ -1,24 +1,24 @@
 # ------------------------------------------------------------------------------------------------
-# tickets-mongo-srv mongo-db k8s deployment file for BigTix platform microservices E-Commerce project
-# @since tickets-srv--JP
+# orders-mongo-srv mongo-db k8s deployment file for BigTix platform microservices E-Commerce project
+# @since orders-srv-start--JP
 # ------------------------------------------------------------------------------------------------
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tickets-mongo-dpl
+  name: orders-mongo-dpl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tickets-mongo
+      app: orders-mongo
   template:
     metadata:
       labels:
-        app: tickets-mongo
+        app: orders-mongo
     spec:
       containers:
-        - name: tickets-mongo
+        - name: orders-mongo
           image: mongo
 
 ---
@@ -26,10 +26,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: tickets-mongo-srv
+  name: orders-mongo-srv
 spec:
   selector:
-    app: tickets-mongo
+    app: orders-mongo
   ports:
     - name: db
       protocol: TCP

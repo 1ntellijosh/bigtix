@@ -1,3 +1,8 @@
+# ------------------------------------------------------------------------------------------------
+# auth-mongo-srv mongo-db k8s deployment file for BigTix platform microservices E-Commerce project
+# @since auth-micro-start--JP
+# ------------------------------------------------------------------------------------------------
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:

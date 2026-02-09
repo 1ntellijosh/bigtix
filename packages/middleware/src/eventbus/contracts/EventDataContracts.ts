@@ -4,6 +4,7 @@
  *
  * @since event-bus-start--JP
  */
+import { OrderStatusEnum } from '@bigtix/common';
 
 /********************************************
  * AUTHORIZATION SERVICE EVENT DATA CONTRACTS
@@ -52,4 +53,28 @@ export interface TicketUpdatedData {
 /** Data payload for ticket.deleted. / ticket.sold. / ticket.cancelled. / ticket.refunded. */
 export interface TicketDeletedData {
   ticketId: string;
+}
+
+/*******************************************
+ * ORDERS SERVICE EVENT DATA CONTRACTS
+ *******************************************/
+
+export interface OrderTicketData {
+  ticketId: string;
+  price: number;
+}
+
+/** Data payload for order.created. */
+export interface OrderCreatedData {
+  orderId: string;
+  userId: string;
+  tickets: OrderTicketData[];
+  expiresAt: number;
+  status: OrderStatusEnum;
+}
+
+/** Data payload for order.status.changed. */
+export interface OrderStatusUpdatedData {
+  orderId: string;
+  status: OrderStatusEnum;
 }
