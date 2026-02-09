@@ -4,8 +4,8 @@
  * @since event-bus-start--JP
  */
 import { AbstractEventFactory } from '@bigtix/middleware';
-import { EventTypesEnum, SourceServiceEnum } from '@bigtix/middleware/src/eventbus/enums/EventsEnums';
-import { TicketCreatedData, TicketDeletedData, TicketUpdatedData } from '@bigtix/middleware/src/eventbus/contracts/EventDataContracts';
+import { EventTypesEnum, SourceServiceEnum } from '@bigtix/middleware';
+import { TicketCreatedData, TicketDeletedData, TicketUpdatedData } from '@bigtix/middleware';
 
 export class TicketEventFactory extends AbstractEventFactory {
   constructor(eventType: EventTypesEnum, correlationId?: string) {

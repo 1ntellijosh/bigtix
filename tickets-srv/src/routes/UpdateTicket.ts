@@ -8,6 +8,9 @@ import { body } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
 import { STATUS_CODES, NotFoundError, UnAuthorizedError } from '@bigtix/common';
 import { TicketService } from '../TicketService';
+import { EventPublisher } from '@bigtix/middleware';
+import { TicketEventFactory } from '../events/TicketEventFactory';
+import { EventTypesEnum } from '@bigtix/middleware';
 
 const router = express.Router();
 const ticketSvc = new TicketService();
@@ -24,7 +27,7 @@ const ticketSvc = new TicketService();
  * @throws {UnAuthorizedError}  If user is not authenticated, or not the owner of the ticket
  * @throws {NotFoundError}  If ticket is not found
  */
-router.put('/tickets', [ 
+router.put('/tickets/update', [ 
     body('id').trim().notEmpty().isMongoId().withMessage('ID is required'),
     body('title').trim().notEmpty().isLength({ min: 6, max: 125 }).withMessage('Title is required'),
     body('price').isFloat({ min: 10 }).withMessage('Price must be a valid number and at least $10'),
@@ -48,6 +51,15 @@ router.put('/tickets', [
     }
 
     const updatedTicket = await ticketSvc.updateTicketById(id, title, price, description);
+
+    const factory = new TicketEventFactory(EventTypesEnum.TICKET_UPDATED);
+    const publisher = new EventPublisher(factory);
+    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_UPDATED, {
+      ticketId: id,
+      price,
+      description,
+      title,
+    });
 
     res.status(STATUS_CODES.SUCCESS).send(updatedTicket);
   })
