@@ -33,7 +33,7 @@ router.post('/tickets/create', [
     body('price').isFloat({ min: 10 }).withMessage('Price must be a valid number and at least $10'),
     body('description').trim().notEmpty().withMessage('Description is required'),
     body('serialNumber').trim().notEmpty().withMessage('Serial number is required'),
-    body('eventId').trim().notEmpty().withMessage('Event ID is required'),
+    body('eventId').trim().notEmpty().isMongoId().withMessage('Event ID is required'),
   ],
   api.validateRequest,
   api.getCurrentUser,
