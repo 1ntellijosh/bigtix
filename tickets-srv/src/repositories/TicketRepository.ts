@@ -67,11 +67,22 @@ export class TicketRepository implements AbstractRepository {
   }
 
   /**
+   * Finds all tickets by given ids list
+   *
+   * @param ids  The ids of the tickets to find
+   *
+   * @returns The ticket in data store
+   */
+  async findAllTicketsInIdsList(ids: string[]): Promise<SavedTicketDoc[]> {
+    return Ticket.find({ _id: { $in: ids } }) || [];
+  }
+
+  /**
    * @inheritdoc
    */
   async updateById(id: string, attrs: object): Promise<SavedTicketDoc | null> {
-    // { new: true } means return the updated document
-    return Ticket.findByIdAndUpdate(id, attrs, { new: true });
+    // { returnDocument: 'after' } means return the updated document
+    return Ticket.findByIdAndUpdate(id, attrs, { returnDocument: 'after' });
   }
 
   /**

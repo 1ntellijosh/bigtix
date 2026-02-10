@@ -17,6 +17,7 @@ interface SavedOrderDoc extends mongoose.Document {
   userId: string;
   expiresAt: Date | null;
   status: OrderStatusEnum;
+  version: number;
 }
 
 interface OrderModel extends mongoose.Model<SavedOrderDoc> {
@@ -42,6 +43,10 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  version: {
+    type: Number,
+    required: true,
+  },
 }, {
   toJSON: {
     // Clean up the user object before returning it
@@ -62,7 +67,12 @@ const orderSchema = new mongoose.Schema({
  * @returns {SavedOrderDoc}  The new order document
  */
 orderSchema.statics.build = (attrs: NewOrderAttrs) => {
-  return new Order(attrs);
+  return new Order({
+    userId: attrs.userId,
+    expiresAt: attrs.expiresAt,
+    status: attrs.status,
+    version: 0,
+  });
 };
 
 const Order = mongoose.model<SavedOrderDoc, OrderModel>('Order', orderSchema);

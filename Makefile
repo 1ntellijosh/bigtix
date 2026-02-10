@@ -133,6 +133,16 @@ add-messaging-namespace:
 rabbit-management:
 	kubectl port-forward svc/rabbitmq -n messaging 15672:15672
 
+# MongoDB shell (no port-forward needed: exec runs inside the pod)
+auth-db:
+	kubectl exec -it $$(kubectl get pod -l app=auth-mongo -o jsonpath='{.items[0].metadata.name}') -- mongosh
+
+orders-db:
+	kubectl exec -it $$(kubectl get pod -l app=orders-mongo -o jsonpath='{.items[0].metadata.name}') -- mongosh
+
+tickets-db:
+	kubectl exec -it $$(kubectl get pod -l app=tickets-mongo -o jsonpath='{.items[0].metadata.name}') -- mongosh
+
 cluster-status:
 	@echo "--------------------------- CLUSTER STATUS ------------------------------"
 	@echo "--- PODS:"

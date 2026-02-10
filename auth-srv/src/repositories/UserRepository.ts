@@ -39,8 +39,8 @@ export class UserRepository implements AbstractRepository {
    * @inheritdoc
    */
   async updateById(id: string, attrs: object): Promise<SavedUserDoc | null> {
-    // { new: true } means return the updated document
-    return User.findByIdAndUpdate(id, attrs, { new: true });
+    // { returnDocument: 'after' } means return the updated document
+    return User.findByIdAndUpdate(id, attrs, { returnDocument: 'after' });
   }
 
   /**

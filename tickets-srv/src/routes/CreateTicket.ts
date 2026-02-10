@@ -8,9 +8,6 @@ import { body } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
 import { STATUS_CODES, BadRequestError } from '@bigtix/common';
 import { TicketService } from '../TicketService';
-import { EventPublisher } from '@bigtix/middleware';
-import { TicketEventFactory } from '../events/TicketEventFactory';
-import { EventTypesEnum } from '@bigtix/middleware';
 
 
 const router = express.Router();
@@ -43,18 +40,6 @@ router.post('/tickets/create', [
     const userId = req.currentUser!.id;
 
     const createdTicket = await ticketSvc.createTicket(title, price, userId, description, serialNumber, eventId);
-
-    const factory = new TicketEventFactory(EventTypesEnum.TICKET_CREATED);
-    const publisher = new EventPublisher(factory);
-    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_CREATED, {
-      ticketId: createdTicket.id,
-      eventId,
-      userId,
-      price,
-      description,
-      serialNumber,
-      title,
-    });
 
     res.status(STATUS_CODES.CREATED).send(createdTicket);
   })

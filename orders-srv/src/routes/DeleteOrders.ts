@@ -6,8 +6,10 @@
 import express, { Request, Response } from "express";
 import { param } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
-import { STATUS_CODES } from '@bigtix/common';
+import { STATUS_CODES, NotFoundError } from '@bigtix/common';
 import { OrderService } from '../OrderService';
+import { OrderStatusEnum } from '@bigtix/common';
+import { SavedTicketDoc } from '../models/Ticket';
 
 const router = express.Router();
 const orderSvc = new OrderService();
@@ -31,9 +33,13 @@ router.delete('/orders/:id', [
     const { id } = req.params;
     const currentUserId = req.currentUser!.id;
 
-    const deleted = await orderSvc.cancelOrderById(currentUserId, id);
+    const order = await orderSvc.cancelOrderById(currentUserId, id) as { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] };
 
-    res.status(STATUS_CODES.SUCCESS).send(deleted);
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    res.status(STATUS_CODES.SUCCESS).send(true);
   })
 );
 

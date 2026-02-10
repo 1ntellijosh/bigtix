@@ -22,6 +22,8 @@ interface SavedTicketDoc extends mongoose.Document {
   userId: string;
   serialNumber: string;
   eventId: string;
+  version: number;
+  orderId?: string;
 }
 
 interface TicketModel extends mongoose.Model<SavedTicketDoc> {
@@ -60,6 +62,13 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  version: {
+    type: Number,
+    required: true,
+  },
+  orderId: {
+    type: String,
+  },
 }, {
   toJSON: {
     // Clean up the ticket object before returning it
@@ -80,7 +89,15 @@ const ticketSchema = new mongoose.Schema({
  * @returns {SavedTicketDoc}  The new ticket document
  */
 ticketSchema.statics.build = (attrs: NewTicketAttrs) => {
-  return new Ticket(attrs);
+  return new Ticket({
+    title: attrs.title,
+    price: attrs.price,
+    userId: attrs.userId,
+    description: attrs.description,
+    serialNumber: attrs.serialNumber,
+    eventId: attrs.eventId,
+    version: 0,
+  });
 };
 
 const Ticket = mongoose.model<SavedTicketDoc, TicketModel>('Ticket', ticketSchema);

@@ -1,14 +1,14 @@
 /**
- * Main entry point for tickets microservice (tickets-srv) setup and running
+ * Main entry point for orders microservice (orders-srv) setup and running
  *
- * @since tickets-srv--JP
+ * @since orders-srv-start--JP
  */
 import { ordersApp } from './App';
 import mongoose from 'mongoose';
 import { DatabaseConnectionError } from '@bigtix/common';
 import { connectToRabbitMQ, disconnectFromRabbitMQ } from '@bigtix/middleware';
-// import { EventConsumer, EventConsumerMap } from '@bigtix/middleware';
-// import { OrdersTicketEventConsumers } from './events/OrdersEventConsumers';
+import { EventConsumer, EventConsumerMap } from '@bigtix/middleware';
+import { TicketEventConsumers } from './events/EventConsumers';
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,9 +27,10 @@ const startService = async () => {
 };
 
 connectToRabbitMQ().then(async (channel) => {
-  // const consumer = new EventConsumer(channel);
-  // await consumer.registerEventConsumers(OrdersTicketEventConsumers as EventConsumerMap)
-  //   .startConsuming('orders-srv.ticket-events');
+  const consumer = new EventConsumer(channel);
+  // Register event consumers for ticket events that orders service needs to handle
+  await consumer.registerEventConsumers(TicketEventConsumers as EventConsumerMap)
+    .startConsuming('orders-srv.ticket-events');
 
   await startService();
 }).catch((err) => {

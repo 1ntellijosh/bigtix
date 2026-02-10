@@ -14,7 +14,7 @@ const router = express.Router();
 const orderSvc = new OrderService();
 
 /**
- * Updates an order
+ * Updates an order status by id
  *
  * @param {string} id  The id of the order to update
  * @param {string} status  The status of the order
@@ -36,16 +36,12 @@ router.put('/orders/:id', [
     const currentUserId = req.currentUser!.id;
     const order = await orderSvc.getOrderById(id);
 
-    if (!order) {
-      throw new NotFoundError('Order not found');
-    }
-
     // User must be the owner of the ticket to update it
     if (order.userId !== currentUserId) {
       throw new UnAuthorizedError('You are not authorized to update this order');
     }
 
-    const updatedOrder = await orderSvc.updateOrderById(id, status);
+    const updatedOrder = await orderSvc.updateOrderStatusById(id, status);
 
     res.status(STATUS_CODES.SUCCESS).send(updatedOrder);
   })

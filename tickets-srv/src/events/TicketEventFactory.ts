@@ -26,6 +26,7 @@ export class TicketEventFactory extends AbstractEventFactory {
           description: data.description,
           serialNumber: data.serialNumber,
           title: data.title,
+          version: data.version,
         } as TicketCreatedData;
       case EventTypesEnum.TICKET_UPDATED:
         return {
@@ -33,6 +34,7 @@ export class TicketEventFactory extends AbstractEventFactory {
           price: data.price,
           description: data.description,
           title: data.title,
+          version: data.version,
         } as TicketUpdatedData;
       case EventTypesEnum.TICKET_DELETED:
       case EventTypesEnum.TICKET_SOLD:

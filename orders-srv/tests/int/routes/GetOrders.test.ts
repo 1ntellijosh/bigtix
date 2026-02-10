@@ -18,19 +18,16 @@ const validTickets = [
     order: null,
     price: 10.00,
     title: 'some title!!!!!',
-    version: 1,
   },
   {
     order: null,
     price: 10.00,
     title: 'another title!!!!!',
-    version: 1,
   },
   {
     order: null,
     price: 10.00,
     title: 'yet another title!!!!!',
-    version: 1,
   },
 ] as NewTicketAttrs[];
 let savedTickets: SavedTicketDoc[] = [];
@@ -68,7 +65,7 @@ const saveOrder = async (order: NewOrderAttrs): Promise<string> => {
 };
 
 const saveTickets = async (tickets: NewTicketAttrs[]): Promise<SavedTicketDoc[]> => {
-  const ticketDocs = await Ticket.insertMany(tickets);
+  const ticketDocs = await Ticket.insertMany(tickets.map(ticket => ({ ...ticket, version: 0 })));
 
   return ticketDocs;
 };
@@ -124,7 +121,7 @@ describe('Get orders routes tests', () => {
     expect(response.body[0].tickets.length).toBe(validTickets.length);
     expect(response.body[0].tickets[0].price).toBe(validTickets[0].price);
     expect(response.body[0].tickets[0].title).toBe(validTickets[0].title);
-    expect(response.body[0].tickets[0].version).toBe(validTickets[0].version);
+    expect(response.body[0].tickets[0].version).toBe(0);
     expect(response.body[0].tickets[0].order).toBe(validOrderIds[0]);
   });
 
@@ -164,7 +161,7 @@ describe('Get orders routes tests', () => {
     expect(response.body.tickets.length).toBe(validTickets.length);
     expect(response.body.tickets[0].price).toBe(validTickets[0].price);
     expect(response.body.tickets[0].title).toBe(validTickets[0].title);
-    expect(response.body.tickets[0].version).toBe(validTickets[0].version);
+    expect(response.body.tickets[0].version).toBe(0);
     expect(response.body.tickets[0].order).toBe(validOrderIds[0]);
   });
 });

@@ -10,9 +10,9 @@ import { SavedOrderDoc } from "./Order";
 interface NewTicketAttrs {
   /** Order id (ObjectId or string). Pass order.id or order._id when creating. */
   order: mongoose.Types.ObjectId | SavedOrderDoc | null;
+  id: string;
   title: string;
   price: number;
-  version: number;
 }
 
 interface SavedTicketDoc extends mongoose.Document {
@@ -72,7 +72,14 @@ const ticketSchema = new mongoose.Schema({
  * @returns {SavedTicketDoc}  The new ticket document
  */
 ticketSchema.statics.build = (attrs: NewTicketAttrs) => {
-  return new Ticket(attrs);
+  // Assign the id to the _id field so it is the same as the incoming id from ticket-srv ticket creation event
+  return new Ticket({
+    _id: attrs.id,
+    title: attrs.title,
+    price: attrs.price,
+    order: attrs.order,
+    version: 0,
+  });
 };
 
 const Ticket = mongoose.model<SavedTicketDoc, TicketModel>('Ticket', ticketSchema);
