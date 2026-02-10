@@ -31,4 +31,7 @@ export const ValidationHelpers = {
   hasPhone: (obj: Record<string, unknown>, key: string): boolean => {
     return typeof obj[key] === 'string' && obj[key].match(/^\d{10}$/) !== null;
   },
+  hasEnum: (obj: Record<string, unknown>, key: string, eNum: any): boolean => {
+    return eNum.includes(obj[key]);
+  },
 } as const;

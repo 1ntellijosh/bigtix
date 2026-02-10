@@ -73,6 +73,19 @@ Used for listing, creating, and managing event tickets.
 | `/api/tickets/create` | POST | `{ title: string, price: number, userId: string, description: string, serialNumber: string, eventId: string }` | Create ticket(s) (auth required) |
 | `/api/tickets` | PUT | `{ id: string, title: string, price: number, description: string }` | Update a ticket |
 
+## Orders
+Used for creating and managing ticket orders.
+
+### APIs
+
+| Route | Method | Body | Purpose |
+|-------|--------|------|---------|
+| `/api/orders` | GET | - | Retrieve all active orders for the given user making the request |
+| `/api/orders/:id` | GET | - | Get details about a specific order |
+| `/api/orders` | POST | `{ tickets: [{ ticketId: string, price: number }] }` | Create an order to purchase the specified tickets |
+| `/api/orders/:id` | PUT | `{ status: string }` | Update an order status |
+| `/api/orders/:id` | DELETE | - | Cancel the order |
+
 ---
 
 # FAQs/Instructions

@@ -34,6 +34,19 @@ build:
           - src: 'tickets-srv/src/**/*.ts'
             dest: src
             strip: 'tickets-srv/src/'
+    - image: 1ntellijosh/bigtix-orders-srv
+      context: .
+      custom:
+        buildCommand: docker build -f orders-srv/deploy/docker/dev.Dockerfile -t $IMAGE $BUILD_CONTEXT
+        dependencies:
+          paths:
+            - orders-srv/**/*
+            - packages/*/dist/**/*
+      sync:
+        manual:
+          - src: 'orders-srv/src/**/*.ts'
+            dest: src
+            strip: 'orders-srv/src/'
     - image: 1ntellijosh/bigtix-client-app
       context: .
       custom:
@@ -54,6 +67,8 @@ manifests:
     - ./ops/k8s/deployments/client-depl.yml
     - ./ops/k8s/deployments/tickets-depl.yml
     - ./ops/k8s/deployments/tickets-mongo-depl.yml
+    - ./ops/k8s/deployments/orders-depl.yml
+    - ./ops/k8s/deployments/orders-mongo-depl.yml
     - ./ops/k8s/ingresses/ingress-srv.yml
     # RabbitMQ is applied by setup-cluster.yml only to speed up cluster setup;
     # including it here ALSO would break skaffold sync

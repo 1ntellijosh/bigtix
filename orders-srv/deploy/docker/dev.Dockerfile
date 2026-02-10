@@ -1,31 +1,31 @@
 # ------------------------------------------------------------------------------------------------
-# PRODUCTION Dockerfile for Tickets microservice of BigTix platform E-Commerce project
-# @since tickets-srv--JP
-# Build context: repo root (.) so packages/common and packages/middleware can be copied.
+# LOCAL DEVELOPMENT Dockerfile for Orders microservice of BigTix platform E-Commerce project
+# @since orders-srv-start--JP
 # ------------------------------------------------------------------------------------------------
 
 FROM node:alpine
 
 WORKDIR /app
 
-# Copy workspace packages (built dist + package.json)
+# Copy workspace packages (built dist folders and package.json files)
 COPY packages/common/package.json ./packages/common/
 COPY packages/common/dist ./packages/common/dist
 COPY packages/middleware/package.json ./packages/middleware/
 COPY packages/middleware/dist ./packages/middleware/dist
 
-# Copy tickets-srv package.json and point workspace deps to local packages
-COPY tickets-srv/package.json ./package.json.tmp
+# Copy orders-srv package.json and modify it to use file: protocol for local packages
+COPY orders-srv/package.json ./package.json.tmp
 RUN sed 's|"@bigtix/common": "\*"|"@bigtix/common": "file:./packages/common"|g; s|"@bigtix/middleware": "\*"|"@bigtix/middleware": "file:./packages/middleware"|g' ./package.json.tmp > ./package.json && rm ./package.json.tmp
 
-# Install production dependencies only
+# Install orders-srv dependencies (will install local packages via file: protocol)
 RUN npm install --omit=dev
 
-# Copy tickets-srv source and build for production
-COPY tickets-srv/src ./src
-COPY tickets-srv/tsconfig.json ./tsconfig.json
-RUN npm run build
+# Copy orders-srv source code and config files
+COPY orders-srv/src ./src
+COPY orders-srv/tsconfig.json ./tsconfig.json
+COPY orders-srv/tests ./tests
 
-# Run compiled app (no ts-node)
-CMD ["npm", "run", "start:prod"]
-    
+# Polling so Skaffold-synced file changes are detected (inotify often doesn't fire for sync)
+ENV CHOKIDAR_USEPOLLING=true
+
+CMD ["npm", "start"]

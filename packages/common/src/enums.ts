@@ -20,3 +20,13 @@ export enum STATUS_CODES {
   GATEWAY_TIMEOUT = 504,
   NO_RESPONSE = 0, // No HTTP response (e.g. network failure, CORS, timeout before response)
 }
+
+export enum OrderStatusEnum {
+  CREATED = 'created',
+  AWAITING_PAYMENT = 'awaiting:payment',
+  PAID = 'paid',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled', // Ticket already sold, or user cancelled the order
+  REFUNDED = 'refunded',
+}
+

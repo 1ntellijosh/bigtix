@@ -13,7 +13,10 @@ import type {
   TicketCreatedData,
   TicketUpdatedData,
   TicketDeletedData,
+  OrderCreatedData,
+  OrderStatusUpdatedData,
 } from '../contracts/EventDataContracts';
+import { OrderStatusEnum } from '@bigtix/common';
 
 export function validateUserIdentityData(data: unknown): data is UserIdentityData {
   return val.isObject(data) && val.hasString(data, 'userId') && val.hasEmail(data, 'email');
@@ -52,6 +55,14 @@ export function validateTicketUpdatedData(data: unknown): data is TicketUpdatedD
 
 export function validateTicketDeletedData(data: unknown): data is TicketDeletedData {
   return val.isObject(data) && val.hasString(data, 'ticketId');
+}
+
+export function validateOrderCreatedData(data: unknown): data is OrderCreatedData {
+  return val.isObject(data) && val.hasString(data, 'orderId') && val.hasString(data, 'userId') && val.hasArray(data, 'tickets') && val.hasNumber(data, 'expiresAt') && val.hasString(data, 'status');
+}
+
+export function validateOrderStatusUpdatedData(data: unknown): data is OrderStatusUpdatedData {
+  return val.isObject(data) && val.hasString(data, 'orderId') && val.hasEnum(data, 'status', OrderStatusEnum);
 }
 
 export type EventDataValidator = (data: unknown) => boolean;

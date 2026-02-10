@@ -25,17 +25,6 @@ export class TicketRepository implements AbstractRepository {
   }
 
   /**
-   * Finds a ticket by given title
-   *
-   * @param title  The title of the ticket to find
-   *
-   * @returns The ticket in data store
-   */
-  async findByTitle(title: string): Promise<SavedTicketDoc | null> {
-    return Ticket.findOne({ title });
-  }
-
-  /**
    * Finds all tickets by given userId
    *
    * @param userId  The userId of the tickets to find

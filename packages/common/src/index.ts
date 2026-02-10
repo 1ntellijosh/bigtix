@@ -6,7 +6,8 @@
 
 export * from './types';
 export * from './enums';
-export { STATUS_CODES } from './enums';
+export { STATUS_CODES, OrderStatusEnum } from './enums';
+export { ORDER_EXPIRATION_SECONDS } from './consts';
 export { AbstractRequestError } from './errors/AbstractRequestError';
 export { BadRequestError } from './errors/BadRequestError';
 export { RequestValidationError } from './errors/RequestValidationError';
