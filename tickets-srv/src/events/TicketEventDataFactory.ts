@@ -7,7 +7,7 @@ import { AbstractEventFactory } from '@bigtix/middleware';
 import { EventTypesEnum, SourceServiceEnum } from '@bigtix/middleware';
 import { TicketCreatedData, TicketDeletedData, TicketUpdatedData } from '@bigtix/middleware';
 
-export class TicketEventFactory extends AbstractEventFactory {
+export class TicketEventDataFactory extends AbstractEventFactory {
   constructor(eventType: EventTypesEnum, correlationId?: string) {
     super(eventType, SourceServiceEnum.TICKETS_SRV, correlationId);
   }

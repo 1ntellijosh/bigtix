@@ -8,10 +8,10 @@ import mongoose from 'mongoose';
 
 let mongoMemDbServer: MongoMemoryServer | null;
 
-// Mock EventPublisher and TicketEventFactory to avoid RabbitMQ connection failure in routes tests
-jest.mock('../src/events/OrderEventFactory', () => {
+// Mock EventPublisher and OrderEventDataFactory to avoid RabbitMQ connection failure in routes tests
+jest.mock('../src/events/OrdersEventDataFactory', () => {
   return {
-    OrderEventFactory: jest.fn().mockImplementation(() => ({
+    OrderEventDataFactory: jest.fn().mockImplementation(() => ({
       setData: jest.fn().mockReturnThis(),
       buildEvent: jest.fn().mockReturnValue({ metadata: {}, data: {} }),
     })),

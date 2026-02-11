@@ -15,6 +15,7 @@ export * from './eventbus/contracts/EventContracts';
 export * from './eventbus/contracts/EventDataContracts';
 export * from './eventbus/factories/AbstractEventFactory';
 export * from './eventbus/RabbitConnectModule';
+export * from './eventbus/Subscriber';
 export * from './eventbus/EventConsumer';
 export * from './eventbus/EventPublisher';
 export * from './eventbus/validators/EventDataValidators';

@@ -34,7 +34,9 @@ export class EventConsumer {
    * @returns this for chaining.
    */
   registerEventConsumers(eventConsumers: EventConsumerMap): this {
-    for (const [eventType, { handler, exchange }] of Object.entries(eventConsumers)) {
+    for (const [eventType, entry] of Object.entries(eventConsumers)) {
+      if (!entry) continue;
+      const { handler, exchange } = entry;
       this.on(eventType as EventTypesEnum, handler, exchange);
     }
 

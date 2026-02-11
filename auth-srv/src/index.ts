@@ -7,8 +7,8 @@ import { authApp } from './App';
 import mongoose from 'mongoose';
 import { DatabaseConnectionError } from '@bigtix/common';
 import { connectToRabbitMQ, disconnectFromRabbitMQ } from '@bigtix/middleware';
-// import { EventConsumer, EventConsumerMap } from '@bigtix/middleware';
-// import { AuthUserEventConsumers } from './events/AuthEventConsumers';
+import { AuthUserEventSubscription } from './events/AuthSubscriptions';
+import { subscribeQueues } from '@bigtix/middleware';
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,9 +27,8 @@ const startService = async () => {
 };
 
 connectToRabbitMQ().then(async (channel) => {
-  // const consumer = new EventConsumer(channel);
-  // await consumer.registerEventConsumers(AuthUserEventConsumers as EventConsumerMap)
-  //   .startConsuming('auth-srv.user-events');
+  // Subscribe to RabbitMQ to handle message events between microservices
+  await subscribeQueues(channel, [AuthUserEventSubscription]);
 
   await startService();
 }).catch((err) => {
