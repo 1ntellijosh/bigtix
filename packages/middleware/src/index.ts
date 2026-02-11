@@ -9,6 +9,7 @@ export * from './APIRequest';
 export * from './PasswordService';
 export * from './AbstractRepository';
 export * from './MiddlewareTestHelpers';
+export * from './eventbus/consts/RabbitConsts';
 export * from './eventbus/enums/EventsEnums';
 export * from './eventbus/contracts/EventContracts';
 export * from './eventbus/contracts/EventDataContracts';

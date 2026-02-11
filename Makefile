@@ -128,6 +128,10 @@ apply-ingress:
 # Create messaging namespace (for RabbitMQ etc.) if missing; idempotent
 add-messaging-namespace:
 	kubectl create namespace messaging --dry-run=client -o yaml | kubectl apply -f -
+# Build RabbitMQ image with delayed message exchange plugin (used by setup-cluster.yml)
+build-rabbitmq-image:
+	docker build -t bigtix-rabbitmq:3.13-management -f ./ops/docker/rabbitmq/Dockerfile .
+
 # Port-forward RabbitMQ for management UI in browser
 # - Go to http://localhost:15672 to view RabbitMQ management UI
 rabbit-management:

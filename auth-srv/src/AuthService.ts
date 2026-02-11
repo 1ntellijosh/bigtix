@@ -10,7 +10,7 @@ import { PasswordService as passSvc } from '@bigtix/middleware';
 import jwt from 'jsonwebtoken';
 import { Request } from 'express';
 
-export class UserService {
+export class AuthService {
   private userRepo: UserRepository;
 
   constructor() {

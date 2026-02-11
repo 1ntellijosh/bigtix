@@ -6,11 +6,11 @@
 import express, { Request, Response } from "express";
 import { APIRequest as api } from '@bigtix/middleware';
 import { body } from 'express-validator';
-import { UserService } from '../UserService';
+import { AuthService } from '../AuthService';
 import { STATUS_CODES } from '@bigtix/common';
 
 const router = express.Router();
-const userSvc = new UserService();
+const userSvc = new AuthService();
 
 router.post('/signin',
   [ 

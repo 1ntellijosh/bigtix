@@ -4,7 +4,7 @@
  * @since event-bus-start--JP
  */
 import amqplib from 'amqplib';
-import { EXCHANGE_NAME } from './enums/EventsEnums';
+import { EXCHANGE_NAME, DELAYED_EXCHANGE_NAME } from './consts/RabbitConsts';
 import { EventTypesEnum } from './enums/EventsEnums';
 import { EventEnvelope, EventData, EventConsumerMap } from './contracts/EventContracts';
 import { EventDataValidators } from './validators/EventDataValidators';
@@ -23,6 +23,7 @@ export type EventHandler = (envelope: EventEnvelope) => Promise<void>;
  */
 export class EventConsumer {
   private handlers = new Map<EventTypesEnum, EventHandler>();
+  private exchanges = new Map<EventTypesEnum, typeof EXCHANGE_NAME | typeof DELAYED_EXCHANGE_NAME>();
 
   constructor(private channel: amqplib.Channel) {}
 
@@ -33,8 +34,8 @@ export class EventConsumer {
    * @returns this for chaining.
    */
   registerEventConsumers(eventConsumers: EventConsumerMap): this {
-    for (const [eventType, handler] of Object.entries(eventConsumers)) {
-      this.on(eventType as EventTypesEnum, handler);
+    for (const [eventType, { handler, exchange }] of Object.entries(eventConsumers)) {
+      this.on(eventType as EventTypesEnum, handler, exchange);
     }
 
     return this;
@@ -48,8 +49,13 @@ export class EventConsumer {
    * @param handler - The handler; receives envelope dispatched for that event type.
    * @returns this for chaining.
    */
-  on<T extends EventData = EventData>(eventType: EventTypesEnum, handler: (envelope: EventEnvelope<T>) => Promise<void>): this {
+  on<T extends EventData = EventData>(
+    eventType: EventTypesEnum,
+    handler: (envelope: EventEnvelope<T>) => Promise<void>,
+    exchange: typeof EXCHANGE_NAME | typeof DELAYED_EXCHANGE_NAME
+  ): this {
     this.handlers.set(eventType, handler as EventHandler);
+    this.exchanges.set(eventType, exchange);
 
     return this;
   }
@@ -76,9 +82,12 @@ export class EventConsumer {
     const durable = options?.durable ?? true;
     await this.channel.assertQueue(queueName, { durable });
 
-    for (const key of routingKeys) {
-      await this.channel.bindQueue(queueName, EXCHANGE_NAME, key);
-    }
+    await this.channel.assertExchange(DELAYED_EXCHANGE_NAME, 'x-delayed-message', {
+      durable: true,
+      arguments: { 'x-delayed-type': 'topic' },
+    });
+
+    await this.bindRoutingKeysToQueueAndExchange(queueName, routingKeys);
 
     await this.channel.consume(
       queueName,
@@ -123,6 +132,29 @@ export class EventConsumer {
   }
 
   /**
+   * Binds routing keys to a queue and exchange.
+   *
+   * @param queueName - The name of the queue to bind the routing keys to.
+   * @param routingKeys - The routing keys to bind to the queue.
+   * @returns {Promise<void>} - A promise that resolves when the routing keys are bound.
+   */
+  private async bindRoutingKeysToQueueAndExchange(queueName: string, routingKeys: EventTypesEnum[]): Promise<void> {
+    for (const key of routingKeys) {
+      switch (this.exchanges.get(key)) {
+        case EXCHANGE_NAME:
+          await this.channel.bindQueue(queueName, EXCHANGE_NAME, key);
+          break;
+        case DELAYED_EXCHANGE_NAME:
+          // Bind to delayed exchange so messages published with delayMs are delivered to this queue after delay
+          await this.channel.bindQueue(queueName, DELAYED_EXCHANGE_NAME, key);
+          break;
+        default:
+          throw new Error('Invalid exchange for event type: ' + key);
+      }
+    }
+  }
+
+  /**
    * Validates the event data against the event type.
    *
    * @param eventType - The event type to validate the data against.
@@ -131,8 +163,10 @@ export class EventConsumer {
    */
   private isValidEventData(eventType: EventTypesEnum, data: unknown): boolean {
     const validator = EventDataValidators[eventType];
+    
     // No validator for this event type => allow (don't drop new event types)
     if (!validator) return true;
+
     return validator(data);
   }
 }

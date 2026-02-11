@@ -6,7 +6,7 @@
 import express, { Request, Response } from "express";
 import { param } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
-import { STATUS_CODES, NotFoundError } from '@bigtix/common';
+import { STATUS_CODES, BadRequestError } from '@bigtix/common';
 import { OrderService } from '../OrderService';
 
 const router = express.Router();
@@ -47,7 +47,9 @@ router.get('/orders/:id', [
     const { id } = req.params;
     const userId = req.currentUser!.id;
 
-    const order = await orderSvc.getSingleUserOrder(userId, id);
+    const order = await orderSvc.getOrderById(id);
+    
+    if (order.userId.toString() !== userId) throw new BadRequestError('You are not authorized to view this order');
 
     res.status(STATUS_CODES.SUCCESS).send(order);
   })

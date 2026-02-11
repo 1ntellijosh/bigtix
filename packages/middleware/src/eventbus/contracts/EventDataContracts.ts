@@ -83,3 +83,11 @@ export interface OrderStatusUpdatedData {
   tickets: OrderTicketData[];
   version: number;
 }
+
+/**
+ * Data payload for order.expired. This data object is sent out by Orders Service to RabbitMQ to notify it in the
+ * given order's expiration time that the order has expired.
+ */
+export interface OrderExpiredData {
+  orderId: string;
+}

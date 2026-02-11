@@ -5,7 +5,7 @@
  * @since event-bus-start--JP
  */
 import amqplib from 'amqplib';
-import { EXCHANGE_NAME } from './enums/EventsEnums';
+import { EXCHANGE_NAME } from './consts/RabbitConsts';
 
 let connection: amqplib.ChannelModel | null = null;
 let channel: amqplib.Channel | null = null;

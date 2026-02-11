@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
 import { DatabaseConnectionError } from '@bigtix/common';
 import { connectToRabbitMQ, disconnectFromRabbitMQ } from '@bigtix/middleware';
 import { EventConsumer, EventConsumerMap } from '@bigtix/middleware';
-import { TicketEventConsumers } from './events/EventConsumers';
+import { TicketEventHandlers, OrderEventHandlers } from './events/EventConsumers';
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,10 +27,14 @@ const startService = async () => {
 };
 
 connectToRabbitMQ().then(async (channel) => {
-  const consumer = new EventConsumer(channel);
+  const ticketConsumer = new EventConsumer(channel);
   // Register event consumers for ticket events that orders service needs to handle
-  await consumer.registerEventConsumers(TicketEventConsumers as EventConsumerMap)
+  await ticketConsumer.registerEventConsumers(TicketEventHandlers as EventConsumerMap)
     .startConsuming('orders-srv.ticket-events');
+  // Register event consumers for order events that orders service needs to handle (delayed messages)
+  const orderConsumer = new EventConsumer(channel);
+  await orderConsumer.registerEventConsumers(OrderEventHandlers as EventConsumerMap)
+    .startConsuming('orders-srv.order-events');
 
   await startService();
 }).catch((err) => {

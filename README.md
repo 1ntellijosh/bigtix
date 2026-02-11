@@ -28,7 +28,6 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 
 ## Database/Cache:
 - Mongodb
-- Redis
 
 ## 3rd Party APIs:
 - Stripe (for payments)
@@ -93,19 +92,11 @@ Used for creating and managing ticket orders.
 ## Workflow when adding/changing files in `./packages`
 
 1. **Add/update assets**
-   - If **simply editing/changing existing file,** just make the changes and save
-   - If **added files are shared Express/server-microservice-specific,** add to `packages/middleware/src/`
-   - If **added files will be used by client too,** add to `packages/common/src/`
-2. **If files were added,** add export to the `./packages/**/` folder
-   - If add was made to `packages/middleware/`, update `packages/middleware/src/index.ts`
-   - If add was made to `packages/common/`, update `packages/common/src/index.ts`
-3. **Rebuild** with `make build-shared-packages`
-4. **Use!:** Import from `@bigtix/middleware` or `@bigtix/common`
-
-### Common Issues
-
-- **"Cannot find module '@bigtix/middleware' or type errors:"**: Run `make build-shared-packages` from root to link workspaces, then `make start/dev`
-- **Import errors**: Check that exports are in `packages/*/src/index.ts`
+   - Packaged code in `packages/middleware/src/` are assets for the non-client micoservices, not the client service
+   - Packaged code in `packages/common/src/` are assets shared by client and microservices
+2. **Update exports** for new shared files in `packages/middleware/src/index.ts` `packages/common/src/index.ts`
+3. **Rebuild** with `make build-shared-packages` to compile code into shared node_modules folders
+4. **Use** code with normal `import ... from @bigtix/middleware` or `import ... from @bigtix/common`
 
 ---
 

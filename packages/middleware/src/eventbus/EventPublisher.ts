@@ -4,9 +4,15 @@
  * @since event-bus-start--JP
  */
 import { connectToRabbitMQ } from './RabbitConnectModule';
-import { EventTypesEnum, EXCHANGE_NAME } from './enums/EventsEnums';
+import { EventTypesEnum } from './enums/EventsEnums';
+import { EXCHANGE_NAME, DELAYED_EXCHANGE_NAME } from './consts/RabbitConsts';
 import { AbstractEventFactory } from './factories/AbstractEventFactory';
 import { EventDataValidators } from './validators/EventDataValidators';
+
+export interface PublishEventOptions {
+  /** Delay delivery by this many milliseconds (requires RabbitMQ Delayed Message Plugin). */
+  delayMs?: number;
+}
 
 export class EventPublisher {
   constructor(private readonly eventFactory: AbstractEventFactory) {}
@@ -17,10 +23,15 @@ export class EventPublisher {
    * @param {string} queueName  The name of the queue to publish the event to (e.g. 'tickets-srv.user-events')
    * @param {EventTypesEnum} eventType  The type of the event.
    * @param {unknown} data  The data of the event.
-   *
+   * @param {PublishEventOptions} [options]  Optional: e.g. delayMs to delay delivery (broker holds message).
    * @returns {Promise<void>}
    */
-  async publishEvent(queueName: string, eventType: EventTypesEnum, data: unknown): Promise<void> {
+  async publishEvent(
+    queueName: string,
+    eventType: EventTypesEnum,
+    data: unknown,
+    options?: PublishEventOptions
+  ): Promise<void> {
     try {
       const channel = await connectToRabbitMQ();
 
@@ -36,8 +47,23 @@ export class EventPublisher {
         eventType, envelope.data
       );
 
-      await channel.publish(EXCHANGE_NAME, eventType, Buffer.from(JSON.stringify(envelope)), { persistent: true });
+      const payload = Buffer.from(JSON.stringify(envelope));
+      const publishOptions = { persistent: true as const };
 
+      if (options?.delayMs != null && options.delayMs > 0) {
+        await channel.assertExchange(DELAYED_EXCHANGE_NAME, 'x-delayed-message', {
+          durable: true,
+          arguments: { 'x-delayed-type': 'topic' },
+        });
+        await channel.publish(
+          DELAYED_EXCHANGE_NAME,
+          eventType,
+          payload,
+          { ...publishOptions, headers: { 'x-delay': options.delayMs } }
+        );
+      } else {
+        await channel.publish(EXCHANGE_NAME, eventType, payload, publishOptions);
+      }
     } catch (error) {
       // TODO: Log the error to a file or database
       console.error('Error publishing event: ', error);

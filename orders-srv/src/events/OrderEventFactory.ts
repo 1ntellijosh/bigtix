@@ -5,7 +5,7 @@
  */
 import { AbstractEventFactory } from '@bigtix/middleware';
 import { EventTypesEnum, SourceServiceEnum } from '@bigtix/middleware';
-import { OrderCreatedData, OrderStatusUpdatedData } from '@bigtix/middleware';
+import { OrderCreatedData, OrderStatusUpdatedData, OrderExpiredData } from '@bigtix/middleware';
 
 export class OrderEventFactory extends AbstractEventFactory {
   constructor(eventType: EventTypesEnum, correlationId?: string) {
@@ -15,7 +15,7 @@ export class OrderEventFactory extends AbstractEventFactory {
   /**
    * @inheritdoc
    */
-  createEventData(eventType: EventTypesEnum, data: any): OrderCreatedData | OrderStatusUpdatedData {
+  createEventData(eventType: EventTypesEnum, data: any): OrderCreatedData | OrderStatusUpdatedData | OrderExpiredData {
     switch (eventType) {
       case EventTypesEnum.ORDER_CREATED:
         return {
@@ -31,7 +31,12 @@ export class OrderEventFactory extends AbstractEventFactory {
           orderId: data.orderId,
           status: data.status,
           version: data.version,
+          tickets: data.tickets,
         } as OrderStatusUpdatedData;
+      case EventTypesEnum.ORDER_EXPIRED:
+        return {
+          orderId: data.orderId,
+        } as OrderExpiredData;
       default:
         throw new Error(`Event type ${eventType} not supported`);
     }

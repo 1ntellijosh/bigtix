@@ -9,7 +9,8 @@
 
   vars:
     project_root: "{{ playbook_dir }}/../.."
-    rabbitmq_image: "docker.io/rabbitmq:3.13-management"
+    # Custom image with rabbitmq_delayed_message_exchange plugin (x-delayed-message) for order.expired delay
+    rabbitmq_image: "bigtix-rabbitmq:3.13-management"
 
   tasks:
     - name: Check if dev-vars.yml exists
@@ -51,32 +52,12 @@
       args:
         chdir: "{{ project_root }}"
 
-    # Pre-pull and load RabbitMQ image into Kind so Skaffold-deployed pod starts without registry pull
-    - name: Ensure temp Docker config dir (no credsStore, avoids docker-credential-desktop not in PATH)
-      ansible.builtin.file:
-        path: "{{ project_root }}/ops/Ansible/.ansible-docker-config"
-        state: directory
-        mode: '0700'
-
-    - name: Write minimal Docker config (no credential helper)
-      ansible.builtin.copy:
-        content: '{}'
-        dest: "{{ project_root }}/ops/Ansible/.ansible-docker-config/config.json"
-        mode: '0600'
-
-    - name: Check if RabbitMQ image exists locally
-      ansible.builtin.shell: docker image inspect {{ rabbitmq_image }}
-      register: rabbitmq_image_local
-      failed_when: false
-      changed_when: false
-      environment:
-        DOCKER_CONFIG: "{{ project_root }}/ops/Ansible/.ansible-docker-config"
-
-    - name: Pull RabbitMQ image when not present locally
-      ansible.builtin.shell: docker pull {{ rabbitmq_image }}
-      when: rabbitmq_image_local.rc != 0
-      environment:
-        DOCKER_CONFIG: "{{ project_root }}/ops/Ansible/.ansible-docker-config"
+    # Build RabbitMQ image with delayed message exchange plugin and load into Kind
+    - name: Build RabbitMQ image with rabbitmq_delayed_message_exchange plugin
+      ansible.builtin.shell: >
+        docker build -t {{ rabbitmq_image }} -f {{ project_root }}/ops/docker/rabbitmq/Dockerfile {{ project_root }}
+      args:
+        chdir: "{{ project_root }}"
 
     - name: Load RabbitMQ image into Kind cluster
       ansible.builtin.shell: >

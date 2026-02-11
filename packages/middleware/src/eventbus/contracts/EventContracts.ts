@@ -5,6 +5,7 @@
  * @since event-bus-start--JP
  */
 import { EventTypesEnum, SourceServiceEnum } from '../enums/EventsEnums';
+import { EXCHANGE_NAME, DELAYED_EXCHANGE_NAME } from '../consts/RabbitConsts';
 
 /**
  * Schema version for the envelope;
@@ -48,5 +49,8 @@ export interface EventEnvelope<T extends EventData = EventData> {
  *   }).startConsuming('auth-srv.user-events');
  */
 export type EventConsumerMap = {
-  [key in EventTypesEnum]: (envelope: EventEnvelope<EventData>) => Promise<void>;
+  [key in EventTypesEnum]: {
+    handler: (envelope: EventEnvelope<EventData>) => Promise<void>,
+    exchange: typeof EXCHANGE_NAME | typeof DELAYED_EXCHANGE_NAME;
+  };
 };

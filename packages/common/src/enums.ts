@@ -29,4 +29,3 @@ export enum OrderStatusEnum {
   CANCELLED = 'cancelled', // Ticket already sold, or user cancelled the order
   REFUNDED = 'refunded',
 }
-
