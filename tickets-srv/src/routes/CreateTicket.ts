@@ -6,7 +6,7 @@
 import express, { Request, Response } from "express";
 import { body } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
-import { STATUS_CODES, BadRequestError } from '@bigtix/common';
+import { STATUS_CODES } from '@bigtix/common';
 import { TicketService } from '../TicketService';
 
 
