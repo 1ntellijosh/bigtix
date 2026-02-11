@@ -9,7 +9,6 @@ import { APIRequest as api } from '@bigtix/middleware';
 import { STATUS_CODES } from '@bigtix/common';
 import { OrderService } from '../OrderService';
 
-
 const router = express.Router();
 const orderSvc = new OrderService();
 
@@ -34,9 +33,9 @@ router.post('/orders/create', [
     const { tickets } = req.body;
     const userId = req.currentUser!.id;
 
-    const createdOrder = await orderSvc.createOrderAndReserveTickets(userId, tickets);
+    const result = await orderSvc.createOrderAndReserveTickets(userId, tickets);
 
-    res.status(STATUS_CODES.CREATED).send(createdOrder);
+    res.status(STATUS_CODES.CREATED).send(result);
   })
 );
 

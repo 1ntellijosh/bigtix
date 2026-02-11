@@ -9,6 +9,10 @@ import { NotFoundError, ServerError, BadRequestError } from '@bigtix/common';
 import { SavedOrderDoc } from './models/Order';
 import { SavedTicketDoc } from './models/Ticket';
 import { OrderStatusEnum, ORDER_EXPIRATION_SECONDS } from '@bigtix/common';
+import { TicketCreatedData, TicketUpdatedData } from '@bigtix/middleware';
+import { EventPublisher } from '@bigtix/middleware';
+import { OrderEventFactory } from './events/OrderEventFactory';
+import { EventTypesEnum } from '@bigtix/middleware';
 
 export class OrderService {
   private orderRepo: OrderRepository;
@@ -46,17 +50,28 @@ export class OrderService {
       throw new BadRequestError('All tickets are unavailable');
     }
 
-    // Calculate expiration date for the order
-    const expiration = new Date();
-    expiration.setSeconds(expiration.getSeconds() + ORDER_EXPIRATION_SECONDS);
-
-    const order = await this.createOrder(userId, expiration);
+    const order = await this.createOrder(userId, this.createExpirationDate());
 
     if (!order) throw new ServerError('Order not created successfully');
 
     const reservedTickets = await this.assignOrderToTickets(order.id, availableTickets);
 
+    // Publish created order event to the event bus
+    await this.notifyOrderCreatedEvent(userId, order, reservedTickets);
+
     return { order, tickets: reservedTickets, unavailableTickets, ticketsNotFound };
+  }
+
+  /**
+   * Creates a new expiration date for an order
+   *
+   * @returns {Date}
+   */
+  createExpirationDate(): Date {
+    const expiration = new Date();
+    expiration.setSeconds(expiration.getSeconds() + ORDER_EXPIRATION_SECONDS);
+    
+    return expiration;
   }
 
   /**
@@ -237,19 +252,117 @@ export class OrderService {
   }
 
   /**
-   * Updates an order by id
+   * Updates an order status by id
    *
    * @param {string} id  The id of the order to update
    * @param {string} status  The status of the order
    *
    * @returns {Promise<SavedOrderDoc>}
    */
-  async updateOrderById(id: string, status: OrderStatusEnum): Promise<SavedOrderDoc> {
-    const order = await this.orderRepo.updateById(id, { status });
+  async updateOrderStatusById(id: string, status: OrderStatusEnum): Promise<SavedOrderDoc> {
+    let order = await this.orderRepo.findById(id);
+
+    if (!order) throw new NotFoundError('Order not found');
+
+    order = await this.orderRepo.updateById(id, { status, version: (order.version + 1) });
     
     if (!order) throw new NotFoundError('Order not found');
     
     return order;
+  }
+
+  /**
+   * Cancels an order by id
+   *
+   * @param {string} userId  The userId of the user to cancel the order for
+   * @param {string} id  The id of the order to delete
+   *
+   * @returns {Promise<boolean | { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }>}
+   */
+  async cancelOrderById(userId: string, id: string): Promise<boolean | { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }> {
+    let order = await this.getOrderById(id);
+
+    if (!order) return false;
+
+    if (order.userId.toString() !== userId) throw new BadRequestError('You are not authorized to cancel this order');
+
+    await this.orderRepo.updateById(id, { status: OrderStatusEnum.CANCELLED });
+
+    // Notify the order cancelled event to the event bus
+    await this.notifyOrderCancelledEvent(userId, order as unknown as { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] });
+
+    return order;
+  }
+
+  /**
+   * Saves a new ticket from a ticket creation event sent from ticket-srv
+   *
+   * @param event 
+   *s
+   * @returns {void}
+   *
+   * @throws {ServerError}  If the ticket cannot be created (will cause the event to be retried again later by the event bus)
+   */
+  async createTicketFromEvent(event: TicketCreatedData): Promise<void> {
+    try {
+      await this.ticketRepo.create({
+        id: event.ticketId,
+        title: event.title,
+        price: event.price,
+        order: null,
+      });
+    } catch (error) {
+      console.error('Error in OrderService createTicketFromEvent event:', error);
+      /**
+       * Throwing server error, which will cause the event to be retried again later by the event bus.
+       * TODO: Add logging to the database, for failed events
+       */
+      console.error('Error creating ticket from event:', error);
+      const msg = error instanceof Error
+        ? 'Cannot process OrderService createTicketFromEvent event: ' + error.message
+        : 'Unknown error executing createTicketFromEvent in OrderService';
+
+      throw new ServerError(msg);
+    }
+  }
+
+  /**
+   * Updates a ticket from a ticket update event sent from ticket-srv
+   *
+   * @param event 
+   *
+   * @returns {void}
+   *
+   * @throws {ServerError}  If the ticket cannot be updated (will cause the event to be retried again later by the event bus)
+   */
+  async updateTicketFromEvent(event: TicketUpdatedData): Promise<void> {
+    try {
+      const ticket = await this.ticketRepo.findById(event.ticketId);
+
+      // Ticket must exist
+      if (!ticket) throw new NotFoundError('Ticket not found');
+
+      // Ticket version must be the next version
+      if (event.version !== (ticket.version + 1)) throw new BadRequestError('Ticket version mismatch');
+
+      await this.ticketRepo.updateById(event.ticketId, {
+        title: event.title,
+        price: event.price,
+        version: event.version,
+      });
+    } catch (error) {
+      console.error('Error in OrderService updateTicketFromEvent event:', error);
+
+      /**
+       * Throwing server error, which will cause the event to be retried again later by the event bus.
+       * TODO: Add logging to the database, for failed events
+       */
+      const msg = error instanceof Error
+        ? 'Cannot process OrderService updateTicketFromEvent event: ' + error.message
+        : 'Unknown error executing updateTicketFromEvent in OrderService';
+
+      throw new ServerError(msg);
+    }
   }
 
   /**
@@ -307,28 +420,51 @@ export class OrderService {
   }
 
   /**
-   * Cancels an order by id
+   * Creates an event publisher for a given event type
    *
-   * @param {string} userId  The userId of the user to cancel the order for
-   * @param {string} id  The id of the order to delete
+   * @param {EventTypesEnum} eventType  The event type to create an event publisher for
    *
-   * @returns {Promise<boolean>}
+   * @returns {EventPublisher}
    */
-  async cancelOrderById(userId: string, id: string): Promise<boolean> {
-    let order = await this.orderRepo.findById(id);
-
-    if (!order) return false;
-
-    if (order.userId.toString() !== userId) throw new BadRequestError('You are not authorized to cancel this order');
-
-    order = await this.orderRepo.updateById(id, { status: OrderStatusEnum.CANCELLED });
-
-    if (!order) return false;
-
-    // Remove cancelled order id from all associated tickets
-    // await this.ticketRepo.updateAllByOrderId(id, { order: null });
-
-    return true;
+  createEventPublisher(eventType: EventTypesEnum): EventPublisher {
+    return new EventPublisher(
+      new OrderEventFactory(eventType)
+    );
   }
 
+  /**
+   * Publishes order created event to the event bus
+   *
+   * @param {SavedOrderDoc} order  The order to notify
+   *
+   * @returns {Promise<void>}
+   */
+  async notifyOrderCreatedEvent(userId: string, order: SavedOrderDoc, reservedTickets: SavedTicketDoc[]): Promise<void> {
+    const publisher = this.createEventPublisher(EventTypesEnum.ORDER_CREATED);
+    await publisher.publishEvent('orders-srv.order-events', EventTypesEnum.ORDER_CREATED, {
+      orderId: order.id,
+      userId,
+      tickets: reservedTickets.map((ticket: SavedTicketDoc) => ({ ticketId: ticket.id, price: ticket.price })),
+      expiresAt: order.expiresAt!.toISOString(),
+      status: order.status,
+      version: order.version, // 0 is the initial version
+    });
+  }
+
+  /**
+   * Publishes order cancelled event to the event bus
+   *
+   * @param {string} userId  The userId of the user to cancel the order for
+   * @param {SavedOrderDoc} order  The order to notify
+   *
+   * @returns {Promise<void>}
+   */
+  async notifyOrderCancelledEvent(userId: string, order: { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }): Promise<void> {
+    const publisher = this.createEventPublisher(EventTypesEnum.ORDER_CREATED);
+    await publisher.publishEvent('orders-srv.order-events', EventTypesEnum.ORDER_CREATED, {
+      orderId: order.id,
+      status: OrderStatusEnum.CANCELLED,
+      tickets: order.tickets.map((ticket: SavedTicketDoc) => ({ ticketId: ticket.id, price: ticket.price })),
+    });
+  }
 }

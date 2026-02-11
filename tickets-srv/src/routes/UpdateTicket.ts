@@ -6,11 +6,8 @@
 import express, { Request, Response } from "express";
 import { body, param } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
-import { STATUS_CODES, NotFoundError, UnAuthorizedError } from '@bigtix/common';
+import { STATUS_CODES, UnAuthorizedError, BadRequestError } from '@bigtix/common';
 import { TicketService } from '../TicketService';
-import { EventPublisher } from '@bigtix/middleware';
-import { TicketEventFactory } from '../events/TicketEventFactory';
-import { EventTypesEnum } from '@bigtix/middleware';
 
 const router = express.Router();
 const ticketSvc = new TicketService();
@@ -26,6 +23,7 @@ const ticketSvc = new TicketService();
  * @throws {RequestValidationError}  If request validation fails
  * @throws {UnAuthorizedError}  If user is not authenticated, or not the owner of the ticket
  * @throws {NotFoundError}  If ticket is not found
+ * @throws {BadRequestError}  If ticket is already attached to an order and cannot be edited/updated
  */
 router.put('/tickets/:id', [ 
     param('id').trim().notEmpty().isMongoId().withMessage('ID is required'),
@@ -42,25 +40,17 @@ router.put('/tickets/:id', [
     const currentUserId = req.currentUser!.id;
     const ticket = await ticketSvc.getTicketById(id);
 
-    if (!ticket) {
-      throw new NotFoundError('Ticket not found');
-    }
-
     // User must be the owner of the ticket to update it
     if (ticket.userId !== currentUserId) {
       throw new UnAuthorizedError('You are not authorized to update this ticket');
     }
 
-    const updatedTicket = await ticketSvc.updateTicketById(id, title, price, description);
+    // If ticket is already attached to an order, it cannot be updated
+    if (ticket.orderId) {
+      throw new BadRequestError('Ticket is already attached to an order and cannot be updated');
+    }
 
-    const factory = new TicketEventFactory(EventTypesEnum.TICKET_UPDATED);
-    const publisher = new EventPublisher(factory);
-    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_UPDATED, {
-      ticketId: id,
-      price,
-      description,
-      title,
-    });
+    const updatedTicket = await ticketSvc.updateTicketById(id, { title, price, description });
 
     res.status(STATUS_CODES.SUCCESS).send(updatedTicket);
   })

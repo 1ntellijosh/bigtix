@@ -10,25 +10,23 @@ import { Order, NewOrderAttrs } from '../../../src/models/Order';
 import { Ticket, SavedTicketDoc, NewTicketAttrs } from '../../../src/models/Ticket';
 import { OrderStatusEnum } from '@bigtix/common';
 import mongoose from 'mongoose';
+import { EventPublisher } from '@bigtix/middleware';
 
 const validTickets = [
   {
     order: null,
     price: 10.00,
     title: 'some title!!!!!',
-    version: 1,
   },
   {
     order: null,
     price: 10.00,
     title: 'another title!!!!!',
-    version: 1,
   },
   {
     order: null,
     price: 10.00,
     title: 'yet another title!!!!!',
-    version: 1,
   },
 ] as NewTicketAttrs[];
 let savedTickets: SavedTicketDoc[] = [];
@@ -55,7 +53,7 @@ const saveOrder = async (order: NewOrderAttrs): Promise<string> => {
 };
 
 const saveTickets = async (tickets: NewTicketAttrs[]): Promise<SavedTicketDoc[]> => {
-  const ticketDocs = await Ticket.insertMany(tickets);
+  const ticketDocs = await Ticket.insertMany(tickets.map(ticket => ({ ...ticket, version: 0 })));
 
   return ticketDocs;
 };
@@ -85,14 +83,14 @@ describe('Create order routes tests', () => {
             order: null,
             price: 10.00,
             title: 'some title!!!!!',
-            version: 1,
+            version: 0,
           },
           {
             id: new mongoose.Types.ObjectId().toString(),
             order: null,
             price: 10.00,
             title: 'another title!!!!!',
-            version: 1,
+            version: 0,
           },
         ],
       }).expect(400);
@@ -137,7 +135,7 @@ describe('Create order routes tests', () => {
       order: null,
       price: 10.00,
       title: 'some title!!!!!',
-      version: 1,
+      version: 0,
     } as SavedTicketDoc);
     const response = await request(ordersApp)
       .post('/api/orders/create')
@@ -150,5 +148,20 @@ describe('Create order routes tests', () => {
     expect(response.body.tickets.length).toBe(2);
     expect(response.body.unavailableTickets.length).toBe(1);
     expect(response.body.ticketsNotFound.length).toBe(1);
+  });
+
+  it('publishes created order event to the event bus', async () => {
+    // Spy on the prototype method - the mock class has publishEvent on prototype
+    const pubSpy = jest.spyOn(EventPublisher.prototype, 'publishEvent').mockResolvedValue(undefined);
+
+    const savedTickets = await saveTickets(validTickets);
+    await request(ordersApp)
+      .post('/api/orders/create')
+      .set('Cookie', createSignedInUserCookie(new mongoose.Types.ObjectId().toString()))
+      .send({
+        tickets: savedTickets.map(ticket => ({ id: ticket.id, price: ticket.price })),
+      });
+
+    expect(pubSpy).toHaveBeenCalled();
   });
 });

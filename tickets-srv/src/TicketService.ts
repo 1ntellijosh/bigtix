@@ -5,7 +5,11 @@
  */
 import { TicketRepository } from './repositories/TicketRepository';
 import { SavedTicketDoc } from './models/Ticket';
-import { BadRequestError, NotFoundError } from '@bigtix/common';
+import { BadRequestError, NotFoundError, ServerError } from '@bigtix/common';
+import { OrderCreatedData, OrderStatusUpdatedData } from '@bigtix/middleware';
+import { EventPublisher } from '@bigtix/middleware';
+import { TicketEventFactory } from './events/TicketEventFactory';
+import { EventTypesEnum } from '@bigtix/middleware';
 
 export class TicketService {
   private tickRepo: TicketRepository;
@@ -39,6 +43,9 @@ export class TicketService {
 
     // Create the ticket
     const ticket = await this.tickRepo.create({ title, price, userId, description, serialNumber, eventId });
+    
+    // Notify the ticket created event to the event bus
+    await this.notifyTicketCreatedEvent(ticket);
 
     return ticket;
   }
@@ -120,11 +127,136 @@ export class TicketService {
    *
    * @returns {Promise<SavedTicketDoc>}
    */
-  async updateTicketById(id: string, title: string, price: number, description: string): Promise<SavedTicketDoc> {
-    const ticket = await this.tickRepo.updateById(id, { title, price, description });
+  async updateTicketById(id: string, attrs: { title?: string, price?: number, description?: string, orderId?: string | null }): Promise<SavedTicketDoc> {
+    let ticket = await this.tickRepo.findById(id);
+
+    if (!ticket) throw new NotFoundError('Ticket not found');
+
+    const changes = {
+      ...attrs,
+      version: (ticket.version + 1),
+    };
+    
+    ticket = await this.tickRepo.updateById(id, changes);
     
     if (!ticket) throw new NotFoundError('Ticket not found');
+
+    await this.notifyTicketUpdatedEvent(ticket);
     
     return ticket;
+  }
+
+  /**
+   * Applies the order id to the tickets that are part of a given created order event. This is used to indicate the
+   * associated tickets are attached to a new order. This can have implications for the tickets, such as they cannot be
+   * edited or deleted unless the order is cancelled/timed out.
+   *
+   * @param {OrderCreatedData} data  The order created data
+   *
+   * @returns {Promise<SavedTicketDoc[]>}
+   */
+  async applyNewOrderToTicketsEvent(event: OrderCreatedData): Promise<void> {
+    try {
+      const { orderId, tickets } = event;
+
+      // Update the tickets with the order id
+      for (const ticket of tickets) {
+        await this.tickRepo.updateById(ticket.ticketId, { orderId });
+      }
+    } catch (error) {
+      console.error('Error in TicketService applyNewOrderToTicketsEvent event:', error);
+      /**
+       * Throwing server error, which will cause the event to be retried again later by the event bus.
+       * TODO: Add logging to the database, for failed events
+       */
+      const msg = error instanceof Error
+        ? 'Cannot process TicketService applyNewOrderToTicketsEvent event: ' + error.message
+        : 'Unknown error executing applyNewOrderToTicketsEvent in TicketService';
+
+      throw new ServerError(msg);
+    }
+  }
+
+  /**
+   * Applies the order cancelled to the tickets that are part of a given order cancelled event. This is used to indicate
+   * the associated tickets are no longer attached to an order. This can have implications for the tickets, such as they
+   * can be edited or deleted again
+   *
+   * @param {OrderCancelledData} data  The order cancelled data
+   *
+   * @returns {Promise<void>}
+   */
+  async applyOrderCancelledToTicketsEvent(event: OrderStatusUpdatedData): Promise<void> {
+    try {
+      const { tickets } = event;
+
+      // Update the tickets with null order id
+      for (const ticket of tickets) {
+        await this.tickRepo.updateById(ticket.ticketId, { orderId: null });
+      }
+    } catch (error) {
+      console.error('Error in TicketService applyOrderCancelledToTicketsEvent event:', error);
+      /**
+       * Throwing server error, which will cause the event to be retried again later by the event bus.
+       * TODO: Add logging to the database, for failed events
+       */
+      const msg = error instanceof Error
+        ? 'Cannot process TicketService applyOrderCancelledToTicketsEvent event: ' + error.message
+        : 'Unknown error executing applyOrderCancelledToTicketsEvent in TicketService';
+
+      throw new ServerError(msg);
+    }
+  }
+
+  /**
+   * Creates an event publisher for a given event type
+   *
+   * @param {EventTypesEnum} eventType  The event type to create an event publisher for
+   *
+   * @returns {EventPublisher}
+   */
+  createEventPublisher(eventType: EventTypesEnum): EventPublisher {
+    return new EventPublisher(
+      new TicketEventFactory(eventType)
+    );
+  }
+
+  /**
+   * Notifies the ticket created event to the event bus
+   *
+   * @param {SavedTicketDoc} createdTicket  The created ticket
+   *
+   * @returns {Promise<void>}
+   */
+  async notifyTicketCreatedEvent(createdTicket: SavedTicketDoc): Promise<void> {
+    const publisher = this.createEventPublisher(EventTypesEnum.TICKET_CREATED);
+    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_CREATED, {
+      ticketId: createdTicket.id,
+      eventId: createdTicket.eventId,
+      userId: createdTicket.userId,
+      price: createdTicket.price,
+      description: createdTicket.description,
+      serialNumber: createdTicket.serialNumber,
+      title: createdTicket.title,
+      version: createdTicket.version,
+    });
+  }
+
+  /**
+   * Notifies the ticket updated event to the event bus
+   *
+   * @param {SavedTicketDoc} updatedTicket  The updated ticket
+   *
+   * @returns {Promise<void>}
+   */
+  async notifyTicketUpdatedEvent(updatedTicket: SavedTicketDoc): Promise<void> {
+    const publisher = this.createEventPublisher(EventTypesEnum.TICKET_UPDATED);
+    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_UPDATED, {
+      ticketId: updatedTicket.id,
+      price: updatedTicket.price,
+      description: updatedTicket.description,
+      title: updatedTicket.title,
+      version: updatedTicket.version,
+    });
   }
 }

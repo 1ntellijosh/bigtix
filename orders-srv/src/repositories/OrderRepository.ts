@@ -48,8 +48,8 @@ export class OrderRepository implements AbstractRepository {
    * @inheritdoc
    */
   async updateById(id: string, attrs: object): Promise<SavedOrderDoc | null> {
-    // { new: true } means return the updated document
-    return Order.findByIdAndUpdate(id, attrs, { new: true });
+    // { returnDocument: 'after' } means return the updated document
+    return Order.findByIdAndUpdate(id, attrs, { returnDocument: 'after' });
   }
 
   /**

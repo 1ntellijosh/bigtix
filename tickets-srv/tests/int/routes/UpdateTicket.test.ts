@@ -87,6 +87,18 @@ describe('Update ticket routes tests', () => {
       }).expect(401);
   });
 
+  it('returns a 400 if the ticket is already attached to an order and cannot be edited/updated', async () => {
+    await Ticket.findByIdAndUpdate(savedTicket.id, { orderId: new mongoose.Types.ObjectId().toString() });
+    await request(tickApp)
+      .put(`/api/tickets/${savedTicket.id}`)
+      .set('Cookie', createSignedInUserCookie(validUserId))
+      .send({
+        title: validTitle,
+        price: validPrice,
+        description: validDescription,
+      }).expect(400);
+  });
+
   it('returns the updated ticket if it is found by id', async () => {
     const response = await request(tickApp)
       .put(`/api/tickets/${savedTicket.id}`)

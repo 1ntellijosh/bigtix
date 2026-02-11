@@ -24,11 +24,13 @@ export class OrderEventFactory extends AbstractEventFactory {
           tickets: data.tickets,
           expiresAt: data.expiresAt,
           status: data.status,
+          version: data.version,
         } as OrderCreatedData;
       case EventTypesEnum.ORDER_STATUS_CHANGED:
         return {
           orderId: data.orderId,
           status: data.status,
+          version: data.version,
         } as OrderStatusUpdatedData;
       default:
         throw new Error(`Event type ${eventType} not supported`);

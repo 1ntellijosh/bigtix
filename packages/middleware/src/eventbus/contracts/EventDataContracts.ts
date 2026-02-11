@@ -40,6 +40,7 @@ export interface TicketCreatedData {
   description: string;
   serialNumber: string;
   title: string;
+  version: number;
 }
 
 /** Data payload for ticket.updated. */
@@ -48,6 +49,7 @@ export interface TicketUpdatedData {
   price: number;
   description: string;
   title: string;
+  version: number;
 }
 
 /** Data payload for ticket.deleted. / ticket.sold. / ticket.cancelled. / ticket.refunded. */
@@ -69,12 +71,15 @@ export interface OrderCreatedData {
   orderId: string;
   userId: string;
   tickets: OrderTicketData[];
-  expiresAt: number;
+  expiresAt: string; // ISO 8601 string (e.g. new Date().toISOString())
   status: OrderStatusEnum;
+  version: number;
 }
 
 /** Data payload for order.status.changed. */
 export interface OrderStatusUpdatedData {
   orderId: string;
   status: OrderStatusEnum;
+  tickets: OrderTicketData[];
+  version: number;
 }

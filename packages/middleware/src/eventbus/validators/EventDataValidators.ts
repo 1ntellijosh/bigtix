@@ -39,7 +39,8 @@ export function validateTicketCreatedData(data: unknown): data is TicketCreatedD
     val.hasNumber(data, 'price') &&
     val.hasString(data, 'description') &&
     val.hasString(data, 'serialNumber') &&
-    val.hasString(data, 'title')
+    val.hasString(data, 'title') &&
+    val.hasNumber(data, 'version')
   );
 }
 
@@ -49,7 +50,8 @@ export function validateTicketUpdatedData(data: unknown): data is TicketUpdatedD
     val.hasString(data, 'ticketId') &&
     val.hasNumber(data, 'price') &&
     val.hasString(data, 'description') &&
-    val.hasString(data, 'title')
+    val.hasString(data, 'title') &&
+    val.hasNumber(data, 'version')
   );
 }
 
@@ -58,11 +60,24 @@ export function validateTicketDeletedData(data: unknown): data is TicketDeletedD
 }
 
 export function validateOrderCreatedData(data: unknown): data is OrderCreatedData {
-  return val.isObject(data) && val.hasString(data, 'orderId') && val.hasString(data, 'userId') && val.hasArray(data, 'tickets') && val.hasNumber(data, 'expiresAt') && val.hasString(data, 'status');
+  return (
+    val.isObject(data) && 
+    val.hasString(data, 'orderId') && 
+    val.hasString(data, 'userId') && 
+    val.hasArray(data, 'tickets') && 
+    val.hasNumber(data, 'expiresAt') && 
+    val.hasString(data, 'status') && 
+    val.hasNumber(data, 'version')
+  );
 }
 
 export function validateOrderStatusUpdatedData(data: unknown): data is OrderStatusUpdatedData {
-  return val.isObject(data) && val.hasString(data, 'orderId') && val.hasEnum(data, 'status', OrderStatusEnum);
+  return (
+    val.isObject(data) &&
+    val.hasString(data, 'orderId') &&
+    val.hasEnum(data, 'status', OrderStatusEnum) &&
+    val.hasNumber(data, 'version')
+  );
 }
 
 export type EventDataValidator = (data: unknown) => boolean;

@@ -49,8 +49,8 @@ export class TicketRepository implements AbstractRepository {
    * @inheritdoc
    */
   async updateById(id: string, attrs: object): Promise<SavedTicketDoc | null> {
-    // { new: true } means return the updated document
-    return Ticket.findByIdAndUpdate(id, attrs, { new: true });
+    // { returnDocument: 'after' } means return the updated document
+    return Ticket.findByIdAndUpdate(id, attrs, { returnDocument: 'after' });
   }
 
   /**

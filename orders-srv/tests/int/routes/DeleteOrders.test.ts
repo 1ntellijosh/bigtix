@@ -10,6 +10,7 @@ import { Order, NewOrderAttrs } from '../../../src/models/Order';
 import { Ticket, SavedTicketDoc, NewTicketAttrs } from '../../../src/models/Ticket';
 import { OrderStatusEnum } from '@bigtix/common';
 import mongoose from 'mongoose';
+import { EventPublisher } from '@bigtix/middleware';
 
 const validUserId = new mongoose.Types.ObjectId().toString();
 
@@ -18,19 +19,16 @@ const validTickets = [
     order: null,
     price: 10.00,
     title: 'some title!!!!!',
-    version: 1,
   },
   {
     order: null,
     price: 10.00,
     title: 'another title!!!!!',
-    version: 1,
   },
   {
     order: null,
     price: 10.00,
     title: 'yet another title!!!!!',
-    version: 1,
   },
 ] as NewTicketAttrs[];
 let savedTickets: SavedTicketDoc[] = [];
@@ -57,7 +55,7 @@ const saveOrder = async (order: NewOrderAttrs): Promise<string> => {
 };
 
 const saveTickets = async (tickets: NewTicketAttrs[]): Promise<SavedTicketDoc[]> => {
-  const ticketDocs = await Ticket.insertMany(tickets);
+  const ticketDocs = await Ticket.insertMany(tickets.map(ticket => ({ ...ticket, version: 0 })));
 
   return ticketDocs;
 };
@@ -99,15 +97,13 @@ describe('Delete (cancel) order routes tests', () => {
       .expect(400);
   });
 
-  it('Returns success with false if order is not found', async () => {
+  it('Returns not found error if order is not found', async () => {
     const orderId = new mongoose.Types.ObjectId().toString();
     const response = await request(ordersApp)
       .delete(`/api/orders/${orderId}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send()
-      .expect(200);
-
-    expect(response.body).toBe(false);
+      .expect(404);
   });
 
   it('Cancels an order by id', async () => {
@@ -145,5 +141,22 @@ describe('Delete (cancel) order routes tests', () => {
     expect(createOrderResponse.body.tickets.length).toBe(3);
     expect(createOrderResponse.body.unavailableTickets.length).toBe(0);
     expect(createOrderResponse.body.ticketsNotFound.length).toBe(0);
+  });
+
+  it('publishes cancelled order event to the event bus', async () => {
+    // Spy on the prototype method - the mock class has publishEvent on prototype
+    const pubSpy = jest.spyOn(EventPublisher.prototype, 'publishEvent').mockResolvedValue(undefined);
+
+    const orderId = await saveOrder(validOrder);
+    const ticketsWithOrderId = addOrderIdToTickets(orderId, validTickets);
+    await saveTickets(ticketsWithOrderId);
+
+    await request(ordersApp)
+      .delete(`/api/orders/${orderId}`)
+      .set('Cookie', createSignedInUserCookie(validOrder.userId))
+      .send()
+      .expect(200);
+
+    expect(pubSpy).toHaveBeenCalled();
   });
 });
