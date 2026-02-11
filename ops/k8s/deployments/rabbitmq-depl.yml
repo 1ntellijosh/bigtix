@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------------------------
-# RabbitMQ in messaging namespace (official rabbitmq image; no Bitnami chart)
-# Password from secret rabbitmq-auth (key: password). Playbook creates the secret.
+# RabbitMQ in messaging namespace (custom image with rabbitmq_delayed_message_exchange plugin).
+# Image built by ops/Ansible/setup-cluster.yml and loaded into Kind. Password from secret rabbitmq-auth.
 # ------------------------------------------------------------------------------------------------
 
 apiVersion: apps/v1
@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: rabbitmq
-          image: docker.io/rabbitmq:3.13-management
+          image: bigtix-rabbitmq:3.13-management
           imagePullPolicy: IfNotPresent
           ports:
             - name: amqp

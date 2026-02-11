@@ -22,8 +22,16 @@ export const ValidationHelpers = {
   hasBoolean: (obj: Record<string, unknown>, key: string): boolean => {
     return typeof obj[key] === 'boolean';
   },
+  /** Accepts a Date instance or a valid ISO 8601 date string (e.g. from JSON). */
   hasDate: (obj: Record<string, unknown>, key: string): boolean => {
-    return obj[key] instanceof Date;
+    const value = obj[key];
+
+    if (value instanceof Date) return !isNaN(value.getTime());
+
+    if (typeof value !== 'string') return false;
+
+    const parsedValue = Date.parse(value);
+    return !isNaN(parsedValue);
   },
   hasEmail: (obj: Record<string, unknown>, key: string): boolean => {
     return typeof obj[key] === 'string' && obj[key].includes('@');
@@ -31,7 +39,9 @@ export const ValidationHelpers = {
   hasPhone: (obj: Record<string, unknown>, key: string): boolean => {
     return typeof obj[key] === 'string' && obj[key].match(/^\d{10}$/) !== null;
   },
-  hasEnum: (obj: Record<string, unknown>, key: string, eNum: any): boolean => {
-    return eNum.includes(obj[key]);
+  /** eNum: TypeScript enum object (e.g. OrderStatusEnum). Checks obj[key] is one of the enum values. */
+  hasEnum: (obj: Record<string, unknown>, key: string, eNum: Record<string, string | number>): boolean => {
+    const values = Object.values(eNum);
+    return values.includes(obj[key] as string | number);
   },
 } as const;

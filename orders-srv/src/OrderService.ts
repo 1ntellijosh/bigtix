@@ -9,7 +9,7 @@ import { NotFoundError, ServerError, BadRequestError } from '@bigtix/common';
 import { SavedOrderDoc } from './models/Order';
 import { SavedTicketDoc } from './models/Ticket';
 import { OrderStatusEnum, ORDER_EXPIRATION_SECONDS } from '@bigtix/common';
-import { TicketCreatedData, TicketUpdatedData } from '@bigtix/middleware';
+import { TicketCreatedData, TicketUpdatedData, OrderExpiredData } from '@bigtix/middleware';
 import { EventPublisher } from '@bigtix/middleware';
 import { OrderEventFactory } from './events/OrderEventFactory';
 import { EventTypesEnum } from '@bigtix/middleware';
@@ -57,7 +57,10 @@ export class OrderService {
     const reservedTickets = await this.assignOrderToTickets(order.id, availableTickets);
 
     // Publish created order event to the event bus
-    await this.notifyOrderCreatedEvent(userId, order, reservedTickets);
+    await this.publishOrderCreatedEvent(userId, order, reservedTickets);
+
+    // Start the expiration timer for the order (broker will deliver at expiresAt)
+    await this.publishOrderExpirationEvent(order.id, order.expiresAt!);
 
     return { order, tickets: reservedTickets, unavailableTickets, ticketsNotFound };
   }
@@ -69,7 +72,9 @@ export class OrderService {
    */
   createExpirationDate(): Date {
     const expiration = new Date();
-    expiration.setSeconds(expiration.getSeconds() + ORDER_EXPIRATION_SECONDS);
+    // expiration.setSeconds(expiration.getSeconds() + ORDER_EXPIRATION_SECONDS);
+    // temporary expiration for testing
+    expiration.setSeconds(expiration.getSeconds() + 30); // 30 seconds
     
     return expiration;
   }
@@ -174,7 +179,7 @@ export class OrderService {
    *
    * @returns {Promise<SavedOrderDoc>}
    */
-  async getOrderById(id: string): Promise<{ id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }> {
+  async getOrderById(id: string): Promise<{ id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[], version: number }> {
     const order = await this.orderRepo.findById(id);
     
     if (!order) throw new NotFoundError('Order not found');
@@ -189,25 +194,8 @@ export class OrderService {
       expiresAt: order.expiresAt as Date,
       userId: order.userId,
       tickets,
+      version: order.version,
     };
-  }
-
-  /**
-   * Retrieves a single order for a given user
-   *
-   * @param {string} userId  The userId of the user to retrieve the order for
-   * @param {string} id  The id of the order to retrieve
-   *
-   * @returns {Promise<SavedOrderDoc>}
-   */
-  async getSingleUserOrder(userId: string, id: string): Promise<{ id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }> {
-    const order = await this.getOrderById(id);
-    
-    if (!order) throw new NotFoundError('Order not found');
-    
-    if (order.userId.toString() !== userId) throw new BadRequestError('You are not authorized to view this order');
-    
-    return order;
   }
 
   /**
@@ -279,17 +267,18 @@ export class OrderService {
    *
    * @returns {Promise<boolean | { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }>}
    */
-  async cancelOrderById(userId: string, id: string): Promise<boolean | { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }> {
-    let order = await this.getOrderById(id);
-
-    if (!order) return false;
+  async cancelOrderById(userId: string, id: string): Promise<{ id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }> {
+    const order = await this.getOrderById(id);
 
     if (order.userId.toString() !== userId) throw new BadRequestError('You are not authorized to cancel this order');
 
-    await this.orderRepo.updateById(id, { status: OrderStatusEnum.CANCELLED });
+    const updatedOrder = await this.updateOrderStatusById(id, OrderStatusEnum.CANCELLED);
+
+    order.status = updatedOrder.status;
+    order.version = updatedOrder.version;
 
     // Notify the order cancelled event to the event bus
-    await this.notifyOrderCancelledEvent(userId, order as unknown as { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] });
+    await this.publishOrderStatusChangedEvent(OrderStatusEnum.CANCELLED, order);
 
     return order;
   }
@@ -303,7 +292,7 @@ export class OrderService {
    *
    * @throws {ServerError}  If the ticket cannot be created (will cause the event to be retried again later by the event bus)
    */
-  async createTicketFromEvent(event: TicketCreatedData): Promise<void> {
+  async onTicketCreatedEvent(event: TicketCreatedData): Promise<void> {
     try {
       await this.ticketRepo.create({
         id: event.ticketId,
@@ -312,15 +301,14 @@ export class OrderService {
         order: null,
       });
     } catch (error) {
-      console.error('Error in OrderService createTicketFromEvent event:', error);
+      console.error('Error in OrderService onTicketCreatedEvent event:', error);
       /**
        * Throwing server error, which will cause the event to be retried again later by the event bus.
        * TODO: Add logging to the database, for failed events
        */
-      console.error('Error creating ticket from event:', error);
       const msg = error instanceof Error
-        ? 'Cannot process OrderService createTicketFromEvent event: ' + error.message
-        : 'Unknown error executing createTicketFromEvent in OrderService';
+        ? 'Cannot process OrderService onTicketCreatedEvent event: ' + error.message
+        : 'Unknown error executing onTicketCreatedEvent in OrderService';
 
       throw new ServerError(msg);
     }
@@ -335,7 +323,7 @@ export class OrderService {
    *
    * @throws {ServerError}  If the ticket cannot be updated (will cause the event to be retried again later by the event bus)
    */
-  async updateTicketFromEvent(event: TicketUpdatedData): Promise<void> {
+  async onTicketUpdatedEvent(event: TicketUpdatedData): Promise<void> {
     try {
       const ticket = await this.ticketRepo.findById(event.ticketId);
 
@@ -351,18 +339,33 @@ export class OrderService {
         version: event.version,
       });
     } catch (error) {
-      console.error('Error in OrderService updateTicketFromEvent event:', error);
+      console.error('Error in OrderService onTicketUpdatedEvent event:', error);
 
       /**
        * Throwing server error, which will cause the event to be retried again later by the event bus.
        * TODO: Add logging to the database, for failed events
        */
       const msg = error instanceof Error
-        ? 'Cannot process OrderService updateTicketFromEvent event: ' + error.message
-        : 'Unknown error executing updateTicketFromEvent in OrderService';
+        ? 'Cannot process OrderService onTicketUpdatedEvent event: ' + error.message
+        : 'Unknown error executing onTicketUpdatedEvent in OrderService';
 
       throw new ServerError(msg);
     }
+  }
+
+  /**
+   * Handles an incoming order expiration event
+   *
+   * @param {OrderExpiredData} event  The order expired data
+   *
+   * @returns {Promise<void>}
+   */
+  async onOrderExpirationEvent(event: OrderExpiredData): Promise<void> {
+    await this.updateOrderStatusById(event.orderId, OrderStatusEnum.EXPIRED);
+
+    const order = await this.getOrderById(event.orderId);
+
+    await this.publishOrderStatusChangedEvent(OrderStatusEnum.EXPIRED, order);
   }
 
   /**
@@ -439,7 +442,7 @@ export class OrderService {
    *
    * @returns {Promise<void>}
    */
-  async notifyOrderCreatedEvent(userId: string, order: SavedOrderDoc, reservedTickets: SavedTicketDoc[]): Promise<void> {
+  async publishOrderCreatedEvent(userId: string, order: SavedOrderDoc, reservedTickets: SavedTicketDoc[]): Promise<void> {
     const publisher = this.createEventPublisher(EventTypesEnum.ORDER_CREATED);
     await publisher.publishEvent('orders-srv.order-events', EventTypesEnum.ORDER_CREATED, {
       orderId: order.id,
@@ -452,19 +455,43 @@ export class OrderService {
   }
 
   /**
-   * Publishes order cancelled event to the event bus
+   * Publishes order status changed event to the event bus
    *
    * @param {string} userId  The userId of the user to cancel the order for
    * @param {SavedOrderDoc} order  The order to notify
    *
    * @returns {Promise<void>}
    */
-  async notifyOrderCancelledEvent(userId: string, order: { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[] }): Promise<void> {
-    const publisher = this.createEventPublisher(EventTypesEnum.ORDER_CREATED);
-    await publisher.publishEvent('orders-srv.order-events', EventTypesEnum.ORDER_CREATED, {
+  async publishOrderStatusChangedEvent(
+    status: OrderStatusEnum,
+    order: { id: string, status: OrderStatusEnum, expiresAt: Date, userId: string, tickets: SavedTicketDoc[], version: number }
+  ): Promise<void> {
+    const publisher = this.createEventPublisher(EventTypesEnum.ORDER_STATUS_CHANGED);
+    await publisher.publishEvent('orders-srv.order-events', EventTypesEnum.ORDER_STATUS_CHANGED, {
       orderId: order.id,
-      status: OrderStatusEnum.CANCELLED,
+      status,
       tickets: order.tickets.map((ticket: SavedTicketDoc) => ({ ticketId: ticket.id, price: ticket.price })),
+      version: order.version,
     });
+  }
+
+  /**
+   * Publishes order expiration event to the event bus. This message will be delivered by RabbitMQ at the given
+   * expiration time, and Orders service will receive it and expire the order
+   *
+   * @param {string} orderId  The id of the order to expire
+   * @param {Date} expiresAt  The expiration date of the order
+   *
+   * @returns {Promise<void>}
+   */
+  async publishOrderExpirationEvent(orderId: string, expiresAt: Date): Promise<void> {
+    const publisher = this.createEventPublisher(EventTypesEnum.ORDER_EXPIRED);
+    const delayMs = Math.max(0, expiresAt.getTime() - Date.now());
+    await publisher.publishEvent(
+      'orders-srv.order-events',
+      EventTypesEnum.ORDER_EXPIRED,
+      { orderId },
+      { delayMs }
+    );
   }
 }

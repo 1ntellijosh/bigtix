@@ -7,13 +7,13 @@ import express, { Request, Response } from "express";
 import { body } from 'express-validator';
 import { APIRequest as api } from '@bigtix/middleware';
 import { STATUS_CODES } from '@bigtix/common';
-import { UserService } from '../UserService';
+import { AuthService } from '../AuthService';
 // import { EventPublisher } from '@bigtix/middleware';
 // import { AuthEventFactory } from '../events/AuthEventFactory';
 // import { EventTypesEnum } from '@bigtix/middleware';
 
 const router = express.Router();
-const userSvc = new UserService();
+const userSvc = new AuthService();
 
 /**** Event usage example
 

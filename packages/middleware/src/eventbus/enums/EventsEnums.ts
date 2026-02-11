@@ -4,7 +4,6 @@
  *
  * @since event-bus-start--JP
  */
-export const EXCHANGE_NAME = 'bigtix.main.eventbus';
 
 export enum SourceServiceEnum {
   AUTH_SRV = 'auth-srv',
@@ -28,4 +27,5 @@ export enum EventTypesEnum {
   TICKET_REFUNDED = 'ticket.refunded',
   ORDER_CREATED = 'order.created',
   ORDER_STATUS_CHANGED = 'order.status.changed',
+  ORDER_EXPIRED = 'order.expired',
 }
