@@ -206,9 +206,25 @@ export class OrderService {
    * @returns {Promise<void>}
    */
   async onOrderExpirationEvent(event: OrderExpiredData): Promise<void> {
-    await this.updateOrderStatusById(event.orderId, OrderStatusEnum.EXPIRED);
-
     const order = await this.getOrderById(event.orderId);
+
+    if (!order) throw new NotFoundError('Order not found');
+
+    /**
+     * First we need to check if the order status to see if it has been cancelled, paid, awaiting payment, or refunded,
+     * and if so, we don't need to do anything
+     */
+    if ([
+      OrderStatusEnum.CANCELLED,
+      OrderStatusEnum.PAID,
+      OrderStatusEnum.AWAITING_PAYMENT,
+      OrderStatusEnum.REFUNDED
+    ].includes(order.status)) return;
+
+    const updatedOrder = await this.updateOrderStatusById(event.orderId, OrderStatusEnum.EXPIRED);
+
+    order.status = OrderStatusEnum.EXPIRED;
+    order.version = updatedOrder.version;
 
     await OrdersPublisher.publishOrderStatusChangedEvent(OrderStatusEnum.EXPIRED, order);
   }
