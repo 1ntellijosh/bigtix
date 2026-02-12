@@ -20,7 +20,6 @@ export const AuthUserEventSubscription : ServiceSubscription = {
       },
       exchange: EXCHANGE_NAME,
     },
-
     [EventTypesEnum.USER_REACTIVATED]: {
       handler: async (envelope) => {
         const data = envelope.data as UserActivationStatusData;

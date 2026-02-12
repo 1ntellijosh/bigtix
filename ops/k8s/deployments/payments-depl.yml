@@ -1,0 +1,70 @@
+# ------------------------------------------------------------------------------------------------
+# payments-srv k8s deployment file for BigTix platform microservices E-Commerce project
+# @since payments-srv-start--JP
+# ------------------------------------------------------------------------------------------------
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-dpl
+spec:
+  replicas: 1 # for now
+  selector:
+    matchLabels:
+      app: payments
+  template:
+    metadata:
+      labels:
+        app: payments
+    spec:
+      containers:
+        - name: payments
+          image: 1ntellijosh/bigtix-payments-srv
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MONGO_URI
+              value: mongodb://payments-mongo-srv:27017/payments
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: RABBITMQ_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name # This will be the pod name
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-url
+                  key: RABBITMQ_URL
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-secret-key
+                  key: STRIPE_SECRET_KEY
+            - name: STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-publishable-key
+                  key: STRIPE_PUBLISHABLE_KEY
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-webhook-key
+                  key: STRIPE_WEBHOOK_SECRET
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-srv
+spec:
+  selector:
+    app: payments
+  ports:
+    - name: payments
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

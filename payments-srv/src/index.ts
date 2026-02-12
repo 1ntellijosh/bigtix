@@ -1,13 +1,13 @@
 /**
- * Main entry point for orders microservice (orders-srv) setup and running
+ * Main entry point for payments microservice (payments-srv) setup and running
  *
- * @since orders-srv-start--JP
+ * @since payments-srv-start--JP
  */
-import { ordersApp } from './App';
+import { paymentsApp } from './App';
 import mongoose from 'mongoose';
 import { DatabaseConnectionError } from '@bigtix/common';
 import { connectToRabbitMQ, disconnectFromRabbitMQ } from '@bigtix/middleware';
-import { OrdersTicketEventSubscription, OrdersOrderEventSubscription, OrdersPaymentEventSubscription } from './events/OrdersSubscriptions';
+import { PaymentsOrderEventSubscription } from './events/PaymentsSubscriptions';
 import { subscribeQueues } from '@bigtix/middleware';
 
 const PORT = process.env.PORT || 3000;
@@ -17,21 +17,23 @@ const startService = async () => {
 
   if (!process.env.MONGO_URI) throw new Error('MONGO_URI is not defined');
 
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is not defined');
+  if (!process.env.STRIPE_PUBLISHABLE_KEY) throw new Error('STRIPE_PUBLISHABLE_KEY is not defined');
+  if (!process.env.STRIPE_WEBHOOK_SECRET) throw new Error('STRIPE_WEBHOOK_SECRET is not defined');
+
   await mongoose.connect(process.env.MONGO_URI).catch((err) => {
-    throw new DatabaseConnectionError('orders-srv failed to connect to database: ' + err.message);
+    throw new DatabaseConnectionError('payments-srv failed to connect to database: ' + err.message);
   });
 
-  ordersApp.listen(PORT, () => {
-    console.log(`Orders service listening on port ${PORT}...`);
+  paymentsApp.listen(PORT, () => {
+    console.log(`Payments service listening on port ${PORT}...`);
   });
 };
 
 connectToRabbitMQ().then(async (channel) => {
   // Subscribe to RabbitMQ to handle message events between microservices
   await subscribeQueues(channel, [
-    OrdersTicketEventSubscription,
-    OrdersOrderEventSubscription,
-    OrdersPaymentEventSubscription,
+    PaymentsOrderEventSubscription,
   ]);
 
   await startService();
