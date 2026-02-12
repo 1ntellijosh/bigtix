@@ -7,8 +7,8 @@ import { UserRepository } from './repositories/UserRepository';
 import { SavedUserDoc } from './models/User';
 import { BadRequestError } from '@bigtix/common';
 import { PasswordService as passSvc } from '@bigtix/middleware';
-import jwt from 'jsonwebtoken';
 import { Request } from 'express';
+import { SessionModule } from './modules/SessionModule';
 
 export class AuthService {
   private userRepo: UserRepository;
@@ -36,7 +36,7 @@ export class AuthService {
     const user = await this.userRepo.create({ email, password });
 
     // Sign in the user
-    this.setJwtInUserSession(req, user);
+    SessionModule.setJwtInUserSession(req, user);
 
     return user;
   }
@@ -54,25 +54,12 @@ export class AuthService {
     if (!user) throw new BadRequestError('Email not found');
 
     const passwordsMatch = await passSvc.verifyPassword(user.password, password);
+    
     if (!passwordsMatch) throw new BadRequestError('Password is incorrect');
 
-    this.setJwtInUserSession(req, user);
+    SessionModule.setJwtInUserSession(req, user);
 
     return user;
-  }
-
-  /**
-   * Sets the JWT in the user's session
-   *
-   * @param {Request} req
-   * @param {SavedUserDoc} user
-   */
-  setJwtInUserSession(req: Request, user: SavedUserDoc) {
-    const userJwt = jwt.sign({
-      id: user.id,
-      email: user.email,
-    }, process.env.JWT_KEY!);
-    req.session = { jwt: userJwt };
   }
 
   /**
@@ -83,12 +70,8 @@ export class AuthService {
    * @returns {object | null}  The current user data
    */
   getCurrentUser(req: Request): { currentUser: SavedUserDoc | null } {
-    if (!('session' in req) || !req.session?.jwt) {
-      return { currentUser: null };
-    }
-  
     try {
-      const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!);
+      const payload = SessionModule.extractPayloadFromJwt(req);
   
       return { currentUser: payload as SavedUserDoc | null };
     } catch (err) {

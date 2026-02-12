@@ -7,7 +7,7 @@ import { AbstractEventFactory } from '@bigtix/middleware';
 import { EventTypesEnum, SourceServiceEnum } from '@bigtix/middleware';
 import { OrderCreatedData, OrderStatusUpdatedData, OrderExpiredData } from '@bigtix/middleware';
 
-export class OrderEventFactory extends AbstractEventFactory {
+export class OrderEventDataFactory extends AbstractEventFactory {
   constructor(eventType: EventTypesEnum, correlationId?: string) {
     super(eventType, SourceServiceEnum.ORDERS_SRV, correlationId);
   }

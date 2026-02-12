@@ -49,7 +49,7 @@ router.get('/orders/:id', [
 
     const order = await orderSvc.getOrderById(id);
     
-    if (order.userId.toString() !== userId) throw new BadRequestError('You are not authorized to view this order');
+    if (order.userId !== userId) throw new BadRequestError('You are not authorized to view this order');
 
     res.status(STATUS_CODES.SUCCESS).send(order);
   })

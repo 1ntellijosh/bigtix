@@ -38,6 +38,17 @@ export interface EventEnvelope<T extends EventData = EventData> {
 }
 
 /**
+ * Data structure for a microservice to subscribe to events for a given queue.
+ *
+ * @param queueName - The name of the queue to subscribe to.
+ * @param eventConsumers - The event consumers to register for the queue.
+ */
+export type ServiceSubscription = {
+  queueName: string;
+  eventConsumers: EventConsumerMap;
+}
+
+/**
  * Map of event types to their consumer functions, passed to EventConsumer.registerEventConsumers().
  * Usage:
  *   const consumer = new EventConsumer(channel);
@@ -48,9 +59,9 @@ export interface EventEnvelope<T extends EventData = EventData> {
  *     },
  *   }).startConsuming('auth-srv.user-events');
  */
-export type EventConsumerMap = {
+export type EventConsumerMap = Partial<{
   [key in EventTypesEnum]: {
-    handler: (envelope: EventEnvelope<EventData>) => Promise<void>,
+    handler: (envelope: EventEnvelope<EventData>) => Promise<void>;
     exchange: typeof EXCHANGE_NAME | typeof DELAYED_EXCHANGE_NAME;
   };
-};
+}>;

@@ -7,9 +7,7 @@ import { TicketRepository } from './repositories/TicketRepository';
 import { SavedTicketDoc } from './models/Ticket';
 import { BadRequestError, NotFoundError, ServerError } from '@bigtix/common';
 import { OrderCreatedData, OrderStatusUpdatedData } from '@bigtix/middleware';
-import { EventPublisher } from '@bigtix/middleware';
-import { TicketEventFactory } from './events/TicketEventFactory';
-import { EventTypesEnum } from '@bigtix/middleware';
+import { TicketsPublisher } from './events/TicketsPublisher';
 
 export class TicketService {
   private tickRepo: TicketRepository;
@@ -45,7 +43,7 @@ export class TicketService {
     const ticket = await this.tickRepo.create({ title, price, userId, description, serialNumber, eventId });
     
     // Notify the ticket created event to the event bus
-    await this.notifyTicketCreatedEvent(ticket);
+    await TicketsPublisher.publishTicketCreatedEvent(ticket);
 
     return ticket;
   }
@@ -141,7 +139,7 @@ export class TicketService {
     
     if (!ticket) throw new NotFoundError('Ticket not found');
 
-    await this.notifyTicketUpdatedEvent(ticket);
+    await TicketsPublisher.publishTicketUpdatedEvent(ticket);
     
     return ticket;
   }
@@ -206,57 +204,5 @@ export class TicketService {
 
       throw new ServerError(msg);
     }
-  }
-
-  /**
-   * Creates an event publisher for a given event type
-   *
-   * @param {EventTypesEnum} eventType  The event type to create an event publisher for
-   *
-   * @returns {EventPublisher}
-   */
-  createEventPublisher(eventType: EventTypesEnum): EventPublisher {
-    return new EventPublisher(
-      new TicketEventFactory(eventType)
-    );
-  }
-
-  /**
-   * Notifies the ticket created event to the event bus
-   *
-   * @param {SavedTicketDoc} createdTicket  The created ticket
-   *
-   * @returns {Promise<void>}
-   */
-  async notifyTicketCreatedEvent(createdTicket: SavedTicketDoc): Promise<void> {
-    const publisher = this.createEventPublisher(EventTypesEnum.TICKET_CREATED);
-    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_CREATED, {
-      ticketId: createdTicket.id,
-      eventId: createdTicket.eventId,
-      userId: createdTicket.userId,
-      price: createdTicket.price,
-      description: createdTicket.description,
-      serialNumber: createdTicket.serialNumber,
-      title: createdTicket.title,
-      version: createdTicket.version,
-    });
-  }
-
-  /**
-   * Notifies the ticket updated event to the event bus
-   *
-   * @param {SavedTicketDoc} updatedTicket  The updated ticket
-   *
-   * @returns {Promise<void>}
-   */
-  async notifyTicketUpdatedEvent(updatedTicket: SavedTicketDoc): Promise<void> {
-    const publisher = this.createEventPublisher(EventTypesEnum.TICKET_UPDATED);
-    await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_UPDATED, {
-      ticketId: updatedTicket.id,
-      price: updatedTicket.price,
-      description: updatedTicket.description,
-      title: updatedTicket.title,
-      version: updatedTicket.version,
-    });
   }
 }

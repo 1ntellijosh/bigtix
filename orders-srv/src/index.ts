@@ -7,8 +7,8 @@ import { ordersApp } from './App';
 import mongoose from 'mongoose';
 import { DatabaseConnectionError } from '@bigtix/common';
 import { connectToRabbitMQ, disconnectFromRabbitMQ } from '@bigtix/middleware';
-import { EventConsumer, EventConsumerMap } from '@bigtix/middleware';
-import { TicketEventHandlers, OrderEventHandlers } from './events/EventConsumers';
+import { OrdersTicketEventSubscription, OrdersOrderEventSubscription } from './events/OrdersSubscriptions';
+import { subscribeQueues } from '@bigtix/middleware';
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,14 +27,11 @@ const startService = async () => {
 };
 
 connectToRabbitMQ().then(async (channel) => {
-  const ticketConsumer = new EventConsumer(channel);
-  // Register event consumers for ticket events that orders service needs to handle
-  await ticketConsumer.registerEventConsumers(TicketEventHandlers as EventConsumerMap)
-    .startConsuming('orders-srv.ticket-events');
-  // Register event consumers for order events that orders service needs to handle (delayed messages)
-  const orderConsumer = new EventConsumer(channel);
-  await orderConsumer.registerEventConsumers(OrderEventHandlers as EventConsumerMap)
-    .startConsuming('orders-srv.order-events');
+  // Subscribe to RabbitMQ to handle message events between microservices
+  await subscribeQueues(channel, [
+    OrdersTicketEventSubscription,
+    OrdersOrderEventSubscription,
+  ]);
 
   await startService();
 }).catch((err) => {
