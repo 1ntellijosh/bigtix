@@ -38,6 +38,11 @@ spec:
                 secretKeyRef:
                   name: rabbitmq-url
                   key: RABBITMQ_URL
+            - name: TICKETMASTER_CONSUMER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ticketmaster-consumer-key
+                  key: TICKETMASTER_CONSUMER_KEY
 
 ---
 

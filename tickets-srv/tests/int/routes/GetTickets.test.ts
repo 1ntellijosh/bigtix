@@ -18,7 +18,6 @@ const validEvent = {
   description: 'some description!!!!!',
   date: new Date(),
   location: 'some location!!!!!',
-  organizerId: '1234567890',
 };
 let validEventId: string;
 const tickets: NewTicketAttrs[] = [

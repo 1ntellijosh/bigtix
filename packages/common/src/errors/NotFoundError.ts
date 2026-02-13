@@ -23,7 +23,8 @@ export class NotFoundError extends AbstractRequestError {
    * @returns {ErrorResponseItem[]}
    */
   genResponseErrItemsList(): ErrorResponseItem[] {
-    const error: ErrorResponseItem = { message: 'Not found' };
+    const error: ErrorResponseItem = { message: this.message };
+
     return [ error ];
   }
 }

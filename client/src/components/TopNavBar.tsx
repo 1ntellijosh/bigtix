@@ -17,32 +17,167 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import AccountCircleOutlined from '@mui/icons-material/AccountCircleOutlined';
 import MailIcon from '@mui/icons-material/Mail';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import MoreIcon from '@mui/icons-material/MoreVert';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '../app/CurrentUserContext';
-import SearchBar from './SearchBar';
+import Drawer from '@mui/material/Drawer';
+import AppLink from './AppLink';
 
 export default function PrimarySearchAppBar() {
   const { currentUser, signOut } = useCurrentUser();
   const router = useRouter();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
-    React.useState<null | HTMLElement>(null);
 
-  const isMenuOpen = Boolean(anchorEl);
-  const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
+  /**
+   * RENDERED DESKTOP PROFILE MENU
+   */
+  const [profileAnchorEl, setProfileAnchorEl] = React.useState<null | HTMLElement>(null);
+  const isProfileMenuOpen = Boolean(profileAnchorEl);
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+    setProfileAnchorEl(event.currentTarget);
+  };
+  const handleProfileMenuClose = async (action?: string) => {
+    setProfileAnchorEl(null);
+
+    await handleProfileMenuAction(action);
+  };
+  const menuId = 'primary-search-account-menu';
+  const renderedProfileMenu = <Menu
+    anchorEl={profileAnchorEl}
+    anchorOrigin={{
+      vertical: 'top',
+      horizontal: 'right',
+    }}
+    id={menuId}
+    keepMounted
+    transformOrigin={{
+      vertical: 'top',
+      horizontal: 'right',
+    }}
+    open={isProfileMenuOpen}
+    onClose={() => handleProfileMenuClose()}
+  >
+    {currentUser ? (
+      <div>
+        <MenuItem onClick={() => handleProfileMenuClose('myaccount')}>My account</MenuItem>
+        <MenuItem onClick={() => handleProfileMenuClose('signout')}>Sign out</MenuItem>
+      </div>
+    ) : (
+      <div>
+        <MenuItem onClick={() => handleProfileMenuClose('signin')}>Sign in</MenuItem>
+        <MenuItem onClick={() => handleProfileMenuClose('signup')}>Sign up</MenuItem>
+      </div>
+    )}
+  </Menu>;
+
+  const [mobileProfileAnchorEl, setMobileProfileAnchorEl] =
+    React.useState<null | HTMLElement>(null);
+  const isMobileProfileMenuOpen = Boolean(mobileProfileAnchorEl);
+  const handleMobileProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileProfileAnchorEl(event.currentTarget);
+  };
+  const handleMobileProfileMenuClose = async (action?: string) => {
+    setMobileProfileAnchorEl(null);
+
+    await handleProfileMenuAction(action);
   };
 
-  const handleMobileMenuClose = () => {
-    setMobileMoreAnchorEl(null);
-  };
+  /**
+   * RENDERED MOBILE PROFILE MENU
+   */
+  const mobileProfileMenuId = 'primary-search-account-menu-mobile-profile';
+  const renderedMobileProfileMenu = (
+    <Menu
+      anchorEl={mobileProfileAnchorEl}
+      anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      id={mobileProfileMenuId}
+      keepMounted
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      open={isMobileProfileMenuOpen}
+      onClose={() => handleMobileProfileMenuClose()}
+    >
+      {currentUser ? (
+        <div>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('myaccount')}>
+            <IconButton
+              size="large"
+              aria-label="sign in"
+              aria-controls="primary-search-account-menu"
+              aria-haspopup="true"
+              color="inherit"
+            >
+              <Badge>
+                <ManageAccountsIcon />
+              </Badge>
+            </IconButton>
+            <p>My account</p>
+          </MenuItem>
 
-  const handleMenuClose = async (action?: string) => {
-    setAnchorEl(null);
-    handleMobileMenuClose();
+          <MenuItem onClick={() => handleMobileProfileMenuClose('signout')}>
+            <IconButton
+              size="large"
+              aria-label="sign out"
+              aria-controls="primary-search-account-menu"
+              aria-haspopup="true"
+              color="inherit"
+            >
+              <Badge>
+                <LogoutIcon />
+              </Badge>
+            </IconButton>
+            <p>Sign out</p>
+          </MenuItem>
+        </div>
+      ) : (
+        <div>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('signin')}>
+            <IconButton
+              size="large"
+              aria-label="sign in"
+              aria-controls="primary-search-account-menu"
+              aria-haspopup="true"
+              color="inherit"
+            >
+              <Badge>
+                <AccountCircleOutlined />
+              </Badge>
+            </IconButton>
+            <p>Sign in</p>
+          </MenuItem>
+
+          <MenuItem onClick={() => handleMobileProfileMenuClose('signup')}>
+            <IconButton
+              size="large"
+              aria-label="sign up"
+              aria-controls="primary-search-account-menu"
+              aria-haspopup="true"
+              color="inherit"
+            >
+              <Badge>
+                <AccountCircleOutlined />
+              </Badge>
+            </IconButton>
+            <p>Sign up</p>
+          </MenuItem>
+        </div>
+      )}
+    </Menu>
+  );
+
+  /**
+   * Handles the action for the profile menu (mobile and desktop)
+   *
+   * @param action - The action to handle
+   *
+   * @returns {Promise<void>}
+   */
+  const handleProfileMenuAction = async (action?: string) => {
     switch (action) {
       case 'signout':
         await signOut();
@@ -54,9 +189,6 @@ export default function PrimarySearchAppBar() {
       case 'signup':
         router.push('/auth/signup');
         break;
-      case 'profile':
-        // router.push('auth/profile');
-        break;
       case 'myaccount':
         // router.push('auth/myaccount');
         break;
@@ -65,149 +197,129 @@ export default function PrimarySearchAppBar() {
     }
   };
 
-  const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileMoreAnchorEl(event.currentTarget);
+  /**
+   * RENDERED MOBILE DRAWER MENU
+   */
+  const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+  const isMobileDrawerOpen = Boolean(mobileDrawerOpen);
+  const handleMobileDrawerOpen = () => {
+    setMobileDrawerOpen(true);
   };
-
-  const menuId = 'primary-search-account-menu';
-  const renderedMenu = <Menu
-    anchorEl={anchorEl}
-    anchorOrigin={{
-      vertical: 'top',
-      horizontal: 'right',
-    }}
-    id={menuId}
-    keepMounted
-    transformOrigin={{
-      vertical: 'top',
-      horizontal: 'right',
-    }}
-    open={isMenuOpen}
-    onClose={() => handleMenuClose()}
-  >
-    {currentUser ? (
-      <div>
-        <MenuItem onClick={() => handleMenuClose('profile')}>Profile</MenuItem>
-        <MenuItem onClick={() => handleMenuClose('myaccount')}>My account</MenuItem>
-        <MenuItem onClick={() => handleMenuClose('signout')}>Sign out</MenuItem>
-      </div>
-    ) : (
-      <div>
-        <MenuItem onClick={() => handleMenuClose('signin')}>Sign in</MenuItem>
-        <MenuItem onClick={() => handleMenuClose('signup')}>Sign up</MenuItem>
-      </div>
-    )}
-  </Menu>;
-
-  const mobileMenuId = 'primary-search-account-menu-mobile';
-  const renderMobileMenu = (
-    <Menu
-      anchorEl={mobileMoreAnchorEl}
-      anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
+  const handleMobileDrawerClose = () => {
+    setMobileDrawerOpen(false);
+  };
+  const renderedMobileDrawer = (
+    <Drawer
+      anchor="left"
+      open={isMobileDrawerOpen}
+      onClose={handleMobileDrawerClose}
+      variant="temporary"
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: '250px',
+        },
       }}
-      id={mobileMenuId}
-      keepMounted
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      open={isMobileMenuOpen}
-      onClose={handleMobileMenuClose}
     >
-      <MenuItem>
-        <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="error">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-        <p>Messages</p>
-      </MenuItem>
-      <MenuItem>
-        <IconButton
-          size="large"
-          aria-label="show 17 new notifications"
-          color="inherit"
-        >
-          <Badge badgeContent={17} color="error">
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
-        <p>Notifications</p>
-      </MenuItem>
-      {currentUser ? (<MenuItem onClick={handleProfileMenuOpen}>
-        <IconButton
-          size="large"
-          aria-label="account of current user"
-          aria-controls="primary-search-account-menu"
-          aria-haspopup="true"
-          color="inherit"
-        >
-          <AccountCircle />
-        </IconButton>
-        <p>Profile</p>
-      </MenuItem>) : (<MenuItem onClick={handleProfileMenuOpen}>
-        <IconButton
-          size="large"
-          aria-label="sign in"
-          aria-controls="primary-search-account-menu"
-          aria-haspopup="true"
-          color="inherit"
-        >
-          <AccountCircleOutlined />
-        </IconButton>
-        <p>Sign in</p>
-      </MenuItem>)}
-    </Menu>
+      <Box
+        sx={{
+          minHeight: '50px',
+          padding: 2,
+          backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'none' : theme.palette.primary.light,
+          color: (theme) => theme.palette.mode === 'dark' ? 'inherit' : 'white',
+          mb: 2,
+        }}>
+        <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
+          <Typography
+            variant="body2"
+            noWrap
+            component="p"
+            sx={{ display: { xs: 'block', sm: 'block' }, fontWeight: 400, fontSize: '25px' }}
+          >
+            <span style={{ fontSize: '26.5px' }}>B</span>ig<span style={{ marginLeft: '-.5px', fontSize: '26.5px' }}>T</span>ix
+          </Typography>
+        </AppLink>
+      </Box>
+      {currentUser ? (
+        <div>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('myaccount')}>My account</MenuItem>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('sell')}>Sell</MenuItem>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('mytickets')}>My tickets</MenuItem>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('signout')}>Sign out</MenuItem>
+        </div>
+      ) : (
+        <div>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('signin')}>Sign in</MenuItem>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('signup')}>Sign up</MenuItem>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('sell')}>Sell</MenuItem>
+          <MenuItem onClick={() => handleMobileProfileMenuClose('mytickets')}>My tickets</MenuItem>
+        </div>
+      )}
+    </Drawer>
   );
-
-  const [searchValue, setSearchValue] = React.useState('');
-
-  const handleSearch = (value: string) => {
-    setSearchValue(value);
-  }
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
-        <Toolbar>
+        <Toolbar
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between'
+          }}
+        >
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             aria-label="open drawer"
-            sx={{ mr: 2 }}
+            sx={{
+              mr: 2,
+              display: { xs: 'flex', sm: 'flex', md: 'none', lg: 'none', xl: 'none' }
+            }}
+            onClick={handleMobileDrawerOpen}
           >
             <MenuIcon />
           </IconButton>
+
           <Box sx={{ marginRight: 3 }}>
-            <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={{ display: { xs: 'none', sm: 'block' } }}
-            >
-              BigTix
-            </Typography>
+            <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
+              <Typography
+                variant="body2"
+                noWrap
+                component="p"
+                sx={{ display: { xs: 'block', sm: 'block' }, fontWeight: 400, fontSize: '25px' }}
+              >
+                <span style={{ fontSize: '26.5px' }}>B</span>ig<span style={{ marginLeft: '-.5px', fontSize: '26.5px' }}>T</span>ix
+              </Typography>
+            </AppLink>
           </Box>
-          <SearchBar placeholder="Search for an event..." onSearch={handleSearch} />
-          <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-            <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-              <Badge badgeContent={4} color="error">
-                <MailIcon />
-              </Badge>
-            </IconButton>
-            <IconButton
-              size="large"
-              aria-label="show 17 new notifications"
-              color="inherit"
-            >
-              <Badge badgeContent={17} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+
+          <Box sx={{
+            display: { xs: 'none', sm: 'none', md: 'flex', lg: 'flex', xl: 'flex' },
+            alignSelf: 'center',
+            alignItems: 'center',
+            gap: 1,
+          }}>
+            <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+              <Typography
+                variant="caption"
+                noWrap
+                component="span"
+                sx={{ fontFamily: 'oswald', fontWeight: 400, fontSize: '20px', '&:hover': { textDecoration: 'underline' } }}
+              >
+                Sell Tickets
+              </Typography>
+            </AppLink>
+
+            <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+              <Typography
+                variant="caption"
+                noWrap
+                component="span"
+                sx={{ fontFamily: 'oswald', fontWeight: 400, fontSize: '20px', '&:hover': { textDecoration: 'underline' } }}
+              >
+                My Tickets
+              </Typography>
+            </AppLink>
+
             <IconButton
               size="large"
               edge="end"
@@ -224,18 +336,19 @@ export default function PrimarySearchAppBar() {
             <IconButton
               size="large"
               aria-label="show more"
-              aria-controls={mobileMenuId}
+              aria-controls={mobileProfileMenuId}
               aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
+              onClick={handleMobileProfileMenuOpen}
               color="inherit"
             >
-              <MoreIcon />
+              {currentUser ? <AccountCircle /> : <AccountCircleOutlined />}
             </IconButton>
           </Box>
         </Toolbar>
       </AppBar>
-      {renderMobileMenu}
-      {renderedMenu}
+      {renderedMobileProfileMenu}
+      {renderedProfileMenu}
+      {renderedMobileDrawer}
     </Box>
   );
 }

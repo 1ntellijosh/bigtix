@@ -5,7 +5,7 @@
  */
 import { HttpService } from '../HttpService';
 
-export const AuthAPIs: { [key: string]: (body?: any, config?: Record<string, any>) => Promise<Response> } = {
+export const AuthAPIs: { [key: string]: (body?: any, config?: Record<string, any>, params?: Record<string, any>) => Promise<Response> } = {
   /**
    * Signs up a new user
    *
