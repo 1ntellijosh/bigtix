@@ -8,6 +8,31 @@ import mongoose from 'mongoose';
 
 let mongoMemDbServer: MongoMemoryServer | null;
 
+// Mock Stripe to avoid requiring real API key in tests
+jest.mock('../src/lib/Stripe', () => ({
+  stripe: {
+    paymentIntents: {
+      create: jest.fn().mockResolvedValue({
+        status: 'requires_action',
+        client_secret: 'test-client-secret',
+        id: 'test-intent-id',
+      }),
+    },
+    webhooks: {
+      constructEvent: jest.fn().mockResolvedValue({
+        data: {
+          object: {
+            metadata: {
+              orderId: 'order-id',
+            }
+          },
+          type: 'payment_intent.succeeded'
+        }
+      })
+    }
+  },
+}));
+
 // Mock EventPublisher and OrderEventDataFactory to avoid RabbitMQ connection failure in routes tests
 jest.mock('../src/events/PaymentsEventDataFactory', () => {
   return {

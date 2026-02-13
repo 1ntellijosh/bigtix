@@ -129,9 +129,11 @@ describe('Create payment routes tests', () => {
   });
 
   it('returns a 400 if the order is not in a valid state for creating a payment', async () => {
-    const orderWithWrongStatus = JSON.parse(JSON.stringify(validOrder));
-    orderWithWrongStatus.status = OrderStatusEnum.EXPIRED;
-    await saveOrder(orderWithWrongStatus);
+    await saveOrder(validOrder);
+    await Order.findByIdAndUpdate(validOrderId, { status: OrderStatusEnum.EXPIRED }, { returnDocument: 'after' });
+    // Ensure update is persisted by fetching fresh
+    const updatedOrder = await Order.findById(validOrderId);
+    expect(updatedOrder?.status).toBe(OrderStatusEnum.EXPIRED);
     await request(paymentsApp).post('/api/payments/new')
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send({
@@ -152,27 +154,34 @@ describe('Create payment routes tests', () => {
       }).expect(400);
   });
 
-  // it('returns a 400 if the order is not in a valid state for charging', async () => {
-  //   const order = await Order.build(validOrder).save();
-  //   await request(paymentsApp).post('/api/payments/new').send({
-  //     orderId: validOrderId,
-  //     amount: 10.00,
-  //     token: validToken,
-  //   }).expect(400);
-  // });
+  it('creates a new payment in the database if paymentIntent is created successfully', async () => {
+    await saveOrder(validOrder);
+    await request(paymentsApp).post('/api/payments/new')
+      .set('Cookie', createSignedInUserCookie(validUserId))
+      .send({
+        orderId: validOrderId,
+        amount: 10.00,
+        confirmationTokenId: validToken,
+      }).expect(201);
 
-  // it('publishes created order event to the event bus', async () => {
-  //   // Spy on the prototype method - the mock class has publishEvent on prototype
-  //   const pubSpy = jest.spyOn(EventPublisher.prototype, 'publishEvent').mockResolvedValue(undefined);
+    const payment = await Payment.findOne({ orderId: validOrderId });
 
-  //   const savedTickets = await saveTickets(validTickets);
-  //   await request(ordersApp)
-  //     .post('/api/orders/create')
-  //     .set('Cookie', createSignedInUserCookie(new mongoose.Types.ObjectId().toString()))
-  //     .send({
-  //       tickets: savedTickets.map(ticket => ({ id: ticket.id, price: ticket.price })),
-  //     });
+    expect(payment).toBeDefined();
+  });
 
-  //   expect(pubSpy).toHaveBeenCalled();
-  // });
+  it('publishes created order event to the event bus', async () => {
+    // Spy on the prototype method - the mock class has publishEvent on prototype
+    const pubSpy = jest.spyOn(EventPublisher.prototype, 'publishEvent').mockResolvedValue(undefined);
+
+    await saveOrder(validOrder);
+    await request(paymentsApp).post('/api/payments/new')
+      .set('Cookie', createSignedInUserCookie(validUserId))
+      .send({
+        orderId: validOrderId,
+        amount: 10.00,
+        confirmationTokenId: validToken,
+      }).expect(201);
+
+    expect(pubSpy).toHaveBeenCalled();
+  });
 });
