@@ -11,6 +11,9 @@ import {
   TicketCreatedData,
   TicketUpdatedData,
   OrderExpiredData,
+  PaymentCreatedData,
+  PaymentSucceededData,
+  PaymentFailedData,
 } from '@bigtix/middleware';
 
 const orderSvc = new OrderService();
@@ -73,6 +76,45 @@ export const OrdersOrderEventSubscription: ServiceSubscription = {
         await orderSvc.onOrderExpirationEvent(data);
       },
       exchange: DELAYED_EXCHANGE_NAME,
+    },
+  },
+};
+
+/**
+ * Subscription for orders-srv to consume payment events
+ */
+export const OrdersPaymentEventSubscription: ServiceSubscription = {
+  queueName: 'orders-srv.payment-events',
+  eventConsumers: {
+    /**
+     * Orders service handles an incoming payment created event. This event is sent out by Payments service to notify
+     * Orders service that a payment has been created for an order.
+     *
+     * @param envelope 
+     */
+    [EventTypesEnum.PAYMENT_CREATED]: {
+      handler: async (envelope) => {
+        const data = envelope.data as PaymentCreatedData;
+        console.log('Order Service received PAYMENT_CREATED event')
+        await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_CREATED, data);
+      },
+      exchange: EXCHANGE_NAME,
+    },
+    [EventTypesEnum.PAYMENT_SUCCEEDED]: {
+      handler: async (envelope) => {
+        const data = envelope.data as PaymentSucceededData;
+        console.log('Order Service received PAYMENT_SUCCEEDED event')
+        await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_SUCCEEDED, data);
+      },
+      exchange: EXCHANGE_NAME,
+    },
+    [EventTypesEnum.PAYMENT_FAILED]: {
+      handler: async (envelope) => {
+        const data = envelope.data as PaymentFailedData;
+        console.log('Order Service received PAYMENT_FAILED event')
+        await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_FAILED, data);
+      },
+      exchange: EXCHANGE_NAME,
     },
   },
 };

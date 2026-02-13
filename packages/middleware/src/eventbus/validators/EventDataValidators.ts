@@ -16,6 +16,9 @@ import type {
   OrderCreatedData,
   OrderStatusUpdatedData,
   OrderExpiredData,
+  PaymentCreatedData,
+  PaymentSucceededData,
+  PaymentFailedData,
 } from '../contracts/EventDataContracts';
 import { OrderStatusEnum } from '@bigtix/common';
 
@@ -86,6 +89,18 @@ export function validateOrderExpiredData(data: unknown): data is OrderExpiredDat
   return val.isObject(data) && val.hasString(data, 'orderId');
 }
 
+export function validatePaymentCreatedData(data: unknown): data is PaymentCreatedData {
+  return val.isObject(data) && val.hasString(data, 'orderId');
+}
+
+export function validatePaymentSucceededData(data: unknown): data is PaymentSucceededData {
+  return val.isObject(data) && val.hasString(data, 'orderId');
+}
+
+export function validatePaymentFailedData(data: unknown): data is PaymentFailedData {
+  return val.isObject(data) && val.hasString(data, 'orderId');
+}
+
 export type EventDataValidator = (data: unknown) => boolean;
 
 /**
@@ -102,10 +117,11 @@ export const EventDataValidators: Partial<Record<EventTypesEnum, EventDataValida
   [EventTypesEnum.TICKET_CREATED]: validateTicketCreatedData,
   [EventTypesEnum.TICKET_UPDATED]: validateTicketUpdatedData,
   [EventTypesEnum.TICKET_DELETED]: validateTicketDeletedData,
-  [EventTypesEnum.TICKET_SOLD]: validateTicketDeletedData,
   [EventTypesEnum.TICKET_CANCELLED]: validateTicketDeletedData,
-  [EventTypesEnum.TICKET_REFUNDED]: validateTicketDeletedData,
   [EventTypesEnum.ORDER_CREATED]: validateOrderCreatedData,
   [EventTypesEnum.ORDER_STATUS_CHANGED]: validateOrderStatusUpdatedData,
   [EventTypesEnum.ORDER_EXPIRED]: validateOrderExpiredData,
+  [EventTypesEnum.PAYMENT_CREATED]: validatePaymentCreatedData,
+  [EventTypesEnum.PAYMENT_SUCCEEDED]: validatePaymentSucceededData,
+  [EventTypesEnum.PAYMENT_FAILED]: validatePaymentFailedData,
 };
