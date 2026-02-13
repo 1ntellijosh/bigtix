@@ -37,7 +37,9 @@ export class TicketEventDataFactory extends AbstractEventFactory {
           version: data.version,
         } as TicketUpdatedData;
       case EventTypesEnum.TICKET_DELETED:
+      case EventTypesEnum.TICKET_SOLD:
       case EventTypesEnum.TICKET_CANCELLED:
+      case EventTypesEnum.TICKET_REFUNDED:
         return { ticketId: data.ticketId } as TicketDeletedData;
       default:
         throw new Error(`Event type ${eventType} not supported`);

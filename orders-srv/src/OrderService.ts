@@ -10,8 +10,7 @@ import { NotFoundError, BadRequestError, ServerError } from '@bigtix/common';
 import { SavedOrderDoc } from './models/Order';
 import { SavedTicketDoc } from './models/Ticket';
 import { OrderStatusEnum } from '@bigtix/common';
-import { EventTypesEnum } from '@bigtix/middleware';
-import { TicketCreatedData, TicketUpdatedData, OrderExpiredData, PaymentCreatedData } from '@bigtix/middleware';
+import { TicketCreatedData, TicketUpdatedData, OrderExpiredData } from '@bigtix/middleware';
 import { OrdersPublisher } from './events/OrdersPublisher';
 import type { OrderWithTicketsDto } from './services/OrderMapper';
 import { CreateOrderUseCase } from './usecases/CreateOrderUseCase';
@@ -120,15 +119,6 @@ export class OrderService {
 
     if (order.userId !== userId) throw new BadRequestError('You are not authorized to cancel this order');
 
-    // If the order is already cancelled, expired, failed, paid, or awaiting payment, we don't need to do anything
-    if ([
-      OrderStatusEnum.CANCELLED,
-      OrderStatusEnum.EXPIRED,
-      OrderStatusEnum.FAILED,
-      OrderStatusEnum.PAID,
-      OrderStatusEnum.AWAITING_PAYMENT,
-    ].includes(order.status)) throw new BadRequestError('Order is already cancelled, expired, failed, paid, or awaiting payment');
-
     const updatedOrder = await this.updateOrderStatusById(id, OrderStatusEnum.CANCELLED);
 
     const result: OrderWithTicketsDto = { ...order, status: updatedOrder.status, version: updatedOrder.version };
@@ -216,94 +206,11 @@ export class OrderService {
    * @returns {Promise<void>}
    */
   async onOrderExpirationEvent(event: OrderExpiredData): Promise<void> {
-    try {
+    await this.updateOrderStatusById(event.orderId, OrderStatusEnum.EXPIRED);
+
     const order = await this.getOrderById(event.orderId);
 
-    if (!order) throw new NotFoundError('Order not found');
-
-    /**
-     * First we need to check if the order status to see if it has been cancelled, paid, awaiting payment, or refunded,
-     * and if so, we don't need to do anything
-     */
-    if ([
-      OrderStatusEnum.CANCELLED,
-      OrderStatusEnum.FAILED,
-      OrderStatusEnum.PAID,
-      OrderStatusEnum.AWAITING_PAYMENT,
-      OrderStatusEnum.REFUNDED
-    ].includes(order.status)) return;
-
-    const updatedOrder = await this.updateOrderStatusById(event.orderId, OrderStatusEnum.EXPIRED);
-
-    order.status = OrderStatusEnum.EXPIRED;
-    order.version = updatedOrder.version;
-
     await OrdersPublisher.publishOrderStatusChangedEvent(OrderStatusEnum.EXPIRED, order);
-    } catch (error) {
-      console.error('Error in OrderService onOrderExpirationEvent event:', error);
-      /**
-       * Throwing server error, which will cause the event to be retried again later by the event bus.
-       * TODO: Add logging to the database, for failed events
-       */
-      const msg = error instanceof Error
-        ? 'Cannot process OrderService onOrderExpirationEvent event: ' + error.message
-        : 'Unknown error executing onOrderExpirationEvent in OrderService';
-
-      throw new ServerError(msg);
-    }
-  }
-
-  /**
-   * Handles an incoming payment status updated event from payments-srv
-   * - If the incoming event is PAYMENT_CREATED, updates the order status to AWAITING_PAYMENT.
-   * - If the incoming event is PAYMENT_SUCCEEDED, updates the order status to PAID.
-   * - If the incoming event is PAYMENT_FAILED, updates the order status to FAILED.
-   *
-   * @param {EventTypesEnum} eventType  The type of the event
-   * @param {PaymentCreatedData} event  The payment created data
-   *
-   * @returns {Promise<void>}
-   */
-  async onPaymentStatusUpdatedEvent(eventType: EventTypesEnum, event: PaymentCreatedData): Promise<void> {
-    try {
-      const order = await this.getOrderById(event.orderId);
-
-      if (!order) throw new NotFoundError('Order not found');
-
-      let updatedStatus: OrderStatusEnum | undefined;
-      switch (eventType) {
-        case EventTypesEnum.PAYMENT_CREATED:
-          updatedStatus = OrderStatusEnum.AWAITING_PAYMENT;
-          break;
-        case EventTypesEnum.PAYMENT_SUCCEEDED:
-          updatedStatus = OrderStatusEnum.PAID;
-          break;
-        case EventTypesEnum.PAYMENT_FAILED:
-          updatedStatus = OrderStatusEnum.FAILED;
-          break;
-        default:
-          break;
-      }
-
-      // Update the order status in the database
-      const updatedOrder = await this.updateOrderStatusById(event.orderId, updatedStatus!);
-
-      // Inform other services of the order status change
-      order.status = updatedOrder.status;
-      order.version = updatedOrder.version;
-      await OrdersPublisher.publishOrderStatusChangedEvent(order.status, order);
-    } catch (error) {
-      console.error('Error in OrderService onPaymentCreatedEvent event:', error);
-      /**
-       * Throwing server error, which will cause the event to be retried again later by the event bus.
-       * TODO: Add logging to the database, for failed events
-       */
-      const msg = error instanceof Error
-        ? 'Cannot process OrderService onPaymentCreatedEvent event: ' + error.message
-        : 'Unknown error executing onPaymentCreatedEvent in OrderService';
-
-      throw new ServerError(msg);
-    }
   }
 
   /**

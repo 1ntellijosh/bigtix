@@ -91,22 +91,3 @@ export interface OrderStatusUpdatedData {
 export interface OrderExpiredData {
   orderId: string;
 }
-
-/*******************************************
- * PAYMENTS SERVICE EVENT DATA CONTRACTS
- *******************************************/
-
-/** Data payload for charge.created. */
-export interface PaymentCreatedData {
-  orderId: string;
-}
-
-/** Data payload for charge.succeeded. */
-export interface PaymentSucceededData {
-  orderId: string;
-}
-
-/** Data payload for charge.failed. */
-export interface PaymentFailedData {
-  orderId: string;
-}

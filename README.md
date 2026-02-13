@@ -26,7 +26,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - Material UI
 - RabbitMQ
 
-## Database:
+## Database/Cache:
 - Mongodb
 
 ## 3rd Party APIs:
@@ -54,7 +54,7 @@ Used for authorizing users
 |-------|--------|------|---------|
 | `/api/users/signup` | POST | `{ email: string, password: string }` | Sign up for an account |
 | `/api/users/signin` | POST | `{ email: string, password: string }` | Sign in to an existing account |
-| `/api/users/signout` | POST | - | Sign out |
+| `/api/users/signout` | POST | `{}` | Sign out |
 | `/api/users/currentuser` | GET | - | Return info about the user |
 
 ## Tickets
@@ -85,57 +85,11 @@ Used for creating and managing ticket orders.
 | `/api/orders/:id` | PUT | `{ status: string }` | Update an order status |
 | `/api/orders/:id` | DELETE | - | Cancel the order |
 
-## Payments
-Used for paying for tickets (using Stripe API)
-
-### APIs
-
-| Route | Method | Body | Purpose |
-|-------|--------|------|---------|
-| `/api/payments/new` | POST | `{ amount: number, orderId: string, confirmationTokenId: string }` | Create a payment for a ticket order with Stripe API using its PaymentIntent methodology |
-| `/api/webhooks/stripe` | POST | - | API designated for Stripe to send webhooks to app, for updates on payments (success/fail) |
-
 ---
 
 # FAQs/Instructions
 
-## Setup and run app for local development
-
-1. You will need to install the following dependancies on your local linux (mac should probably work too):
-
-    | Dep | install URL |
-    |-----|-------------|
-    | MAKE | https://www.gnu.org/software/make/ |
-    | Ansible | https://docs.ansible.com/ansible/latest/installation/index.html |
-    | Node.js/NPM | https://docs.npmjs.com/downloading-and-installing-node-js-and-npm |
-    | Docker | https://docs.docker.com/get-started/get-docker/#supported-platforms |
-    | kubectl | https://kubernetes.io/docs/tasks/tools/ |
-    | Kind | https://kind.sigs.k8s.io/docs/user/quick-start/#installation |
-    | Helm | https://helm.sh/docs/intro/install/ |
-    | Skaffold | https://skaffold.dev/docs/install/#standalone-binary |
-
-    You will also need a Stripe account so you can access the developer dashboard.
-
-2. Run `make init` in the project root. You will be prompted to choose a password for the jwt session tokens in the app, then what the rabbitmq management console will be (user name is 'user'). The first time you do this command, you will also be prompted to choose a site url to enter into the browser to access the site locally. This command creates the dev-vars.yml file in your root. It hold those variables there to change if you want later. If you want to change this later, you have to delete the host line it adds in your local `/etc/hosts` file, and erase the `dev-vars.yml` file this command generates.
-
-3. Run `make start` in your project root. This should build and setup the docker images and local Kubernetes cluster, along with a lot of other stuff. If it worked, you can go to the url you were prompted for in the browser to see the app. You can ctrl -> C to stop skaffold and the app, and run `make dev` to fire the cluster up again. If you want to destroy the cluster, enter `make destroy`. `make full-clear` will destroy the cluster, along with deleting local Docker images associated with the bigtix app. Enter `make start` to build the cluster again.
-
-All will work on the app, accept for **any pages or requests related to making (pretend) payments** for your ticket orders with Stripe will not work until you do **Subscribe to Stripe webhooks locally via Stripe CLI** below:
-
-## Subscribe to Stripe webhooks locally via Stripe CLI
-
-1. To use/develop with Stripe locally, you need to have the Strip CLI installed to get app to listen for/handle Stripe payment webhook updates.
-
-    | Dep | install URL |
-    |-----|-------------|
-    | Stripe CLI | https://stripe.com/docs/stripe-cli |
-
-1. Register an account on Stripe and get into the developer dashboard. There, you should see `Publishable key` and `Secret key` in the top right of the dashboard. Copy and paste those into `STRIPE_PUBLISHABLE_KEY` and `STRIPE_SECRET_KEY` respectively in the `dev-vars.yml` file of the project root.
-
-2. Now you setup your local machine to listen for and trigger Stripe webhooks. This is essential for the local app to receive payment updates sent out to Stripe so it can mark orders as completed/failed status in the database. Open an extra terminal window to enter `make stripe-dev` in the project root. You will be prompted to login to your Stripe account, and after doing so, you will see `Your webhook signing secret is whsec_...`. Copy that key and paste it into the `STRIPE_WEBHOOK_SECRET` var in your `dev-vars.yml` file. **Keep the Stripe dev terminal open,** as when you close it, you will have to `make stripe-dev` again and copy/paste another key in `dev-vars.yml`. This is unfortunately the only way to dev locally unless you setup a ngrok account and url and tunnel the public Stripe api to your local machine.
-
-
-## Workflow When Adding/Changing Files in `./packages`
+## Workflow when adding/changing files in `./packages`
 
 1. **Add/update assets**
    - Packaged code in `packages/middleware/src/` are assets for the non-client micoservices, not the client service
@@ -151,8 +105,8 @@ All will work on the app, accept for **any pages or requests related to making (
 ## How images will be made/used/deployed on prod and local:
 
 ### LOCAL:
-Shared packages (`packages/common`, `packages/middleware`) are built with `make build-shared-packages`; then service images are built with `make build-dev-images`. All microservices' Dockerfiles copy these packages into their respective image (repo root is build context), so Skaffold watches the `./packages` folder and the microservice folder for each microservice image sync. After editing a shared package source, running `make build-shared-packages` causes Skaffold pick up the new `./packages/**/dist/` folder, and rebuild the images.
-Images are loaded into Kind with `make kload-imgs` (Skaffold uses local images, no push). The `image: 1ntellijosh/bigtix-...` in `ops/k8s/deployments/*.yml` stays the same; the implicit `:latest` tag is used.
+Shared packages (`packages/common`, `packages/middleware`) are built with `make build-shared-packages`; then service images are built with `make build-dev-images`. Both `auth-srv` and `client` Dockerfiles copy these packages into the image (repo root is build context), so Skaffold watches the whole repo and will rebuild an image when you change that service’s code or the shared packages. After editing only shared package source, run `make build-shared-packages` so the next Skaffold rebuild picks up the new `dist/`.
+Images are loaded into Kind with `make kload-imgs` (Skaffold uses local images, no push). Run the dev loop with `make dev`. The `image: 1ntellijosh/bigtix-...` in `ops/k8s/deployments/*.yml` stays the same; the implicit `:latest` tag is used.
 
 ### PRODUCTION:
 The service images are built in a Github Actions build workflow, triggered automatically from making a release. The built containers are pushed to either dockerhub or github image repository (doesn't matter right now). Each service's image version/tag will be extracted from the `service-name/deploy/version.json` file in their respective directory using the Github Action's build yaml script.
@@ -172,11 +126,5 @@ Deployments of the built images are triggered in Github Actions by selecting a s
 2. **TLS at the edge:** Terminate HTTPS at ingress or load balancer (e.g. AWS ALB with ACM, or Kubernetes Ingress with a TLS block and a cert secret).
    - Traffic to pods can stay HTTP inside the cluster since the proxy handles TLS.
 3. **Client SERVER API URL:** **!!! This probaby won't need to be done, but noted here to check.** Build the client-dpl deployment image with updated `SERVER_API_BASE_URL` var for server side API calls if it's different from `http://ingress-nginx-controller.ingress-nginx.svc.cluster.local` (e.g. `SERVER_API_BASE_URL=http://new-ingress-nginx-service-name.new-ingress-nginx-namespace.svc.cluster.local`).
-4. **Subscribe deployed site to Stripe webhooks via Stripe Dashboard:**
-    1. Open Workbench: In Stripe Dashboard, navigate to the Developers section and select the Webhooks tab.
-    2. Add Endpoint: Click Add destination (or Create an event destination).
-    3. Configure URL: Enter server's endpoint URL (e.g., https://bigtixdomain.com).
-    4. Select Events: Click Select events and search for the three events listed above. Check each one and click Add events.
-    5. Save & Secret: Click Create destination. Once created, reveal the Signing secret (starts with whsec_) and add it to server's environment variables as STRIPE_WEBHOOK_SECRET. 
 
 ---

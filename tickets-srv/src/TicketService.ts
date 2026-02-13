@@ -176,15 +176,15 @@ export class TicketService {
   }
 
   /**
-   * Applies the order cancelled to the tickets that are part of a given order cancelled/expired/failed event. This is
-   * used to indicate the associated tickets are no longer attached to an order. This can have implications for the
+   * Applies the order cancelled to the tickets that are part of a given order cancelled/expired event. This is used to
+   * indicate the associated tickets are no longer attached to an order. This can have implications for the
    * tickets, so they can be edited or deleted again
    *
    * @param {OrderCancelledData} data  The order cancelled data
    *
    * @returns {Promise<void>}
    */
-  async onOrderClosedEvent(event: OrderStatusUpdatedData): Promise<void> {
+  async onOrderCancelOrExpireEvent(event: OrderStatusUpdatedData): Promise<void> {
     try {
       const { tickets } = event;
 
@@ -193,14 +193,14 @@ export class TicketService {
         await this.tickRepo.updateById(ticket.ticketId, { orderId: null });
       }
     } catch (error) {
-      console.error('Error in TicketService onOrderClosedEvent event:', error);
+      console.error('Error in TicketService onOrderCancelOrExpireEvent event:', error);
       /**
        * Throwing server error, which will cause the event to be retried again later by the event bus.
        * TODO: Add logging to the database, for failed events
        */
       const msg = error instanceof Error
-        ? 'Cannot process TicketService onOrderClosedEvent event: ' + error.message
-        : 'Unknown error executing onOrderClosedEvent in TicketService';
+        ? 'Cannot process TicketService onOrderCancelOrExpireEvent event: ' + error.message
+        : 'Unknown error executing onOrderCancelOrExpireEvent in TicketService';
 
       throw new ServerError(msg);
     }

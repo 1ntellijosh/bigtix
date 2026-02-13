@@ -7,7 +7,7 @@ import { ordersApp } from './App';
 import mongoose from 'mongoose';
 import { DatabaseConnectionError } from '@bigtix/common';
 import { connectToRabbitMQ, disconnectFromRabbitMQ } from '@bigtix/middleware';
-import { OrdersTicketEventSubscription, OrdersOrderEventSubscription, OrdersPaymentEventSubscription } from './events/OrdersSubscriptions';
+import { OrdersTicketEventSubscription, OrdersOrderEventSubscription } from './events/OrdersSubscriptions';
 import { subscribeQueues } from '@bigtix/middleware';
 
 const PORT = process.env.PORT || 3000;
@@ -18,7 +18,7 @@ const startService = async () => {
   if (!process.env.MONGO_URI) throw new Error('MONGO_URI is not defined');
 
   await mongoose.connect(process.env.MONGO_URI).catch((err) => {
-    throw new DatabaseConnectionError('orders-srv failed to connect to database: ' + err.message);
+    throw new DatabaseConnectionError('tickets-srv failed to connect to database: ' + err.message);
   });
 
   ordersApp.listen(PORT, () => {
@@ -31,7 +31,6 @@ connectToRabbitMQ().then(async (channel) => {
   await subscribeQueues(channel, [
     OrdersTicketEventSubscription,
     OrdersOrderEventSubscription,
-    OrdersPaymentEventSubscription,
   ]);
 
   await startService();

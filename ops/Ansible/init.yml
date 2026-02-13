@@ -16,6 +16,7 @@
 
   vars:
     project_root: "{{ playbook_dir }}/../.."
+    host_domain: bigtixnetwork.com   # default; overridden from dev-vars.yml when file exists
 
   tasks:
     - name: Check if dev-vars.yml exists
@@ -30,19 +31,8 @@
 
     - name: Set host_domain from loaded dev-vars.yml
       ansible.builtin.set_fact:
-        host_domain: "{{ HOST_DOMAIN }}"
+        host_domain: "{{ HOST_DOMAIN | default(host_domain) }}"
       when: dev_vars_stat.stat.exists
-
-    - name: Prompt for host_domain when creating dev-vars for the first time
-      ansible.builtin.pause:
-        prompt: "Host domain for local dev (Enter for bigtixnetwork.com)"
-      register: host_domain_prompt
-      when: not dev_vars_stat.stat.exists
-
-    - name: Set host_domain from first-time prompt
-      ansible.builtin.set_fact:
-        host_domain: "{{ (host_domain_prompt.user_input | default('') | trim) or 'bigtixnetwork.com' }}"
-      when: not dev_vars_stat.stat.exists
 
     - name: Generate dev-vars.yml from template
       ansible.builtin.template:

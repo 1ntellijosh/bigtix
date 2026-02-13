@@ -106,19 +106,6 @@ describe('Delete (cancel) order routes tests', () => {
       .expect(404);
   });
 
-  it('Returns bad request error if order is already cancelled, expired, failed, paid, or awaiting payment', async () => {
-    const orderWithStatus = JSON.parse(JSON.stringify(validOrder));
-    orderWithStatus.status = OrderStatusEnum.PAID;
-    const orderId = await saveOrder(orderWithStatus);
-    const ticketsWithOrderId = addOrderIdToTickets(orderId, validTickets);
-    await saveTickets(ticketsWithOrderId);
-    await request(ordersApp)
-      .delete(`/api/orders/${orderId}`)
-      .set('Cookie', createSignedInUserCookie(validUserId))
-      .send()
-      .expect(400);
-  });
-
   it('Cancels an order by id', async () => {
     const orderId = await saveOrder(validOrder);
     const ticketsWithOrderId = addOrderIdToTickets(orderId, validTickets);

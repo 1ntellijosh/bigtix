@@ -8,8 +8,7 @@
     "auth-srv",
     "client",
     "tickets-srv",
-    "orders-srv",
-    "payments-srv"
+    "orders-srv"
   ],
   "scripts": {
     "build": "npm run build --workspaces",

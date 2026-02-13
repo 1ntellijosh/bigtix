@@ -9,7 +9,6 @@ export enum SourceServiceEnum {
   AUTH_SRV = 'auth-srv',
   TICKETS_SRV = 'tickets-srv',
   ORDERS_SRV = 'orders-srv',
-  PAYMENTS_SRV = 'payments-srv',
 }
 
 export enum EventTypesEnum {
@@ -23,11 +22,10 @@ export enum EventTypesEnum {
   TICKET_CREATED = 'ticket.created',
   TICKET_UPDATED = 'ticket.updated',
   TICKET_DELETED = 'ticket.deleted',
+  TICKET_SOLD = 'ticket.sold',
   TICKET_CANCELLED = 'ticket.cancelled',
+  TICKET_REFUNDED = 'ticket.refunded',
   ORDER_CREATED = 'order.created',
   ORDER_STATUS_CHANGED = 'order.status.changed',
   ORDER_EXPIRED = 'order.expired',
-  PAYMENT_CREATED = 'charge.created',
-  PAYMENT_SUCCEEDED = 'charge.succeeded',
-  PAYMENT_FAILED = 'charge.failed',
 }

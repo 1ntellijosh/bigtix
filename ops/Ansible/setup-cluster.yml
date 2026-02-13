@@ -110,52 +110,7 @@
         chdir: "{{ project_root }}"
       register: jwt_secret_result
       changed_when: "'configured' in jwt_secret_result.stdout or 'created' in jwt_secret_result.stdout"
-
-    - name: Set stripe_publishable_key from dev-vars.yml
-      ansible.builtin.set_fact:
-        stripe_publishable_key: "{{ STRIPE_PUBLISHABLE_KEY }}"
-
-    - name: Create Kubernetes secret stripe-publishable-key from dev-vars.yml
-      ansible.builtin.shell: >
-        kubectl create secret generic stripe-publishable-key
-        --from-literal=STRIPE_PUBLISHABLE_KEY={{ stripe_publishable_key }}
-        --dry-run=client -o yaml
-        | kubectl apply -f -
-      args:
-        chdir: "{{ project_root }}"
-      register: stripe_publishable_key_result
-      changed_when: "'configured' in stripe_publishable_key_result.stdout or 'created' in stripe_publishable_key_result.stdout"
-
-    - name: Set stripe_secret_key from dev-vars.yml
-      ansible.builtin.set_fact:
-        stripe_secret_key: "{{ STRIPE_SECRET_KEY }}"
-
-    - name: Create Kubernetes secret stripe-secret-key from dev-vars.yml
-      ansible.builtin.shell: >
-        kubectl create secret generic stripe-secret-key
-        --from-literal=STRIPE_SECRET_KEY={{ stripe_secret_key }}
-        --dry-run=client -o yaml
-        | kubectl apply -f -
-      args:
-        chdir: "{{ project_root }}"
-      register: stripe_secret_key_result
-      changed_when: "'configured' in stripe_secret_key_result.stdout or 'created' in stripe_secret_key_result.stdout"
-
-    - name: Set stripe_webhook_secret from dev-vars.yml
-      ansible.builtin.set_fact:
-        stripe_webhook_secret: "{{ STRIPE_WEBHOOK_SECRET }}"
-
-    - name: Create Kubernetes secret stripe-webhook-key from dev-vars.yml
-      ansible.builtin.shell: >
-        kubectl create secret generic stripe-webhook-key
-        --from-literal=STRIPE_WEBHOOK_SECRET={{ stripe_webhook_secret }}
-        --dry-run=client -o yaml
-        | kubectl apply -f -
-      args:
-        chdir: "{{ project_root }}"
-      register: stripe_webhook_secret_result
-      changed_when: "'configured' in stripe_webhook_secret_result.stdout or 'created' in stripe_webhook_secret_result.stdout"
-
+    
     - name: Build shared packages
       ansible.builtin.shell: >
         make build-shared-packages

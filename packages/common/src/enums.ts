@@ -21,29 +21,11 @@ export enum STATUS_CODES {
   NO_RESPONSE = 0, // No HTTP response (e.g. network failure, CORS, timeout before response)
 }
 
-/**
- * Statuses for an BigTix order
- *
- * @since payments-srv-start--JP
- */
 export enum OrderStatusEnum {
   CREATED = 'created',
   AWAITING_PAYMENT = 'awaiting:payment',
   PAID = 'paid',
   EXPIRED = 'expired',
-  CANCELLED = 'cancelled', // Order failed, or user cancelled the order
-  FAILED = 'failed', // Order failed, or user cancelled the order
+  CANCELLED = 'cancelled', // Ticket already sold, or user cancelled the order
   REFUNDED = 'refunded',
-}
-
-/**
- * Statuses for a payment (these are Stripe API statuses, except for initial state of PENDING)
- *
- * @since payments-srv-start--JP
- */
-export enum PaymentStatusEnum {
-  PENDING = 'pending',
-  SUCCESS = 'succeeded',
-  REQUIRES_ACTION = 'requires_action',
-  REQUIRES_PAYMENT_METHOD = 'requires_payment_method',
 }

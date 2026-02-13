@@ -36,12 +36,7 @@ export const TicketsOrderEventSubscription: ServiceSubscription = {
         switch (data.status) {
           case OrderStatusEnum.CANCELLED:
           case OrderStatusEnum.EXPIRED:
-          case OrderStatusEnum.FAILED:
-            await ticketSvc.onOrderClosedEvent(data);
-            break;
-          case OrderStatusEnum.AWAITING_PAYMENT:
-          case OrderStatusEnum.PAID:
-            // Do nothing, as the tickets are already attached to an order
+            await ticketSvc.onOrderCancelOrExpireEvent(data);
             break;
           // There will be many other statuses to handle here...
           default:

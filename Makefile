@@ -53,49 +53,30 @@ init:
 # - Kind     	   - https://kind.sigs.k8s.io/docs/user/quick-start/#installation
 # - Helm     	   - https://helm.sh/docs/intro/install/
 # - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
-# - Stripe CLI     - https://stripe.com/docs/stripe-cli
 #
-full-clear:
-	@echo "CLEARING ALL LOCAL BIGTIX CLUSTER AND DOCKER IMAGES..."
+clear:
+	@echo "CLEARING ALL LOCAL BIGTIX PROJECT APPLICATION RESOURCES..."
 	$(MAKE) clear-dev-images
 	-$(MAKE) stop 2>/dev/null || true
 	@echo "Clear complete."
 
-destroy:
-	@echo "DESTROYING LOCAL BIGTIX CLUSTER..."
+stop:
+	@echo "STOPPING LOCAL BIGTIX PROJECT..."
 	@echo "Deleting Kind cluster (removes cluster and all pods, deployments, services, ingresses)..."
 	-$(MAKE) kstop 2>/dev/null || true
 	@echo "Stop complete."
 
 start:
-	@echo "CREATING LOCAL BIGTIX CLUSTER..."
+	@echo "STARTING LOCAL BIGTIX PROJECT..."
 	ansible-playbook ./ops/Ansible/setup-cluster.yml
 	$(MAKE) dev
 
 dev:
-	@echo "RUNNING DEVELOPMENT ENVIRONMENT (skaffold)..."
+	@echo "Running development environment (skaffold)..."
 	@skaffold dev -f skaffold.dev.yml
 
-##
-# Stripe Dev
-# --------------------------
-# Prerequisites:
-# ---------------
-# - Stripe CLI     - https://stripe.com/docs/stripe-cli
-# - Stripe Dashboard - https://dashboard.stripe.com/
-# ---------------
-# Setup/Helpful Links:
-# - Stripe Webhook Secret - https://dashboard.stripe.com/webhooks
-# - Stripe Webhook URL - https://your-server.com/api/webhooks/stripe
-# - Stripe Webhook Events - payment_intent.succeeded, payment_intent.payment_failed, payment_intent.requires_action
-# - Stripe Webhook Signature - https://dashboard.stripe.com/webhooks/signature
-# - Stripe Webhook Signature Verification - https://dashboard.stripe.com/webhooks/signature-verification
-#
-stripe-dev:
-	@KEY=$$(grep '^STRIPE_SECRET_KEY:' dev-vars.yml 2>/dev/null | sed 's/^STRIPE_SECRET_KEY: *//' | sed 's/^["'\'']//;s/["'\'']$$//' | tr -d ' '); \
-	if [ -z "$$KEY" ]; then echo "Error: STRIPE_SECRET_KEY not set in dev-vars.yml"; exit 1; fi; \
-	stripe login --api-key "$$KEY"; \
-	stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.requires_action --forward-to http://localhost:3000/api/webhooks/stripe
+inject-local-secrets:
+	ansible-playbook ./ops/Ansible/local-secret-inject.yml
 
 
 ##
@@ -108,7 +89,6 @@ kload-imgs:
 	kind load docker-image 1ntellijosh/bigtix-client-app:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-tickets-srv:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-orders-srv:latest --name bigtix-cluster
-	kind load docker-image 1ntellijosh/bigtix-payments-srv:latest --name bigtix-cluster
 
 # Create a new Kind cluster with the config file
 kstart:
@@ -136,7 +116,6 @@ apply-deployments:
 	kubectl apply -f ./ops/k8s/deployments/tickets-depl.yml
 	kubectl apply -f ./ops/k8s/deployments/orders-depl.yml
 	kubectl apply -f ./ops/k8s/deployments/client-depl.yml
-	kubectl apply -f ./ops/k8s/deployments/payments-depl.yml
 
 # Retry apply (admission webhook can be slow to accept connections after controller is ready)
 apply-ingress:
@@ -167,9 +146,6 @@ orders-db:
 
 tickets-db:
 	kubectl exec -it $$(kubectl get pod -l app=tickets-mongo -o jsonpath='{.items[0].metadata.name}') -- mongosh
-
-payments-db:
-	kubectl exec -it $$(kubectl get pod -l app=payments-mongo -o jsonpath='{.items[0].metadata.name}') -- mongosh
 
 cluster-status:
 	@echo "--------------------------- CLUSTER STATUS ------------------------------"
@@ -214,12 +190,6 @@ build-orders-dev-image:
 build-orders-prod-image:
 	docker build -f ./orders-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-orders-srv:latest .
 
-build-payments-dev-image:
-	docker build -f ./payments-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-payments-srv:latest .
-
-build-payments-prod-image:
-	docker build -f ./payments-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-payments-srv:latest .
-
 build-client-dev-image:
 	docker build -f ./client/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-client-app:latest .
 
@@ -231,7 +201,6 @@ build-dev-images:
 	$(MAKE) build-client-dev-image
 	$(MAKE) build-tickets-dev-image
 	$(MAKE) build-orders-dev-image
-	$(MAKE) build-payments-dev-image
 
 bs:
 	$(MAKE) build-shared-packages
@@ -251,31 +220,4 @@ build-prod-images:
 	$(MAKE) build-tickets-prod-image
 	$(MAKE) build-client-prod-image
 	$(MAKE) build-orders-prod-image
-	$(MAKE) build-payments-prod-image
-
-##
-# TEST COMMANDS:
-# --------------------------
-
-test-payments-srv:
-	cd payments-srv && npm run test
-
-test-orders-srv:
-	cd orders-srv && npm run test
-
-test-tickets-srv:
-	cd tickets-srv && npm run test
-
-test-auth-srv:
-	cd auth-srv && npm run test
-
-# test-client-app:
-# 	cd client && npm run test
-
-test-all:
-	$(MAKE) test-payments-srv
-	$(MAKE) test-orders-srv
-	$(MAKE) test-tickets-srv
-	$(MAKE) test-auth-srv
-# $(MAKE) test-client-app
 
