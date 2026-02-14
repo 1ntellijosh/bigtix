@@ -8,7 +8,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
     - For server-side rendering
     - Quicker content loading (especially on mobile)
     - Better for SEO
-- kubernetes app, will be deployed to AWS EKS cluster
+- Kubernetes app, will be deployed to AWS EKS cluster
   - To simulate real-world, big-traffic e-commerce sites on the cloud
   - kind instead of minikube on local dev
     - Lighter weigth
@@ -30,9 +30,13 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - Mongodb
 
 ## 3rd Party APIs:
-- Stripe (for payments)
+- Ticketmaster Discovery
+    - So ticket sellers can attached tickets to the event, and so buyers can search for tickets by event, and view event details for tickets
+- Stripe
+    - Used for payments. This is NOT a real app, so obviously payments will not charge. But API is fully implemented to do so if it was real
 
 ## DevOps:
+- AWS
 - Docker
 - Kubernetes
 - kind
@@ -69,6 +73,7 @@ Used for listing, creating, and managing event tickets.
 | `/api/tickets/serial-number/:serialNumber` | GET | - | Retrieve ticket with specific serial number |
 | `/api/tickets/event/:eventId` | GET | - | Retrieve all tickets from a specific event ID |
 | `/api/tickets/user/:userId` | GET | - | Retrieve all tickets from a specific user ID |
+| `/api/events/search` | GET | - | Search for events to the the ticket a user's ticket is for (calls TicketMaster API) |
 | `/api/tickets/create` | POST | `{ title: string, price: number, userId: string, description: string, serialNumber: string, eventId: string }` | Create ticket(s) (auth required) |
 | `/api/tickets` | PUT | `{ id: string, title: string, price: number, description: string }` | Update a ticket |
 
@@ -101,7 +106,9 @@ Used for paying for tickets (using Stripe API)
 
 ## Setup and run app for local development
 
-1. You will need to install the following dependancies on your local linux (mac should probably work too):
+1. **INSTALL DEPENDENCIES:**
+    
+    You will need to install the following dependancies on your local linux (mac should probably work too):
 
     | Dep | install URL |
     |-----|-------------|
@@ -116,23 +123,42 @@ Used for paying for tickets (using Stripe API)
 
     You will also need a Stripe account so you can access the developer dashboard.
 
-2. Run `make init` in the project root. You will be prompted to choose a password for the jwt session tokens in the app, then what the rabbitmq management console will be (user name is 'user'). The first time you do this command, you will also be prompted to choose a site url to enter into the browser to access the site locally. This command creates the dev-vars.yml file in your root. It hold those variables there to change if you want later. If you want to change this later, you have to delete the host line it adds in your local `/etc/hosts` file, and erase the `dev-vars.yml` file this command generates.
+2. **INITIALIZE PROJECT FILES, VARS, AND HOST CONFIG:**
+    
+    Run `make init` in the project root. You will be prompted to choose a password for the jwt session tokens in the app, then what the rabbitmq management console will be (user name is 'user'). The first time you do this command, you will also be prompted to choose a site url to enter into the browser to access the site locally. This command creates the dev-vars.yml file in your root. It hold those variables there to change if you want later. If you want to change this later, you have to delete the host line it adds in your local `/etc/hosts` file, and erase the `dev-vars.yml` file this command generates.
 
-3. Run `make start` in your project root. This should build and setup the docker images and local Kubernetes cluster, along with a lot of other stuff. If it worked, you can go to the url you were prompted for in the browser to see the app. You can ctrl -> C to stop skaffold and the app, and run `make dev` to fire the cluster up again. If you want to destroy the cluster, enter `make destroy`. `make full-clear` will destroy the cluster, along with deleting local Docker images associated with the bigtix app. Enter `make start` to build the cluster again.
+3. **CREATE LOCAL CLUSTER:**
+    
+    Run `make start` in your project root. This should build and setup the docker images and local Kubernetes cluster, along with a lot of other stuff. If it worked, you can go to the url you were prompted for in the browser to see the app. You can ctrl -> C to stop skaffold and the app, and run `make dev` to fire the cluster up again. If you want to destroy the cluster, enter `make destroy`. `make full-clear` will destroy the cluster, along with deleting local Docker images associated with the bigtix app. Enter `make start` to build the cluster again.
 
-All will work on the app, accept for **any pages or requests related to making (pretend) payments** for your ticket orders with Stripe will not work until you do **Subscribe to Stripe webhooks locally via Stripe CLI** below:
+    The app will technically work at this point but you can only sign up, sign out, and search for existing tickets. you will not be able to do much else, since you have to setup **developer accounts with Stripe and Ticketmaster for API keys in the following steps** 
 
-## Subscribe to Stripe webhooks locally via Stripe CLI
+4. **TICKETMASTER API:**
+    
+    In order to create tickets, you will need to search for venues the tickets are for. You need access to the TicketMaster API to get event data. Sign up for a developer account at [TicketMaster Developer](https://developer.ticketmaster.com/products-and-docs/apis/getting-started/) and create an app. You can get a `Consumer Key` for the app there. You can then paste the key to the `TICKETMASTER_CONSUMER_KEY` in your `dev-vars.yml` file. Either Ctrl-C out of your terminal if you have `make start` or `make dev` running, and enter `make destroy` then `make start` again so the `./ops/Ansible/setup-cluster.yml` script can inject the API key into the cluster on creation.
 
-1. To use/develop with Stripe locally, you need to have the Strip CLI installed to get app to listen for/handle Stripe payment webhook updates.
+    At this point, you should be able to create a ticket for selling after logging in. 
+
+5. **STRIPE API:**
+    
+    In order to use or develop any pages or requests related to making (pretend) payments for ticket orders with Stripe locally, you must register for [developer account on Stripe](https://docs.stripe.com/get-started) and get into the developer dashboard. There, you should see `Publishable key` and `Secret key` in the top right of the dashboard. Copy and paste those into `STRIPE_PUBLISHABLE_KEY` and `STRIPE_SECRET_KEY` respectively in the `dev-vars.yml` file of the project root.
+
+6. **INSTALL STRIPE CLI :**
+    
+    To use/develop with Stripe payments locally, you need to have the Strip CLI installed to get app to listen for/handle Stripe payment webhook updates, which update the payments and orders to either failed or completed.
 
     | Dep | install URL |
     |-----|-------------|
     | Stripe CLI | https://stripe.com/docs/stripe-cli |
 
-1. Register an account on Stripe and get into the developer dashboard. There, you should see `Publishable key` and `Secret key` in the top right of the dashboard. Copy and paste those into `STRIPE_PUBLISHABLE_KEY` and `STRIPE_SECRET_KEY` respectively in the `dev-vars.yml` file of the project root.
 
-2. Now you setup your local machine to listen for and trigger Stripe webhooks. This is essential for the local app to receive payment updates sent out to Stripe so it can mark orders as completed/failed status in the database. Open an extra terminal window to enter `make stripe-dev` in the project root. You will be prompted to login to your Stripe account, and after doing so, you will see `Your webhook signing secret is whsec_...`. Copy that key and paste it into the `STRIPE_WEBHOOK_SECRET` var in your `dev-vars.yml` file. **Keep the Stripe dev terminal open,** as when you close it, you will have to `make stripe-dev` again and copy/paste another key in `dev-vars.yml`. This is unfortunately the only way to dev locally unless you setup a ngrok account and url and tunnel the public Stripe api to your local machine.
+    After installing Stripe CLI, you can setup your local machine to listen for and trigger Stripe webhook updates on order payments. These updates inform the Payment microserves to mark payments as completed or failed status in the database, and there for to message the Orders microservice to mark its orders as such as such. To set up Stripe webhooks locally:
+    
+    1. Open an extra terminal window to enter `make stripe-dev` in the project root. You will be prompted to login to your Stripe account
+    2. After login, you will see `Your webhook signing secret is whsec_...`. in the terminal. Copy that key and paste it into the `STRIPE_WEBHOOK_SECRET` var in your `dev-vars.yml` file. **Keep the Stripe dev terminal open,** as when you close it, you will have to `make stripe-dev` again and copy/paste another key in `dev-vars.yml`. This is unfortunately the only way to dev locally unless you setup a ngrok account and url and tunnel the public Stripe api to your local machine.
+    3. Either Ctrl-C out of your terminal if you have `make start` or `make dev` running, and enter `make destroy` then `make start` again so the `./ops/Ansible/setup-cluster.yml` script can inject the API key into the cluster on creation.
+
+    You can now develop/use the payment system and order processing area of the application now
 
 
 ## Workflow When Adding/Changing Files in `./packages`

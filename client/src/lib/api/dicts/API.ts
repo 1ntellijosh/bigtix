@@ -4,7 +4,9 @@
  * @since next-client--JP
  */
 import { AuthAPIs } from './AuthAPIs';
+import { TicketsAPIs } from './TicketsAPIs';
 
 export const API: { [key: string]: { [key: string]: (...args: any[]) => Promise<Response> } } = {
   auth: AuthAPIs,
+  tick: TicketsAPIs,
 };

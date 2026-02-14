@@ -17,6 +17,7 @@ const startService = async () => {
 
   if (!process.env.MONGO_URI) throw new Error('MONGO_URI is not defined');
 
+  if (!process.env.TICKETMASTER_CONSUMER_KEY) throw new Error('TICKETMASTER_CONSUMER_KEY is not defined');
 
   await mongoose.connect(process.env.MONGO_URI).catch((err) => {
     throw new DatabaseConnectionError('tickets-srv failed to connect to database: ' + err.message);

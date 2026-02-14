@@ -40,6 +40,7 @@ jest.mock('@bigtix/middleware', () => {
 
 beforeAll(async () => {
   process.env.JWT_KEY = 'test-jwt-key';
+  process.env.TICKETMASTER_CONSUMER_KEY = process.env.TICKETMASTER_CONSUMER_KEY || 'test-consumer-key';
   mongoMemDbServer = await MongoMemoryServer.create();
   const mongoUri = mongoMemDbServer.getUri();
 

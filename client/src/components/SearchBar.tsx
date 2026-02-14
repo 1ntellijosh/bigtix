@@ -17,6 +17,7 @@ const Search = styled('div')(({ theme }) => ({
   '&:hover': {
     backgroundColor: alpha(theme.palette.common.white, 0.25),
   },
+  transition: 'background-color 0.35s ease',
 }));
 
 const SearchIconWrapper = styled('div')(({ theme }) => ({
@@ -36,9 +37,9 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '20ch',
+    width: '40ch',
+    [theme.breakpoints.up('lg')]: {
+      width: '90ch',
     },
   },
 }));
@@ -57,7 +58,6 @@ export default function SearchBar({ placeholder, onSearch }: { placeholder: stri
         onChange={(e) => setSearch(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
-            setSearch('');
             onSearch(value);
           }
         }}

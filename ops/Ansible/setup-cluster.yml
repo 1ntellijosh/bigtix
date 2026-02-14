@@ -111,6 +111,21 @@
       register: jwt_secret_result
       changed_when: "'configured' in jwt_secret_result.stdout or 'created' in jwt_secret_result.stdout"
 
+    - name: Set TICKETMASTER_CONSUMER_KEY from dev-vars.yml
+      ansible.builtin.set_fact:
+        TICKETMASTER_CONSUMER_KEY: "{{ TICKETMASTER_CONSUMER_KEY }}"
+
+    - name: Create Kubernetes secret ticketmaster-consumer-key from dev-vars.yml
+      ansible.builtin.shell: >
+        kubectl create secret generic ticketmaster-consumer-key
+        --from-literal=TICKETMASTER_CONSUMER_KEY={{ TICKETMASTER_CONSUMER_KEY }}
+        --dry-run=client -o yaml
+        | kubectl apply -f -
+      args:
+        chdir: "{{ project_root }}"
+      register: TICKETMASTER_CONSUMER_KEY_result
+      changed_when: "'configured' in TICKETMASTER_CONSUMER_KEY_result.stdout or 'created' in TICKETMASTER_CONSUMER_KEY_result.stdout"
+
     - name: Set stripe_publishable_key from dev-vars.yml
       ansible.builtin.set_fact:
         stripe_publishable_key: "{{ STRIPE_PUBLISHABLE_KEY }}"

@@ -6,6 +6,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { APIError } from "@bigtix/common";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
 
 export default (
   apiMethod: () => Promise<Response>,
@@ -26,14 +31,16 @@ export default (
       ? error.errors.filter((error) => error.message !== 'Invalid value') // Filter out 'Invalid value' messages
       : [ { message: 'Something went wrong. Please try again' } ];
     setErrors(
-      <div className="alert alert-danger">
-        <h4 className="alert-heading">Oops...</h4>
-        <ul className="my-0">
+      <Alert severity="error">
+        <AlertTitle>Oops...</AlertTitle>
+        <List dense disablePadding>
           {errorsList.map((error, i) => (
-            <li key={i}>{error.message}</li>
+            <ListItem key={i} disablePadding>
+              <ListItemText primary={error.message} />
+            </ListItem>
           ))}
-        </ul>
-      </div>
+        </List>
+      </Alert>
     );
     // If optional onFail function is provided, call it as well
     if (onFail) onFail(error);
