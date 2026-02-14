@@ -241,21 +241,56 @@ export default function PrimarySearchAppBar() {
       </Box>
       {currentUser ? (
         <div>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('myaccount')}>My account</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('sell')}>Sell</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('mytickets')}>My tickets</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('signout')}>Sign out</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('myaccount')}>My account</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('sell')}>Sell</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('mytickets')}>My tickets</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('signout')}>Sign out</MenuItem>
         </div>
       ) : (
         <div>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('signin')}>Sign in</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('signup')}>Sign up</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('sell')}>Sell</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('mytickets')}>My tickets</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('signin')}>Sign in</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('signup')}>Sign up</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('sell')}>Sell</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('mytickets')}>My tickets</MenuItem>
         </div>
       )}
     </Drawer>
   );
+
+  /**
+   * Handles the action for the drawer menu
+   *
+   * @param action - The action to handle
+   *
+   * @returns {Promise<void>}
+   */
+  const handleDrawerMenuSelect = async (action?: string) => {
+    handleMobileDrawerClose();
+
+    switch (action) {
+      case 'signout':
+        handleProfileMenuAction(action);
+        break;
+      case 'signin':
+        handleProfileMenuAction(action);
+        break;
+      case 'signup':
+        handleProfileMenuAction(action);
+        break;
+      case 'myaccount':
+        handleProfileMenuAction(action);
+        break;
+      case 'sell':
+        router.push('/tickets/create');
+        break;
+      case 'mytickets':
+        router.push('/tickets/mytickets');
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
@@ -298,7 +333,7 @@ export default function PrimarySearchAppBar() {
             alignItems: 'center',
             gap: 1,
           }}>
-            <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+            <AppLink href="/tickets/create" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
               <Typography
                 variant="caption"
                 noWrap
@@ -309,7 +344,7 @@ export default function PrimarySearchAppBar() {
               </Typography>
             </AppLink>
 
-            <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+            <AppLink href="/tickets/mytickets" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
               <Typography
                 variant="caption"
                 noWrap

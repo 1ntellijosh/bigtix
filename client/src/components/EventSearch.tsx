@@ -5,6 +5,7 @@
  */
 'use client';
 import { useState } from 'react';
+import { APIError } from '@bigtix/common';
 import SearchBar from './SearchBar';
 import { API } from '../lib/api/dicts/API';
 import Box from '@mui/material/Box';
@@ -89,7 +90,7 @@ export default function EventSearch() {
 
   return (
     <Box>
-      <SearchBar placeholder="Search for an event, artist, or venue..." onSearch={onSearchEntered} />
+      <SearchBar placeholder="Search your event and start selling..." onSearch={onSearchEntered} />
 
       <Box sx={{ mt: 2 }}>  
         {!errors && events !== null && !events.length ?
