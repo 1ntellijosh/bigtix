@@ -11,6 +11,7 @@ import { getTicketsRouter } from './routes/GetTickets';
 import { updateTicketsRouter } from './routes/UpdateTicket';
 import { ErrorHandler as errHandler } from '@bigtix/middleware';
 import { ticketMasterAPIRouter } from './routes/TicketMasterAPIRoutes';
+import { createEventRouter } from './routes/CreateEvent';
 
 const app = express();
 app.set('trust proxy', true); // tell express to trust the proxy (since requests are coming via proxy with NGINX)
@@ -25,6 +26,7 @@ app.use('/api', createTicketRouter);
 app.use('/api', getTicketsRouter);
 app.use('/api', updateTicketsRouter);
 app.use('/api', ticketMasterAPIRouter);
+app.use('/api', createEventRouter);
 
 app.use(errHandler.prepareErrResp);
 

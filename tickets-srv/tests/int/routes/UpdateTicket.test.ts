@@ -29,7 +29,7 @@ const ticket: NewTicketAttrs = {
   userId: validUserId,
   description: validDescription,
   serialNumber: '1234567890',
-  eventId: '',
+  event: new mongoose.Types.ObjectId(),
 };
 
 describe('Update ticket routes tests', () => {
@@ -37,7 +37,7 @@ describe('Update ticket routes tests', () => {
     const event = await Event.build(validEvent).save();
     validEventId = event._id.toString();
 
-    ticket.eventId = validEventId;
+    ticket.event = new mongoose.Types.ObjectId(validEventId);
     savedTicket = await Ticket.build(ticket).save();
     savedTicket.id = savedTicket._id.toString();
   });

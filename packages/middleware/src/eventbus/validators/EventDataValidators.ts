@@ -36,16 +36,41 @@ export function validateUserActivationStatusData(data: unknown): data is UserAct
 
 export function validateTicketCreatedData(data: unknown): data is TicketCreatedData {
   if (!val.isObject(data)) return false;
-  return (
-    val.hasString(data, 'ticketId') &&
-    val.hasString(data, 'eventId') &&
-    val.hasString(data, 'userId') &&
-    val.hasNumber(data, 'price') &&
-    val.hasString(data, 'description') &&
-    val.hasString(data, 'serialNumber') &&
-    val.hasString(data, 'title') &&
-    val.hasNumber(data, 'version')
-  );
+
+  if (!val.hasString(data, 'ticketId')) {
+    console.log('ticketId is not valid');
+    return false;
+  }
+  if (!val.hasString(data, 'eventId')) {
+    console.log('eventId is not valid');
+    return false;
+  }
+  if (!val.hasString(data, 'userId')) {
+    console.log('userId is not valid');
+    return false;
+  }
+  if (!val.hasNumber(data, 'price')) {
+    console.log('price is not valid');
+    return false;
+  }
+  if (!val.hasString(data, 'description')) {
+    console.log('description is not valid');
+    return false;
+  }
+  if (!val.hasString(data, 'serialNumber')) {
+    console.log('serialNumber is not valid');
+    return false;
+  }
+  if (!val.hasString(data, 'title')) {
+    console.log('title is not valid');
+    return false;
+  }
+  if (!val.hasNumber(data, 'version')) {
+    console.log('version is not valid');
+    return false;
+  }
+
+  return true;
 }
 
 export function validateTicketUpdatedData(data: unknown): data is TicketUpdatedData {

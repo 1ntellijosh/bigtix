@@ -18,6 +18,9 @@ const validEvent = {
   description: 'some description!!!!!',
   date: new Date(),
   location: 'some location!!!!!',
+  tmEventId: '1234567890',
+  attractions: '{}',
+  image: 'some image!!!!!',
 };
 let validEventId: string;
 const tickets: NewTicketAttrs[] = [
@@ -27,7 +30,7 @@ const tickets: NewTicketAttrs[] = [
     userId: validUserId,
     description: validDescription,
     serialNumber: '1234567890',
-    eventId: '',
+    event: new mongoose.Types.ObjectId(),
   },
   {
     title: validTitle,
@@ -35,7 +38,7 @@ const tickets: NewTicketAttrs[] = [
     userId: validUserId,
     description: validDescription,
     serialNumber: '1234567891',
-    eventId: '',
+    event: new mongoose.Types.ObjectId(),
   },
   {
     title: validTitle,
@@ -43,7 +46,7 @@ const tickets: NewTicketAttrs[] = [
     userId: validUserId,
     description: validDescription,
     serialNumber: '1234567892',
-    eventId: '',
+    event: new mongoose.Types.ObjectId(),
   },
 ];
 let savedTickets: SavedTicketDoc[] = [];
@@ -55,7 +58,7 @@ describe('Get tickets routes tests', () => {
     validEventId = event._id.toString();
     
     for (const ticket of tickets) {
-      ticket.eventId = validEventId;
+      ticket.event = new mongoose.Types.ObjectId(validEventId);
       const savedTicket = await Ticket.build(ticket).save();
       savedTicket.id = savedTicket._id.toString();
       savedTickets.push(savedTicket);
@@ -99,7 +102,7 @@ describe('Get tickets routes tests', () => {
     expect(response.body.price).toBe(savedTickets[0].price);
     expect(response.body.description).toBe(savedTickets[0].description);
     expect(response.body.serialNumber).toBe(savedTickets[0].serialNumber);
-    expect(response.body.eventId).toBe(savedTickets[0].eventId);
+    expect(response.body.event).toBe(savedTickets[0].event);
   });
 
   it('returns a 404 if the ticket is not found by serial number', async () => {
@@ -117,7 +120,7 @@ describe('Get tickets routes tests', () => {
     expect(response.body.price).toBe(savedTickets[0].price);
     expect(response.body.description).toBe(savedTickets[0].description);
     expect(response.body.serialNumber).toBe(savedTickets[0].serialNumber);
-    expect(response.body.eventId).toBe(savedTickets[0].eventId);
+    expect(response.body.event).toBe(savedTickets[0].event);
   });
 
   it('returns the ticket if it is found by event id', async () => {
@@ -129,7 +132,7 @@ describe('Get tickets routes tests', () => {
     expect(response.body[0].price).toBe(savedTickets[0].price);
     expect(response.body[0].description).toBe(savedTickets[0].description);
     expect(response.body[0].serialNumber).toBe(savedTickets[0].serialNumber);
-    expect(response.body[0].eventId).toBe(savedTickets[0].eventId);
+    expect(response.body[0].event).toBe(savedTickets[0].event);
   });
 
   it('returns all tickets for a given user', async () => {
@@ -141,6 +144,6 @@ describe('Get tickets routes tests', () => {
     expect(response.body[0].price).toBe(savedTickets[0].price);
     expect(response.body[0].description).toBe(savedTickets[0].description);
     expect(response.body[0].serialNumber).toBe(savedTickets[0].serialNumber);
-    expect(response.body[0].eventId).toBe(savedTickets[0].eventId);
+    expect(response.body[0].event).toBe(savedTickets[0].event);
   });
 });

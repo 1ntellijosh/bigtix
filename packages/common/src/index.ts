@@ -4,7 +4,7 @@
  * @since next-client--JP
  */
 
-export * from './types';
+export * from './contracts';
 export * from './enums';
 export { STATUS_CODES, OrderStatusEnum } from './enums';
 export { ORDER_EXPIRATION_SECONDS } from './consts';

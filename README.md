@@ -74,6 +74,7 @@ Used for listing, creating, and managing event tickets.
 | `/api/tickets/event/:eventId` | GET | - | Retrieve all tickets from a specific event ID |
 | `/api/tickets/user/:userId` | GET | - | Retrieve all tickets from a specific user ID |
 | `/api/events/search` | GET | - | Search for events to the the ticket a user's ticket is for (calls TicketMaster API) |
+| `/api/events/:eventId` | GET | - | Get details about a single event (calls TicketMaster API) |
 | `/api/tickets/create` | POST | `{ title: string, price: number, userId: string, description: string, serialNumber: string, eventId: string }` | Create ticket(s) (auth required) |
 | `/api/tickets` | PUT | `{ id: string, title: string, price: number, description: string }` | Update a ticket |
 

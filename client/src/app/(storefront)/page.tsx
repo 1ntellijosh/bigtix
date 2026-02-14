@@ -8,10 +8,20 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useCurrentUser } from '../CurrentUserContext';
-import EventSearch from '../../components/EventSearch';
+import { useRouter } from 'next/navigation';
+import SearchBar from '../../components/SearchBar';
+import AppLink from '../../components/AppLink';
+import Button from '@mui/material/Button';
 
 export default function Home() {
   const { currentUser } = useCurrentUser();
+  const router = useRouter();
+
+  const onEventSearch = (keywords: string) => {
+    const encodedKeyword = encodeURIComponent(keywords);
+
+    router.push(`/tickets/search?keywords=${encodedKeyword}`);
+  }
 
   return (
     <Container maxWidth="lg" disableGutters>
@@ -35,13 +45,21 @@ export default function Home() {
           width: '100%',
           // Set a max-width that increases at specific breakpoints
           maxWidth: {
-            xs: '500px', // max-width on extra-small screens
+            xs: '400px', // max-width on extra-small screens
             md: '900px', // max-width on medium screens
             lg: '1200px', // max-width on large screens
           },
         }}>
-          <EventSearch />
+          <SearchBar placeholder="Search for an event" onSearch={onEventSearch} />
         </Box>
+      </Box>
+
+      <Box>
+        <AppLink href="/tickets/event/vvG1iZbS55yKJr">
+          <Button variant="contained" color="primary">
+            My Chemical Romance with Special Guest The Used
+          </Button>
+        </AppLink>
       </Box>
     </Container>
   );

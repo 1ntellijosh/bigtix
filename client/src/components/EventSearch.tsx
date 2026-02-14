@@ -5,6 +5,7 @@
  */
 'use client';
 import { useState } from 'react';
+import { APIError } from '@bigtix/common';
 import SearchBar from './SearchBar';
 import { API } from '../lib/api/dicts/API';
 import Box from '@mui/material/Box';
@@ -13,8 +14,25 @@ import ListSearchResults from '../hooks/ListSearchResults';
 import EventSearchItem from './EventSearchItem';
 import { getDateSegments } from '../lib/DateMethods';
 import ListSkeleton from './ListSkeleton';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function EventSearch() {
+type EventSearchOptions = {
+  initialSearch: string;
+  eventItemBtnLabel: string;
+  searchPlaceholder: string;
+};
+
+type EventSearchProps = {
+  onSelect: (event: any) => void;
+  options: EventSearchOptions;
+};
+
+export default function EventSearch({
+  onSelect,
+  options
+}: EventSearchProps) {
+  const router = useRouter();
   // Events search results
   const [events, setEvents] = useState<any[] | null>(null);
   // Keyword for the search
@@ -29,7 +47,7 @@ export default function EventSearch() {
    *
    * @param {SearchedEvent[]} events  The events search results
    */
-  const processEventsSearchResults = (events: any) => {
+  const processEventsSearchResults = (events: any, eventItemBtnLabel: string = 'Buy Tickets') => {
     setIsSearching(false);
     const preparedEvents = [];
     for (const event of events) {
@@ -55,8 +73,15 @@ export default function EventSearch() {
    * @returns {Promise<SearchedEvent[]>}  The events search results
    */
   const apiSearch = async (encodedKeyword: string): Promise<any[]> => {
-    const response = await API.tick!.searchForEvents!(encodedKeyword);
+    /**
+     * If current page url includes 'keywords=', then we are on the search page, and we want to replace the keywords
+     * with the new keyword so if user leaves and comes back, they will see the results for most recent keyword search
+     */
+    if (window.location.href.includes('keywords=')) {
+      router.replace(`/tickets/search?keywords=${encodedKeyword}`);
+    }
 
+    const response = await API.tick!.searchForEvents!(encodedKeyword);
     return response as unknown as Promise<any[]>;
   }
 
@@ -87,9 +112,16 @@ export default function EventSearch() {
     }, 1000);
   }
 
+  useEffect(() => {
+    if (options.initialSearch) {
+      onSearchEntered(options.initialSearch);
+    }
+  }, []);
+
   return (
     <Box>
-      <SearchBar placeholder="Search for an event, artist, or venue..." onSearch={onSearchEntered} />
+      <SearchBar
+        placeholder={options.searchPlaceholder} onSearch={onSearchEntered} initialValue={options.initialSearch} />
 
       <Box sx={{ mt: 2 }}>  
         {!errors && events !== null && !events.length ?
@@ -114,7 +146,7 @@ export default function EventSearch() {
             <Box>
               {events.map((event) => (
                 <Box key={event.id} sx={{ marginBottom: listItemMarginBottom }}>
-                  <EventSearchItem id={event.id} item={event} />
+                  <EventSearchItem item={event} onSelect={onSelect} eventItemBtnLabel={options.eventItemBtnLabel} />
                 </Box>
               ))}
             </Box>
