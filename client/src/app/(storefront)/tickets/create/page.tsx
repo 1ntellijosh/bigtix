@@ -29,6 +29,9 @@ export default function TicketCreatePage() {
     setSelectedEvent(detailedEvent);
   }
 
+  const headerImages = [ 'c1', 'c2', 'c3', 'c4', 'c5' ];
+  const randomHeaderImage = headerImages[Math.floor(Math.random() * headerImages.length)];
+
   return (
     <Container sx={{ minWidth: '100%', height: '100%' }} disableGutters>
       {/* SECTION 1: SELECTING AN EVENT TO SELL TICKETS FOR */}
@@ -74,7 +77,7 @@ export default function TicketCreatePage() {
           <Box
             sx={{
               minWidth: '100%',
-              backgroundImage: `url(/c5.jpg)`,
+              backgroundImage: `url(/${randomHeaderImage}.jpg)`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
@@ -86,13 +89,13 @@ export default function TicketCreatePage() {
                 xl: 'block',
               },
               height: {
-                xs: '100px',
-                sm: '100px',
+                xs: '0px',
+                sm: '0px',
                 md: '220px',
                 lg: '220px',
                 xl: '220px',
               },
-              opacity: 0.6,
+              opacity: (theme) => theme.palette.mode === 'dark' ? 0.35 : 0.6,
             }}
           >
 
