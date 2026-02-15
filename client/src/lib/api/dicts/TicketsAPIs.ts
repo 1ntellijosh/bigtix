@@ -16,4 +16,16 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
   searchForEvents: function (keyword: string, config: Record<string, any> = {}): Promise<Response> {
     return HttpService.get(`/api/events/search?keyword=${keyword}`, config) as Promise<Response>;
   },
+
+  /**
+   * Gets the details of an event
+   *
+   * @param {object} body  The body of the request
+   *   @prop {string} eventId  The id of the event
+   *
+   * @returns {Promise<Response>}
+   */
+  getEventDetails: function (eventId: string, config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.get(`/api/events/details/${eventId}`, config) as Promise<Response>;
+  },
 };

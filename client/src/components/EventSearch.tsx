@@ -5,6 +5,7 @@
  */
 'use client';
 import { useState } from 'react';
+import { APIError } from '@bigtix/common';
 import SearchBar from './SearchBar';
 import { API } from '../lib/api/dicts/API';
 import Box from '@mui/material/Box';
@@ -14,7 +15,11 @@ import EventSearchItem from './EventSearchItem';
 import { getDateSegments } from '../lib/DateMethods';
 import ListSkeleton from './ListSkeleton';
 
-export default function EventSearch() {
+type EventSearchProps = {
+  onSelect: (event: any) => void;
+};
+
+export default function EventSearch({ onSelect }: EventSearchProps) {
   // Events search results
   const [events, setEvents] = useState<any[] | null>(null);
   // Keyword for the search
@@ -89,7 +94,7 @@ export default function EventSearch() {
 
   return (
     <Box>
-      <SearchBar placeholder="Search for an event, artist, or venue..." onSearch={onSearchEntered} />
+      <SearchBar placeholder="Search your event and start selling..." onSearch={onSearchEntered} />
 
       <Box sx={{ mt: 2 }}>  
         {!errors && events !== null && !events.length ?
@@ -114,7 +119,7 @@ export default function EventSearch() {
             <Box>
               {events.map((event) => (
                 <Box key={event.id} sx={{ marginBottom: listItemMarginBottom }}>
-                  <EventSearchItem id={event.id} item={event} />
+                  <EventSearchItem item={event} onSelect={onSelect} />
                 </Box>
               ))}
             </Box>

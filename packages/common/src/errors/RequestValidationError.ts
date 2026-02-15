@@ -4,7 +4,7 @@
  * @since users-service-continued--JP
  */
 import { STATUS_CODES } from '../enums';
-import { ErrorResponseItem, ExpressValidationErrorItem } from '../types';
+import { ErrorResponseItem, ExpressValidationErrorItem } from '../contracts';
 import { AbstractRequestError } from "./AbstractRequestError";
 
 export class RequestValidationError extends AbstractRequestError {

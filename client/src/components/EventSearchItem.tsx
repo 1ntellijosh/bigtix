@@ -10,8 +10,14 @@ import Button from '@mui/material/Button';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import DateDisplay from './DateDisplay';
 
-export default function EventSearchItem({ id, item }: { id: string, item: any }) {
+type EventSearchItemProps = {
+  item: any;
+  onSelect: (event: any) => void;
+};
+
+export default function EventSearchItem({ item, onSelect }: EventSearchItemProps) {
   const theme = useTheme();
   const router = useRouter();
   /**
@@ -90,7 +96,7 @@ export default function EventSearchItem({ id, item }: { id: string, item: any })
         transition: 'box-shadow 0.35s ease, background-color 0.35s ease',
       }}
       onClick={() => {
-        router.push(`/tickets/sell/${id}`);
+        onSelect(item);
       }}
       onMouseEnter={() => {
         setHovered(true);
@@ -100,66 +106,7 @@ export default function EventSearchItem({ id, item }: { id: string, item: any })
       }}
     >
       {/* Column 1: date segments – pill block, day emphasized, weekday strip (theme-aware, inverts in dark) */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'stretch',
-          borderRadius: 2,
-          overflow: 'hidden',
-          minWidth: 50,
-          bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#121212' : 'grey.300'),
-        }}
-      >
-        <Box sx={{ py: 1, px: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              color: (theme) => (theme.palette.mode === 'dark' ? 'grey.200' : 'grey.700'),
-            }}
-          >
-            {item.dateSegments.month}
-          </Typography>
-
-          <Typography
-            component="span"
-            sx={{
-              fontSize: '2rem',
-              fontWeight: 800,
-              lineHeight: 1.1,
-              color: (theme) => (theme.palette.mode === 'dark' ? 'grey.100' : 'grey.800'),
-            }}
-          >
-            {item.dateSegments.day}
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            py: 0.75,
-            px: 1.5,
-            display: 'flex',
-            justifyContent: 'center',
-            borderRadius: '0 0 8px 8px',
-            bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.700' : 'grey.400'),
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              color: (theme) => (theme.palette.mode === 'dark' ? 'grey.200' : 'grey.700'),
-            }}
-          >
-            {item.dateSegments.weekday}
-          </Typography>
-        </Box>
-      </Box>
+      <DateDisplay month={item.dateSegments.month} day={item.dateSegments.day} weekday={item.dateSegments.weekday} />
       {/* Column 2: event picture (fixed width) */}
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {item.image ? (
@@ -241,7 +188,9 @@ export default function EventSearchItem({ id, item }: { id: string, item: any })
         <Button
           variant="contained"
           color={buttonColor}
-          href={`/events/${id}`}
+          onClick={() => {
+            onSelect(item);
+          }}
           sx={(theme) => ({
             fontSize: {
               xs: '12px',
