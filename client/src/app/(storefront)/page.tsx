@@ -40,7 +40,7 @@ export default function Home() {
             lg: '1200px', // max-width on large screens
           },
         }}>
-          <EventSearch />
+          <EventSearch onSelect={() => {}} />
         </Box>
       </Box>
     </Container>

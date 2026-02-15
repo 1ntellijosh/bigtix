@@ -9,9 +9,25 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import EventSearch from '../../../../components/EventSearch';
+import { API } from '../../../../lib/api/dicts/API';
+import { getDateSegments } from '../../../../lib/DateMethods';
+import EventViewer from '../../../../components/EventViewer';
+import Button from '@mui/material/Button';
 
 export default function TicketCreatePage() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [confirmedEvent, setConfirmedEvent] = useState(false);
+
+  const onEventSelected = async (event: any) => {
+
+    const detailedEvent = await API.tick!.getEventDetails!(event.id) as EventDetails;
+
+    const dateSegments = getDateSegments(new Date(detailedEvent.date));
+    detailedEvent.description = `${dateSegments.time} | ${detailedEvent.location}`;
+    detailedEvent.dateSegments = dateSegments;
+
+    setSelectedEvent(detailedEvent);
+  }
 
   return (
     <Container maxWidth="lg">
@@ -26,37 +42,73 @@ export default function TicketCreatePage() {
       >
 
         {/* SECTION 1: SELECTING AN EVENT TO SELL TICKETS FOR */}
-        <Typography component="h1" sx={{ mb: 2, fontWeight: 400, fontFamily: 'oswald', fontSize: '40px', mb: 0 }}>
-          Sell Your Tickets
-        </Typography>
-        <Typography component="h5" sx={{ mb: 2, fontWeight: 400, fontSize: '18px' }}>
-          Sell your tickets to events you're attending.
-        </Typography>
+        {!selectedEvent ? (
+          <>
+            <Typography component="h1" sx={{ mb: 2, fontWeight: 400, fontFamily: 'oswald', fontSize: '40px', mb: 0 }}>
+              Sell Your Tickets
+            </Typography>
+            <Typography component="h5" sx={{ mb: 2, fontWeight: 400, fontSize: '18px' }}>
+              Sell your tickets to events you're attending.
+            </Typography>
 
-        <Box sx={{
-          my: 2,
-          width: '100%',
-          // Set a max-width that increases at specific breakpoints
-          maxWidth: {
-            xs: '500px', // max-width on extra-small screens
-            md: '900px', // max-width on medium screens
-            lg: '1200px', // max-width on large screens
-          },
-        }}>
-          <EventSearch selectedEventHandler={setSelectedEvent} />
-        </Box>
+            <Box sx={{
+              my: 2,
+              width: '100%',
+              // Set a max-width that increases at specific breakpoints
+              maxWidth: {
+                xs: '500px', // max-width on extra-small screens
+                md: '900px', // max-width on medium screens
+                lg: '1200px', // max-width on large screens
+              },
+            }}>
+              <EventSearch onSelect={onEventSelected} />
+            </Box>
+          </>
+        ) : (
+          null
+        )}
 
         {/* SECTION 2: CONFIRMING THE EVENT TO SELL TICKETS FOR */}
-        <Typography component="h1" sx={{ mb: 2, fontWeight: 400, fontFamily: 'oswald', fontSize: '40px', mb: 0 }}>
-          Is this the event you want to sell tickets for?
-        </Typography>
-        <Typography component="h5" sx={{ mb: 2, fontWeight: 400, fontSize: '18px' }}>
-          If not, you can search again for a different event.
-        </Typography>
+        {selectedEvent && !confirmedEvent ? (
+          <>
+            <Typography component="h1" sx={{ mb: 2, fontWeight: 400, fontFamily: 'oswald', fontSize: '40px', mb: 0 }}>
+              Is this the event you want to sell tickets for?
+            </Typography>
+            <Typography component="h5" sx={{ mb: 2, fontWeight: 400, fontSize: '18px' }}>
+              If not, you can search again for a different event.
+            </Typography>
 
-        <Box>
-          
-        </Box>
+            <Box sx={{
+              my: 2,
+              width: '100%',
+              // Set a max-width that increases at specific breakpoints
+              maxWidth: {
+                xs: '500px', // max-width on extra-small screens
+                md: '900px', // max-width on medium screens
+                lg: '1200px', // max-width on large screens
+              },
+            }}>
+              <EventViewer eventId={selectedEvent.id as string}>
+                <Button variant="contained" color="primary" onClick={() => setConfirmedEvent(true)}>
+                  Confirm
+                </Button>
+              </EventViewer>
+            </Box>
+          </>
+        ) : (
+          null
+        )}
+
+        {/* SECTION 3: CONFIRMED THE EVENT TO SELL TICKETS FOR */}
+        {confirmedEvent ? (
+          <>
+            <Typography component="h1" sx={{ mb: 2, fontWeight: 400, fontFamily: 'oswald', fontSize: '40px', mb: 0 }}>
+              Confirming the event to sell tickets for...
+            </Typography>
+          </>
+        ) : (
+          null
+        )}
       </Box>
     </Container>
   );

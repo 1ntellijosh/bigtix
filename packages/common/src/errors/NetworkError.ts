@@ -4,7 +4,7 @@
  * @since next-client--JP
  */
 import { STATUS_CODES } from '../enums';
-import { ErrorResponseItem } from '../types';
+import { ErrorResponseItem } from '../contracts';
 import { AbstractRequestError } from "./AbstractRequestError";
 
 export class NetworkError extends AbstractRequestError {
