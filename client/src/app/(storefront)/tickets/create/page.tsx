@@ -14,6 +14,7 @@ import { API } from '../../../../lib/api/dicts/API';
 import { getDateSegments } from '../../../../lib/DateMethods';
 import EventViewer from '../../../../components/EventViewer';
 import Button from '@mui/material/Button';
+import { STYLE_CONSTS } from '../../../../styles/consts';
 
 export default function TicketCreatePage() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -52,9 +53,9 @@ export default function TicketCreatePage() {
               xl: 'block',
             },
             height: {
-              md: 200,
-              lg: 200,
-              xl: 200,
+              md: STYLE_CONSTS.EVENT_SEARCH_HEADER_HEIGHT,
+              lg: STYLE_CONSTS.EVENT_SEARCH_HEADER_HEIGHT,
+              xl: STYLE_CONSTS.EVENT_SEARCH_HEADER_HEIGHT,
             },
             opacity: (theme) => theme.palette.mode === 'dark' ? 0.35 : 0.6,
           }}
@@ -63,6 +64,7 @@ export default function TicketCreatePage() {
 
       {/* SECTION 1: SELECTING AN EVENT TO SELL TICKETS FOR */}
       <Container
+        maxWidth="lg"
         sx={{
           height: selectedEvent ? '0px' : 'auto',
           overflow: 'hidden',
@@ -70,14 +72,14 @@ export default function TicketCreatePage() {
       >
         <Box
           sx={{
-            mt: 12,
+            mt: 10,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
           }}
         >
-          <Typography component="h1" sx={{ mb: 2, fontWeight: 400, fontFamily: 'oswald', fontSize: '40px', mb: 0 }}>
+          <Typography component="h1" sx={{ fontWeight: 400, fontFamily: 'oswald', fontSize: '40px' }}>
             Sell Your Tickets
           </Typography>
           <Typography component="h5" sx={{ mb: 2, fontWeight: 400, fontSize: '18px' }}>
@@ -101,16 +103,16 @@ export default function TicketCreatePage() {
 
       {/* SECTION 2: CONFIRMING THE EVENT TO SELL TICKETS FOR */}
       {selectedEvent && !confirmedEvent ? (
-        <Box>
-          <Typography component="h1" sx={{ mb: 2, fontWeight: 400, fontFamily: 'oswald', fontSize: '40px', mb: 0 }}>
-            Is this the event you want to sell tickets for?
-          </Typography>
-          <Typography component="h5" sx={{ mb: 2, fontWeight: 400, fontSize: '18px' }}>
-            If not, you can search again for a different event.
-          </Typography>
-
+        <Container
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            minWidth: '100vw',
+          }}
+        >
           <Box sx={{
-            my: 2,
+            mt: 2,
             width: '100%',
             // Set a max-width that increases at specific breakpoints
             maxWidth: {
@@ -129,10 +131,12 @@ export default function TicketCreatePage() {
               </Button>
             </EventViewer>
           </Box>
-        </Box>
+        </Container>
       ) : (
         null
       )}
+
+      
 
       {/* SECTION 3: CONFIRMED THE EVENT TO SELL TICKETS FOR */}
       {confirmedEvent ? (

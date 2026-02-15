@@ -15,8 +15,7 @@ import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import AccountCircleOutlined from '@mui/icons-material/AccountCircleOutlined';
-import MailIcon from '@mui/icons-material/Mail';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import { STYLE_CONSTS } from '../styles/consts';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useRouter } from 'next/navigation';
@@ -293,7 +292,18 @@ export default function PrimarySearchAppBar() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar
+        position="static"
+        sx={{
+          minHeight: {
+            xs: 'auto',
+            sm: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+            md: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+            lg: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+            xl: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+          },
+        }}
+      >
         <Toolbar
           sx={{
             display: 'flex',
