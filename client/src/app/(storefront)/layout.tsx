@@ -16,9 +16,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
   return (
     <Box sx={{ position: 'relative', minHeight: '100vh' }}>
       <TopNavBar />
-      <Container>
-        {children}
-      </Container>
+      {children}
     </Box>
   );
 }

@@ -51,6 +51,15 @@ export default function EventViewer({ eventId, children }: EventViewerProps) {
         </Box>
       ) : (
         <Box>
+          <Box sk={{ width: '100%', height: '100%', display: 'flex' }}>
+            
+          </Box>
+
+
+
+
+
+
           <Typography variant="h6">{detailedEvent.name}</Typography>
             <Typography variant="body1">{detailedEvent.location}</Typography>
             {detailedEvent.image ? (
@@ -130,7 +139,12 @@ export default function EventViewer({ eventId, children }: EventViewerProps) {
 //               "musicbrainz": "https://musicbrainz.org/artist/c07f0676-9143-4217-8a9f-4c26bd636f13",
 //               "instagram": "https://www.instagram.com/mychemicalromance/",
 //               "homepage": "http://www.mychemicalromance.com/"
-//           }
+//           },
+//           "classifications": [
+//               "Music",
+//               "Rock",
+//               "Alternative Rock"
+//           ]
 //       },
 //       {
 //           "name": "The Used",
@@ -145,7 +159,14 @@ export default function EventViewer({ eventId, children }: EventViewerProps) {
 //               "musicbrainz": "https://musicbrainz.org/artist/8262d8e4-9137-4bb3-a787-3caabbbc13e9",
 //               "instagram": "https://instagram.com/theused",
 //               "homepage": "http://theused.net/"
-//           }
+//           },
+//           "classifications": [
+//               "Music",
+//               "Rock",
+//               "Alternative Rock"
+//           ]
 //       }
-//   ]
+//   ],
+//   "description": "",
+//   "dateSegments": null
 // }
