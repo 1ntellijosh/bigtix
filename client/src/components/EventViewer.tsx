@@ -55,7 +55,7 @@ export default function EventViewer({ eventId, children }: EventViewerProps) {
             
           </Box>
 
-
+          {children}
 
 
 
@@ -106,7 +106,7 @@ export default function EventViewer({ eventId, children }: EventViewerProps) {
           }
           <Typography variant="body1">{detailedEvent.description}</Typography>
           <DateDisplay month={detailedEvent.dateSegments.month} day={detailedEvent.dateSegments.day} weekday={detailedEvent.dateSegments.weekday} />
-          {children}
+          
         </Box>
       )}
     </Box>
