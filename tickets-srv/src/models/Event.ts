@@ -6,19 +6,21 @@
 import mongoose from "mongoose";
 
 interface NewEventAttrs {
+  tmEventId: string;
   title: string;
   date: Date;
-  description: string;
   location: string;
+  attractions: string;
   image: string | null;
 }
 
 interface SavedEventDoc extends mongoose.Document {
   id: string;
+  tmEventId: string;
   title: string;
   date: Date;
-  description: string;
   location: string;
+  attractions: string;
   image: string | null;
 }
 
@@ -34,6 +36,10 @@ interface EventModel extends mongoose.Model<SavedEventDoc> {
 }
 
 const eventSchema = new mongoose.Schema({
+  tmEventId: {
+    type: String,
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -43,6 +49,10 @@ const eventSchema = new mongoose.Schema({
     required: true,
   },
   location: {
+    type: String,
+    required: true,
+  },
+  attractions: {
     type: String,
     required: true,
   },

@@ -3,17 +3,23 @@
  *
  * @since tickets-srv--JP
  */
+import mongoose from 'mongoose';
 import { TicketRepository } from './repositories/TicketRepository';
+import { EventRepository } from './repositories/EventRepository';
+import { TicketMasterAPIService } from './lib/TicketMasterAPIService';
 import { SavedTicketDoc } from './models/Ticket';
 import { BadRequestError, NotFoundError, ServerError } from '@bigtix/common';
 import { OrderCreatedData, OrderStatusUpdatedData } from '@bigtix/middleware';
 import { TicketsPublisher } from './events/TicketsPublisher';
+import { NewEventAttrs, SavedEventDoc } from './models/Event';
 
 export class TicketService {
   private tickRepo: TicketRepository;
+  private eventRepo: EventRepository;
 
   constructor() {
     this.tickRepo = new TicketRepository();
+    this.eventRepo = new EventRepository();
   }
 
   /**
@@ -23,7 +29,7 @@ export class TicketService {
    * @param {string} price
    * @param {string} userId
    * @param {string} serialNumber
-   * @param {string} eventId
+   * @param {mongoose.Types.ObjectId | SavedEventDoc | null} event
    *
    * @returns {Promise<SavedUserDoc>}
    * 
@@ -40,12 +46,31 @@ export class TicketService {
     if (savedTicket) throw new BadRequestError('Ticket already exists');
 
     // Create the ticket
-    const ticket = await this.tickRepo.create({ title, price, userId, description, serialNumber, eventId });
+    const ticket = await this.tickRepo.create({ title, price, userId, description, serialNumber, event: new mongoose.Types.ObjectId(eventId) });
     
     // Notify the ticket created event to the event bus
     await TicketsPublisher.publishTicketCreatedEvent(ticket);
 
     return ticket;
+  }
+
+  /**
+   * Creates multiple tickets
+   *
+   * @param {string} title  The title of the tickets
+   * @param {number} price  The price of the tickets
+   * @param {string} description  The description of the tickets
+   * @param {array<string>} serialNumbers  The serial numbers of the tickets
+   * @param {string} eventId  The event id of the tickets
+   */
+  async createTickets(title: string, price: number, userId: string, description: string, serialNumbers: string[], eventId: string): Promise<SavedTicketDoc[]> {
+    const tickets = [];
+    for (const serialNumber of serialNumbers) {
+      const ticket = await this.createTicket(title, price, userId, description, serialNumber, eventId);
+      tickets.push(ticket);
+    }
+
+    return tickets;
   }
 
   /**
@@ -81,7 +106,7 @@ export class TicketService {
   /**
    * Retrieves all tickets for a given event id
    *
-   * @param {string} eventId  The event id of the ticket to retrieve
+   * @param {mongoose.Types.ObjectId | SavedEventDoc | null} event  The event of the ticket to retrieve
    *
    * @returns {Promise<SavedTicketDoc[]>}
    */
@@ -142,6 +167,33 @@ export class TicketService {
     await TicketsPublisher.publishTicketUpdatedEvent(ticket);
     
     return ticket;
+  }
+
+  /**
+   * Creates a new event, by getting the details from TicketMaster API and saving them to the Event model in the database
+   *
+   * @param {string} tmEventId  The TicketMaster id of the event to create
+   *
+   * @returns {Promise<SavedEventDoc>}
+   */
+  async createEvent(tmEventId: string): Promise<SavedEventDoc> {
+    const event = await this.eventRepo.findByTmEventId(tmEventId);
+
+    // Events can already be saved in the database, so we don't need to get the details from TicketMaster API
+    if (event) return event;
+
+    const eventDetails = await TicketMasterAPIService.getEventDetails(tmEventId);
+
+    const newEvent = {
+      title: eventDetails.name,
+      date: eventDetails.date,
+      location: eventDetails.location,
+      tmEventId: eventDetails.id,
+      attractions: JSON.stringify(eventDetails.attractions),
+      image: eventDetails.image ? eventDetails.image.url : null,
+    } as NewEventAttrs;
+
+    return this.eventRepo.create(newEvent);
   }
 
   /**

@@ -47,6 +47,17 @@ export class TicketRepository implements AbstractRepository {
   }
 
   /**
+   * Finds a ticket by given tmEventId (ticketmaster event id)
+   *
+   * @param tmEventId  The tmEventId of the ticket to find
+   *
+   * @returns The ticket in data store
+   */
+  findByTmEventId(tmEventId: string): Promise<SavedTicketDoc | null> {
+    return Ticket.findOne({ tmEventId });
+  }
+
+  /**
    * Finds a ticket by given serial number
    *
    * @param serialNumber  The serial number of the ticket to find

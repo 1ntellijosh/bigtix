@@ -33,7 +33,7 @@ export class TicketsPublisher {
     const publisher = this.createEventPublisher(EventTypesEnum.TICKET_CREATED);
     await publisher.publishEvent('tickets-srv.ticket-events', EventTypesEnum.TICKET_CREATED, {
       ticketId: createdTicket.id,
-      eventId: createdTicket.eventId,
+      eventId: createdTicket.event!.toString(),
       userId: createdTicket.userId,
       price: createdTicket.price,
       description: createdTicket.description,

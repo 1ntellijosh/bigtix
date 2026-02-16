@@ -15,18 +15,25 @@ import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import AccountCircleOutlined from '@mui/icons-material/AccountCircleOutlined';
-import MailIcon from '@mui/icons-material/Mail';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import { STYLE_CONSTS } from '../styles/consts';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useCurrentUser } from '../app/CurrentUserContext';
 import Drawer from '@mui/material/Drawer';
 import AppLink from './AppLink';
+import TopNavSearchBar from './TopNavSearchBar';
+
+/** Paths where the nav search bar is hidden */
+const SEARCH_BAR_HIDDEN_PATHS = ['/', '/tickets/create', '/tickets/search', '/selltickets'];
 
 export default function PrimarySearchAppBar() {
   const { currentUser, signOut } = useCurrentUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const showSearchBar = !SEARCH_BAR_HIDDEN_PATHS.some(
+    (path) => path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(path + '/')
+  );
 
   /**
    * RENDERED DESKTOP PROFILE MENU
@@ -241,24 +248,77 @@ export default function PrimarySearchAppBar() {
       </Box>
       {currentUser ? (
         <div>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('myaccount')}>My account</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('sell')}>Sell</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('mytickets')}>My tickets</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('signout')}>Sign out</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('myaccount')}>My account</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('sell')}>Sell</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('mytickets')}>My tickets</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('signout')}>Sign out</MenuItem>
         </div>
       ) : (
         <div>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('signin')}>Sign in</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('signup')}>Sign up</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('sell')}>Sell</MenuItem>
-          <MenuItem onClick={() => handleMobileProfileMenuClose('mytickets')}>My tickets</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('signin')}>Sign in</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('signup')}>Sign up</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('sell')}>Sell</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('mytickets')}>My tickets</MenuItem>
         </div>
       )}
     </Drawer>
   );
+
+  /**
+   * Handles the action for the drawer menu
+   *
+   * @param action - The action to handle
+   *
+   * @returns {Promise<void>}
+   */
+  const handleDrawerMenuSelect = async (action?: string) => {
+    handleMobileDrawerClose();
+
+    switch (action) {
+      case 'signout':
+        handleProfileMenuAction(action);
+        break;
+      case 'signin':
+        handleProfileMenuAction(action);
+        break;
+      case 'signup':
+        handleProfileMenuAction(action);
+        break;
+      case 'myaccount':
+        handleProfileMenuAction(action);
+        break;
+      case 'sell':
+        router.push('/selltickets');
+        break;
+      case 'mytickets':
+        router.push('/tickets/mytickets');
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar
+        position="static"
+        sx={{
+          minHeight: {
+            xs: 'auto',
+            sm: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+            md: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+            lg: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+            xl: `${STYLE_CONSTS.HEADER_HEIGHT}px`,
+          },
+          padding: {
+            xs: '0px',
+            sm: '0px',
+            md: '0 6px 0 6px',
+            lg: '0 6px 0 6px',
+            xl: '0 6px 0 6px',
+          }
+        }}
+      >
         <Toolbar
           sx={{
             display: 'flex',
@@ -279,7 +339,7 @@ export default function PrimarySearchAppBar() {
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ marginRight: 3 }}>
+          <Box sx={{ marginRight: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
             <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
               <Typography
                 variant="body2"
@@ -290,6 +350,12 @@ export default function PrimarySearchAppBar() {
                 <span style={{ fontSize: '26.5px' }}>B</span>ig<span style={{ marginLeft: '-.5px', fontSize: '26.5px' }}>T</span>ix
               </Typography>
             </AppLink>
+
+            {showSearchBar && (
+              <Box sx={{ display: { xs: 'none', sm: 'none', md: 'flex', lg: 'flex', xl: 'flex' } }}>
+                <TopNavSearchBar />
+              </Box>
+            )}
           </Box>
 
           <Box sx={{
@@ -298,7 +364,7 @@ export default function PrimarySearchAppBar() {
             alignItems: 'center',
             gap: 1,
           }}>
-            <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+            <AppLink href="/selltickets" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
               <Typography
                 variant="caption"
                 noWrap
@@ -309,7 +375,7 @@ export default function PrimarySearchAppBar() {
               </Typography>
             </AppLink>
 
-            <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+            <AppLink href="/tickets/mytickets" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
               <Typography
                 variant="caption"
                 noWrap
@@ -349,6 +415,18 @@ export default function PrimarySearchAppBar() {
       {renderedMobileProfileMenu}
       {renderedProfileMenu}
       {renderedMobileDrawer}
+      {showSearchBar && (
+        <AppBar
+          position="static"
+          sx={{ backgroundColor: 'transparent',
+            display: { xs: 'flex', sm: 'flex', md: 'none', lg: 'none', xl: 'none' }
+          }}
+        >
+          <Toolbar>
+            <TopNavSearchBar style={{ display: 'flex', alignItems: 'center', flexGrow: 1, padding: '4px 0px' }} />
+          </Toolbar>
+        </AppBar>
+      )}
     </Box>
   );
 }

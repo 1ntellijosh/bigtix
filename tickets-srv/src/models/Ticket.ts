@@ -4,6 +4,7 @@
  * @since tickets-srv--JP
  */
 import mongoose from "mongoose";
+import { SavedEventDoc } from "./Event";
 
 interface NewTicketAttrs {
   title: string;
@@ -11,7 +12,7 @@ interface NewTicketAttrs {
   description: string;
   userId: string;
   serialNumber: string;
-  eventId: string;
+  event: mongoose.Types.ObjectId | SavedEventDoc | null;
 }
 
 interface SavedTicketDoc extends mongoose.Document {
@@ -21,7 +22,7 @@ interface SavedTicketDoc extends mongoose.Document {
   price: number;
   userId: string;
   serialNumber: string;
-  eventId: string;
+  event: mongoose.Types.ObjectId | SavedEventDoc | null;
   version: number;
   orderId?: string;
 }
@@ -58,8 +59,9 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  eventId: {
-    type: String,
+  event: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
     required: true,
   },
   version: {
@@ -95,7 +97,7 @@ ticketSchema.statics.build = (attrs: NewTicketAttrs) => {
     userId: attrs.userId,
     description: attrs.description,
     serialNumber: attrs.serialNumber,
-    eventId: attrs.eventId,
+    event: attrs.event,
     version: 0,
   });
 };

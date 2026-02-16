@@ -1,24 +1,20 @@
 /**
- * Search bar component for the storefront
+ * Search bar component for the top navigation bar
  * 
- * @since  material-UI-sass--JP
+ * @since create-tickets--JP
  */
 'use client';
 import { useState } from 'react';
-import { styled, alpha } from '@mui/material/styles';
+import { alpha, styled } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.shape.borderRadius,
-  
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  transition: 'background-color 0.35s ease',
+  backgroundColor: theme.palette.grey[200],
+  color: '#121212',
 }));
 
 const SearchIconWrapper = styled('div')(({ theme }) => ({
@@ -34,27 +30,29 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: 'inherit',
   '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
+    padding: '5px',
     // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '40ch',
-    [theme.breakpoints.up('lg')]: {
-      width: '90ch',
-    },
   },
 }));
 
-export default function SearchBar({ placeholder, onSearch, initialValue }: { placeholder: string, onSearch: (value: string) => void, initialValue?: string }) {
-  const [value, setSearch] = useState(initialValue || '');
+export default function SearchBar({ style }: { style?: React.CSSProperties }) {
+  const router = useRouter();
+  const [value, setSearch] = useState('');
+
+  const onSearch = (value: string) => {
+    const encodedValue = encodeURIComponent(value);
+
+    router.push(`/tickets/search?keywords=${encodedValue}`);
+  }
 
   return (
-    <Search>
+    <Search style={style}>
       <SearchIconWrapper>
         <SearchIcon />
       </SearchIconWrapper>
       <StyledInputBase
-        placeholder={placeholder}
+        placeholder={`Search for an event...`}
         inputProps={{ 'aria-label': 'search' }}
         value={value}
         onChange={(e) => setSearch(e.target.value)}

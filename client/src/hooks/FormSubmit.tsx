@@ -20,8 +20,8 @@ export default (
 ) => {
   const [errors, setErrors] = useState<null | React.ReactNode>(null);
 
-  const submitForm = (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const submitForm = (e: React.SubmitEvent<HTMLFormElement> | undefined = undefined) => {
+    if (e) e.preventDefault();
     setErrors(null);
     submitMutation.mutate(body);
   };

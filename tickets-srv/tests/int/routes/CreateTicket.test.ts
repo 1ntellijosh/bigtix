@@ -20,6 +20,9 @@ const validEvent = {
   description: 'some description!!!!!',
   date: new Date(),
   location: 'some location!!!!!',
+  tmEventId: '1234567890',
+  attractions: '{}',
+  image: 'some image!!!!!',
 };
 let validEventId: string;
 
@@ -47,7 +50,7 @@ describe('Create ticket routes tests', () => {
         price: validPrice,
         description: validDescription,
         serialNumber: validSerialNumber,
-        eventId: validEventId,
+        event: validEventId,
       })
       .expect(400);
   });
@@ -153,7 +156,7 @@ describe('Create ticket routes tests', () => {
     expect(tickets[0].price).toBe(validPrice);
     expect(tickets[0].description).toBe(validDescription);
     expect(tickets[0].serialNumber).toBe(validSerialNumber);
-    expect(tickets[0].eventId).toBe(validEventId);
+    expect(tickets[0].event).toBe(new mongoose.Types.ObjectId(validEventId));
   });
 
   it('publishes created ticket event to the event bus', async () => {

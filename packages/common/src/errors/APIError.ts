@@ -4,7 +4,7 @@
  * @since users-service-continued--JP
  */
 import { STATUS_CODES } from '../enums';
-import { ErrorResponseItem } from '../types';
+import { ErrorResponseItem } from '../contracts';
 import { AbstractRequestError } from "./AbstractRequestError";
 
 export class APIError extends AbstractRequestError {
