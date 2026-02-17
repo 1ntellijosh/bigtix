@@ -22,7 +22,7 @@ const paymentSvc = new PaymentService();
  * @throws {BadRequestError}  If order is not found
  * @throws {UnAuthorizedError}  If user is not authenticated
  */
-router.post('/payments/new', [ 
+router.post('/new', [ 
     body('orderId').trim().notEmpty().isMongoId().withMessage('Order ID is required'),
     body('amount').isFloat({ min: 10 }).withMessage('Amount must be a valid number and at least $10'),
     body('confirmationTokenId').trim().notEmpty().withMessage('Confirmation Token ID is required'),

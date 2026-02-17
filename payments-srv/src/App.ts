@@ -19,8 +19,8 @@ app.use(cookieSession({
   secure: process.env.NODE_ENV === 'production'
 }));
 
-app.use('/api', createPaymentRouter);
-app.use('/api', stripeWebhookRouter);
+app.use('/api/payments', createPaymentRouter);
+app.use('/api/webhooks', stripeWebhookRouter);
 
 app.use(errHandler.prepareErrResp);
 

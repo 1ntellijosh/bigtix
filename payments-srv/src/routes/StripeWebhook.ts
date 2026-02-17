@@ -24,7 +24,7 @@ const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
  * @throws {BadRequestError}  If order is not found
  * @throws {UnAuthorizedError}  If user is not authenticated
  */
-router.post('/webhooks/stripe',
+router.post('/stripe',
   api.validateRequest,
   api.callAsync(async (req: Request, res: Response) => {
     const rawBody = req.body;

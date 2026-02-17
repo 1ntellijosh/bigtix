@@ -70,4 +70,13 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
   createEvent: function (body: any, config: Record<string, any> = {}): Promise<Response> {
     return HttpService.post(`/api/events/create`, body, config) as Promise<Response>;
   },
+
+  /**
+   * Gets all tickets
+   *
+   * @returns {Promise<Response>}
+   */
+  getAllTickets: function (config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.get(`/api/tickets/all`, config) as Promise<Response>;
+  },
 };

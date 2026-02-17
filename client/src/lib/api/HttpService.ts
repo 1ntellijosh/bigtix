@@ -109,7 +109,6 @@ export class HttpService {
     apiMethod: 'get' | 'post' | 'put' | 'patch' | 'delete', url: string, args: any[] = []): Promise<any> => {
     try {
       const response = await axios[apiMethod](this.updateUrlForServerSide(url), ...args);
-      
       return response.data;
     } catch (error: any) {
       return this.throwFailedCallError(error as any);

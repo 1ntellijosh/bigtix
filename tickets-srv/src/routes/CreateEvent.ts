@@ -20,7 +20,7 @@ const ticketSvc = new TicketService();
  * @throws {BadRequestError}  If event is not valid
  * @throws {UnAuthorizedError}  If user is not authenticated
  */
-router.post('/events/create', [ 
+router.post('/create', [ 
   body('tmEventId').trim().notEmpty().withMessage('ID is required'),
 ],
 api.validateRequest,

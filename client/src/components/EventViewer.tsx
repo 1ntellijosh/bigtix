@@ -35,17 +35,11 @@ export default function EventViewer({ eventId, children }: EventViewerProps) {
   const fetchDetailedEvent = async () => {
     const detailedEvent = await API.tick!.getEventDetails!(eventId) as unknown as EventDetails;
 
-    console.log('raw event: ', JSON.parse(JSON.stringify(detailedEvent)), null, 2);
-
     await addDateSegmentsToEvent(detailedEvent);
 
     fixEmptyAttractionsEvent(detailedEvent);
 
     await filterExternalLinksInAttractions(detailedEvent);
-
-    console.log(detailedEvent);
-    
-    console.log('finished event: ', detailedEvent);
 
     setTimeout(() => {
       setDetailedEvent(detailedEvent);

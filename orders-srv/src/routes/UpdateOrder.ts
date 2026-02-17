@@ -23,7 +23,7 @@ const orderSvc = new OrderService();
  * @throws {UnAuthorizedError}  If user is not authenticated, or not the owner of the ticket
  * @throws {NotFoundError}  If ticket is not found
  */
-router.put('/orders/:id', [ 
+router.put('/update/:id', [ 
     param('id').trim().notEmpty().isMongoId().withMessage('ID is required'),
     body('status').trim().notEmpty().isIn(Object.values(OrderStatusEnum)).withMessage('Status is required'),
   ],

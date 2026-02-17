@@ -23,7 +23,7 @@ const router = express.Router();
  * @throws {APIError}  If the events are not found
  * @throws {APIError}  If the events are not found
  */
-router.get('/events/search/', api.callAsync(async (req: Request, res: Response) => {
+router.get('/search/', api.callAsync(async (req: Request, res: Response) => {
   if (!req.query || !req.query.keyword) {
     throw new BadRequestError('Please search for an event, artist, or venue');
   }
@@ -48,7 +48,7 @@ router.get('/events/search/', api.callAsync(async (req: Request, res: Response) 
  * @throws {APIError}  If the event is not found
  * @throws {APIError}  If the event is not found
  */
-router.get('/events/details/:tmEventId', api.callAsync(async (req: Request, res: Response) => {
+router.get('/details/:tmEventId', api.callAsync(async (req: Request, res: Response) => {
   if (!req.params || !req.params.tmEventId) {
     throw new BadRequestError('Event ID is required');
   }
