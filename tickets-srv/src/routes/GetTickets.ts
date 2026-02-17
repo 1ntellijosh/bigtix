@@ -16,7 +16,7 @@ const ticketSvc = new TicketService();
  * Retrieves all tickets
  *
  */
-router.get('/tickets', api.callAsync(async (req: Request, res: Response) => {
+router.get('/all', api.callAsync(async (req: Request, res: Response) => {
   const tickets = await ticketSvc.getAllTickets();
 
   res.status(STATUS_CODES.SUCCESS).send(tickets);
@@ -30,7 +30,7 @@ router.get('/tickets', api.callAsync(async (req: Request, res: Response) => {
  * @throws {BadRequestError}  If ticket is not valid
  * @throws {NotFoundError}  If ticket is not found
  */
-router.get('/tickets/:id', [ 
+router.get('/get-ticket/:id', [ 
     param('id').trim().notEmpty().isMongoId().withMessage('ID is required'),
   ],
   api.validateRequest,
@@ -51,7 +51,7 @@ router.get('/tickets/:id', [
  * @throws {BadRequestError}  If ticket is not valid
  * @throws {NotFoundError}  If ticket is not found
  */
-router.get('/tickets/serial-number/:serialNumber', [
+router.get('/serial-number/:serialNumber', [
     param('serialNumber').trim().notEmpty().withMessage('Serial number is required'),
   ],
   api.validateRequest,
@@ -64,38 +64,38 @@ router.get('/tickets/serial-number/:serialNumber', [
 );
 
 /**
- * Retrieves all tickets for a given event id
- *
- * @param {string} eventId  The eventId of the event to retrieve tickets for
- *
- * @throws {RequestValidationError}  If request validation fails
- */
-router.get('/tickets/event/:eventId', [ 
-    param('eventId').trim().notEmpty().isMongoId().withMessage('Event ID is required'),
-  ],
-  api.validateRequest,
-  api.callAsync(async (req: Request, res: Response) => {
-    const { eventId } = req.params;
-    const tickets = await ticketSvc.getTicketsByEventId(eventId);
-
-    res.status(STATUS_CODES.SUCCESS).send(tickets);
-  })
-);
-
-/**
  * Retrieves all tickets by user id
  *
  * @param {string} userId  The userId of the user to retrieve tickets for
  *
  * @throws {BadRequestError}  If userId is not valid
  */
-router.get('/tickets/user/:userId', [
+router.get('/user/:userId', [
     param('userId').trim().notEmpty().withMessage('User ID is required'),
   ],
   api.validateRequest,
   api.callAsync(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const tickets = await ticketSvc.getTicketsByUserId(userId);
+
+    res.status(STATUS_CODES.SUCCESS).send(tickets);
+  })
+);
+
+/**
+ * Retrieves all tickets for a given event id
+ *
+ * @param {string} eventId  The eventId of the event to retrieve tickets for
+ *
+ * @throws {RequestValidationError}  If request validation fails
+ */
+router.get('/for-event/:eventId', [ 
+    param('eventId').trim().notEmpty().isMongoId().withMessage('Event ID is required'),
+  ],
+  api.validateRequest,
+  api.callAsync(async (req: Request, res: Response) => {
+    const { eventId } = req.params;
+    const tickets = await ticketSvc.getTicketsByEventId(eventId);
 
     res.status(STATUS_CODES.SUCCESS).send(tickets);
   })

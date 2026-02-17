@@ -21,7 +21,7 @@ const orderSvc = new OrderService();
  *
  * @throws {UnAuthorizedError}  If user is not authenticated
  */
-router.post('/orders/create', [ 
+router.post('/create', [ 
     body('tickets').isArray().withMessage('Tickets must be an array').notEmpty().withMessage('Tickets are required'),
     body('tickets.*.id').trim().notEmpty().isMongoId().withMessage('Ticket ID is required'),
     body('tickets.*.price').isFloat({ min: 10 }).withMessage('Price must be a valid number and at least $10'),

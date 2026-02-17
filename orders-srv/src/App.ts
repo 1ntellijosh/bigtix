@@ -21,10 +21,10 @@ app.use(cookieSession({
   secure: process.env.NODE_ENV === 'production'
 }));
 
-app.use('/api', createOrderRouter);
-app.use('/api', getOrdersRouter);
-app.use('/api', updateOrderRouter);
-app.use('/api', deleteOrderRouter);
+app.use('/api/orders', createOrderRouter);
+app.use('/api/orders', getOrdersRouter);
+app.use('/api/orders', updateOrderRouter);
+app.use('/api/orders', deleteOrderRouter);
 
 app.use(errHandler.prepareErrResp);
 

@@ -18,7 +18,7 @@ const orderSvc = new OrderService();
  * @throws {UnAuthorizedError}  If user is not authenticated
  * @throws {NotFoundError}  If orders are not found
  */
-router.get('/orders',
+router.get('/all',
   api.getCurrentUser,
   api.authIsRequired,
   api.callAsync(async (req: Request, res: Response) => {
@@ -37,7 +37,7 @@ router.get('/orders',
  * @throws {BadRequestError}  If order is not valid
  * @throws {NotFoundError}  If order is not found
  */
-router.get('/orders/:id', [ 
+router.get('/get-order/:id', [ 
     param('id').trim().notEmpty().isMongoId().withMessage('ID is required'),
   ],
   api.validateRequest,

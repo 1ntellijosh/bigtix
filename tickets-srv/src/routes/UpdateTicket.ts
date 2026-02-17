@@ -25,7 +25,7 @@ const ticketSvc = new TicketService();
  * @throws {NotFoundError}  If ticket is not found
  * @throws {BadRequestError}  If ticket is already attached to an order and cannot be edited/updated
  */
-router.put('/tickets/:id', [ 
+router.put('/update/:id', [ 
     param('id').trim().notEmpty().isMongoId().withMessage('ID is required'),
     body('title').trim().notEmpty().isLength({ min: 6, max: 125 }).withMessage('Title is required'),
     body('price').isFloat({ min: 10 }).withMessage('Price must be a valid number and at least $10'),

@@ -25,7 +25,7 @@ const ticketSvc = new TicketService();
  * @throws {BadRequestError}  If ticket is not valid
  * @throws {UnAuthorizedError}  If user is not authenticated
  */
-router.post('/tickets/create', [ 
+router.post('/create', [ 
     body('title').trim().notEmpty().isLength({ min: 6, max: 125 }).withMessage('Title is required'),
     body('price').isFloat({ min: 10 }).withMessage('Price must be a valid number and at least $10'),
     body('description').trim().notEmpty().withMessage('Description is required'),
@@ -57,7 +57,7 @@ router.post('/tickets/create', [
  * @throws {BadRequestError}  If ticket is not valid
  * @throws {UnAuthorizedError}  If user is not authenticated
  */
-router.post('/tickets/createmulti', [ 
+router.post('/createmulti', [ 
   body('title').trim().notEmpty().isLength({ min: 6, max: 125 }).withMessage('Title is required'),
   body('price').isFloat({ min: 10 }).withMessage('Price must be a valid number and at least $10'),
   body('description').trim().notEmpty().withMessage('Description is required'),

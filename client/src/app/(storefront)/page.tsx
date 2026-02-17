@@ -1,26 +1,28 @@
 /**
- * Home page (storefront)
+ * Home page (storefront). Server-rendered; links and search use client components where needed.
  *
  * @since material-UI-sass--JP
  */
-'use client';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { useCurrentUser } from '../CurrentUserContext';
-import { useRouter } from 'next/navigation';
-import SearchBar from '../../components/SearchBar';
-import AppLink from '../../components/AppLink';
-import Button from '@mui/material/Button';
+import { API } from '../../lib/api/dicts/API';
+import { headers } from 'next/headers';
+import HomeClientContentWrapper from '../../components/HomeClientContentWrapper';
 
-export default function Home() {
-  const { currentUser } = useCurrentUser();
-  const router = useRouter();
-
-  const onEventSearch = (keywords: string) => {
-    const encodedKeyword = encodeURIComponent(keywords);
-
-    router.push(`/tickets/search?keywords=${encodedKeyword}`);
+export default async function Home() {
+  let allTickets: SavedTicketDoc[] | null = null;
+  try {
+    const ctxHeaders = await headers();
+    const cookie = ctxHeaders.get('cookie') ?? '';
+    const host = ctxHeaders.get('host') ?? '';
+    
+    const resp = await API.tick!.getAllTickets!({
+      headers: { Cookie: cookie, Host: host },
+    });
+    allTickets = (resp as unknown as SavedTicketDoc[]) ?? null;
+  } catch (error) {
+    allTickets = null;
   }
 
   return (
@@ -50,16 +52,8 @@ export default function Home() {
             lg: '1200px', // max-width on large screens
           },
         }}>
-          <SearchBar placeholder="Search for an event" onSearch={onEventSearch} />
+          <HomeClientContentWrapper allTickets={allTickets} />
         </Box>
-      </Box>
-
-      <Box>
-        <AppLink href="/tickets/event/vvG1iZbS55yKJr">
-          <Button variant="contained" color="primary">
-            My Chemical Romance with Special Guest The Used
-          </Button>
-        </AppLink>
       </Box>
     </Container>
   );

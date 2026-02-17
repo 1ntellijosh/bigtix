@@ -74,7 +74,7 @@ export class TicketRepository implements AbstractRepository {
    * @returns The tickets in data store
    */
   async findAll(): Promise<SavedTicketDoc[] | null> {
-    return Ticket.find();
+    return Ticket.find().populate('event');
   }
 
   /**

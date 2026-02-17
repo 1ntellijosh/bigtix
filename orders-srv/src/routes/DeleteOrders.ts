@@ -23,7 +23,7 @@ const orderSvc = new OrderService();
  * @throws {UnAuthorizedError}  If user is not authenticated, or not the owner of the ticket
  * @throws {NotFoundError}  If ticket is not found
  */
-router.delete('/orders/:id', [ 
+router.delete('/delete/:id', [ 
     param('id').trim().notEmpty().isMongoId().withMessage('ID is required'),
   ],
   api.validateRequest,

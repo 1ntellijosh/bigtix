@@ -22,11 +22,11 @@ app.use(cookieSession({
   secure: process.env.NODE_ENV === 'production'
 }));
 
-app.use('/api', createTicketRouter);
-app.use('/api', getTicketsRouter);
-app.use('/api', updateTicketsRouter);
-app.use('/api', ticketMasterAPIRouter);
-app.use('/api', createEventRouter);
+app.use('/api/tickets', createTicketRouter);
+app.use('/api/tickets', getTicketsRouter);
+app.use('/api/tickets', updateTicketsRouter);
+app.use('/api/events', ticketMasterAPIRouter);
+app.use('/api/events', createEventRouter);
 
 app.use(errHandler.prepareErrResp);
 
