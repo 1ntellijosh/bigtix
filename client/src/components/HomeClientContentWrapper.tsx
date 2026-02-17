@@ -1,5 +1,7 @@
 /**
  * Holds the client content for the home page
+ *
+ * @since carousel--JP
  */
 'use client'
 
@@ -15,22 +17,28 @@ interface TicketWithEvent extends SavedTicketDoc {
 }
 
 export default function HomeClientContentWrapper({ allTickets }: { allTickets: TicketWithEvent[] | null }) {
-  const eventsMap = new Map<string, MainPageCarouselEvent>();
-  for (const ticket of allTickets || []) {
-    if (ticket.event && !eventsMap.has(ticket.event!.title)) {
-      const event = ticket.event as unknown as MainPageCarouselEvent;
-      const raw = ticket.event.attractions;
-      if (typeof raw === 'string') {
-        const parsed = JSON.parse(raw);
-        event.attractions = parsed;
-      } else {
-        event.attractions = raw;
+  const prepareEventsMapFromTickets = (allTickets: TicketWithEvent[] | null) => {
+    const eventsMap = new Map<string, MainPageCarouselEvent>();
+    for (const ticket of allTickets || []) {
+      if (ticket.event && !eventsMap.has(ticket.event!.title)) {
+        const event = ticket.event as unknown as MainPageCarouselEvent;
+        const raw = ticket.event.attractions;
+        if (typeof raw === 'string') {
+          const parsed = JSON.parse(raw);
+          event.attractions = parsed;
+        } else {
+          event.attractions = raw;
+        }
+        const dateSegments = getDateSegments(new Date(event.date));
+        event.dateSegments = dateSegments;
+        eventsMap.set(ticket.event!.title, event);
       }
-      const dateSegments = getDateSegments(new Date(event.date));
-      event.dateSegments = dateSegments;
-      eventsMap.set(ticket.event!.title, event);
     }
+
+    return eventsMap;
   }
+
+  const eventsMap = prepareEventsMapFromTickets(allTickets);
   const events = Array.from(eventsMap.entries());
 
   return (
