@@ -12,6 +12,10 @@ import { ErrorHandler as errHandler } from '@bigtix/middleware';
 
 const app = express();
 app.set('trust proxy', true); // tell express to trust the proxy (since requests are coming via proxy with NGINX)
+
+// Stripe webhook must get the raw body for signature verification; mount before json() so body is not parsed
+app.use('/api/webhooks', express.raw({ type: '*/*' }), stripeWebhookRouter);
+
 app.use(json());
 app.use(cookieSession({
   signed: false,
@@ -20,7 +24,6 @@ app.use(cookieSession({
 }));
 
 app.use('/api/payments', createPaymentRouter);
-app.use('/api/webhooks', stripeWebhookRouter);
 
 app.use(errHandler.prepareErrResp);
 

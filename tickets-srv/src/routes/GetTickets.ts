@@ -89,13 +89,33 @@ router.get('/user/:userId', [
  *
  * @throws {RequestValidationError}  If request validation fails
  */
-router.get('/for-event/:eventId', [ 
+router.get('/for-event/:eventId', [
     param('eventId').trim().notEmpty().isMongoId().withMessage('Event ID is required'),
   ],
   api.validateRequest,
   api.callAsync(async (req: Request, res: Response) => {
     const { eventId } = req.params;
     const tickets = await ticketSvc.getTicketsByEventId(eventId);
+
+    res.status(STATUS_CODES.SUCCESS).send(tickets);
+  })
+);
+
+/**
+ * Retrieves all tickets for a given ticketmaster event id
+ *
+ * @param {string} tmEventId  The ticketmaster event id of the event to retrieve tickets for
+ *
+ * @throws {RequestValidationError}  If request validation fails
+ */
+router.get('/tm-event/:tmEventId', [
+    param('tmEventId').trim().notEmpty().withMessage('Ticketmaster event ID is required'),
+  ],
+  api.validateRequest,
+  api.callAsync(async (req: Request, res: Response) => {
+    const { tmEventId } = req.params;
+
+    const tickets = await ticketSvc.getTicketsByTmEventId(tmEventId);
 
     res.status(STATUS_CODES.SUCCESS).send(tickets);
   })

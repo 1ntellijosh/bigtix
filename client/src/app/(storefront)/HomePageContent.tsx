@@ -6,17 +6,17 @@
 'use client'
 
 import { Box } from '@mui/material';
-import SearchBarWithNav from './SearchBarWithNav';
-import MainPageCarousel, { type MainPageCarouselEvent } from './MainPageCarousel';
-import type { SavedTicketDoc } from '../../../tickets-srv/src/models/Ticket';
-import type { SavedEventDoc } from '../../../tickets-srv/src/models/Event';
-import { getDateSegments } from '../lib/DateMethods';
+import SearchBarWithNav from '../../components/SearchBarWithNav';
+import MainPageCarousel, { type MainPageCarouselEvent } from '../../components/MainPageCarousel';
+import type { SavedTicketDoc } from '../../../../tickets-srv/src/models/Ticket';
+import type { SavedEventDoc } from '../../../../tickets-srv/src/models/Event';
+import { getDateSegments } from '../../lib/DateMethods';
 
 interface TicketWithEvent extends SavedTicketDoc {
   event: SavedEventDoc;
 }
 
-export default function HomeClientContentWrapper({ allTickets }: { allTickets: TicketWithEvent[] | null }) {
+export default function HomePageContent({ allTickets }: { allTickets: TicketWithEvent[] | null }) {
   const prepareEventsMapFromTickets = (allTickets: TicketWithEvent[] | null) => {
     const eventsMap = new Map<string, MainPageCarouselEvent>();
     for (const ticket of allTickets || []) {

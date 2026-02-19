@@ -23,12 +23,12 @@ export class StripeWebhookUseCase {
   /**
    * Handles an incoming Stripe payment intent webhook
    *
-   * @param {string} rawBody  The raw body of the webhook
+   * @param {string | Buffer} rawBody  The raw body of the webhook (must be unparsed for signature verification)
    * @param {string} sig  The signature of the webhook
    *
    * @returns {Promise<void>}
    */
-  async execute(rawBody: string, sig: string): Promise<void> {
+  async execute(rawBody: string | Buffer, sig: string): Promise<void> {
     this.extractEventFromStripeWebhook(rawBody, sig);
 
     if (!this.orderId) throw new ServerError('Order ID is not set');
@@ -41,12 +41,12 @@ export class StripeWebhookUseCase {
   /**
    * Extracts the event from the Stripe webhook raw body and signature
    *
-   * @param {string} rawBody  The raw body of the webhook
+   * @param {string | Buffer} rawBody  The raw body of the webhook
    * @param {string} sig  The signature of the webhook
    *
    * @returns {Promise<{ data: { object: any }, type: string }>}
    */
-  private extractEventFromStripeWebhook(rawBody: string, sig: string): StripeWebhookUseCase {
+  private extractEventFromStripeWebhook(rawBody: string | Buffer, sig: string): StripeWebhookUseCase {
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!endpointSecret) throw new ServerError('STRIPE_WEBHOOK_SECRET is not set');
