@@ -140,7 +140,8 @@ export default function SellTicketsSearchPage() {
           width: '100%',
           // Set a max-width that increases at specific breakpoints
           maxWidth: {
-            xs: '400px', // max-width on extra-small screens
+            xs: '450px', // max-width on extra-small screens
+            sm: '450px', // max-width on small screens
             md: '900px', // max-width on medium screens
             lg: '1200px', // max-width on large screens
           },
@@ -149,7 +150,6 @@ export default function SellTicketsSearchPage() {
             <EventSearch
               onSelect={onEventSelected}
               options={{
-                initialSearch: '',
                 eventItemBtnLabel: 'Sell Tickets',
                 searchPlaceholder: 'Search your event and start selling...'
               }}

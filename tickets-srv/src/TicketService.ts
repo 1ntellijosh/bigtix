@@ -111,9 +111,34 @@ export class TicketService {
    * @returns {Promise<SavedTicketDoc[]>}
    */
   async getTicketsByEventId(eventId: string): Promise<SavedTicketDoc[]> {
-    const tickets = await this.tickRepo.findByEventId(eventId);
+    let tickets = await this.tickRepo.findByEventId(eventId);
+
+    if (!tickets) return [];
+
+    // Return only available tickets, aka tickets that are not reserved or paid for in another order
+    return tickets.filter((t) => t.orderId === null || t.orderId === undefined);
+  }
+
+  /**
+   * Retrieves all tickets for a given ticketmaster event id
+   *
+   * @param {string} tmEventId  The ticketmaster event id of the event to retrieve tickets for
+   *
+   * @returns {Promise<SavedTicketDoc[]>}
+   */
+  async getTicketsByTmEventId(tmEventId: string): Promise<SavedTicketDoc[]> {
+    const event = await this.eventRepo.findByTmEventId(tmEventId);
+
+    if (!event) throw new NotFoundError('Event not found');
+
+    const tickets = await this.tickRepo.findByEventId(event.id);
+
+    if (!tickets) return [];
+
+    // Return only available tickets, aka tickets that are not reserved or paid for in another order
+    const availableTickets = tickets.filter((t) => t.orderId === null || t.orderId === undefined);
     
-    return tickets || [];
+    return availableTickets;
   }
 
   /**

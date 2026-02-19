@@ -54,7 +54,8 @@ export interface EventDetails {
   location: string;
   date: Date | null;
   image: TicketMasterImage | null;
-  attractions: { name: string; externalLinks: Record<string, string>, classifications: string[] }[];
-  description: string;
-  dateSegments: { month: string; day: string; weekday: string } | null;
+  attractions?: { name: string; externalLinks: Record<string, string>, classifications: string[] }[];
+  description?: string;
+  dateSegments?: { month: string; day: string; weekday: string } | null;
+  info?: string;
 }

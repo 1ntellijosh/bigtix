@@ -28,7 +28,7 @@ export class CreatePaymentUseCase {
     this.requestAmount = amount;
   }
 
-  async execute(): Promise<{ status: PaymentStatusEnum, clientSecret: string | null }> {
+  async execute(): Promise<{ status: string, clientSecret: string | null }> {
     // 1. Grab the order from the database for validation and finalization
     const order = await this.fetchOrder();
 
@@ -48,7 +48,7 @@ export class CreatePaymentUseCase {
     await this.publishPaymentEvent(paymentStatus);
 
     return {
-      status: paymentStatus,
+      status: result.status,
       clientSecret: result.status === PaymentStatusEnum.REQUIRES_ACTION
         ? result.clientSecret
         : null,

@@ -32,7 +32,7 @@ export class PaymentService {
    *
    * @throws {ServerError}  If order is not created successfully
    */
-  async createPaymentForOrder(userId: string, confirmationTokenId: string, orderId: string, amount: number): Promise<{ status: PaymentStatusEnum, clientSecret: string | null }> {
+  async createPaymentForOrder(userId: string, confirmationTokenId: string, orderId: string, amount: number): Promise<{ status: string, clientSecret: string | null }> {
     const createPaymentUseCase = new CreatePaymentUseCase(userId, confirmationTokenId, orderId, amount);
 
     const result = await createPaymentUseCase.execute();
@@ -43,12 +43,12 @@ export class PaymentService {
   /**
    * Handles an incoming Stripe webhook
    *
-   * @param {string} rawBody  The raw body of the webhook
+   * @param {string | Buffer} rawBody  The raw body of the webhook (must be unparsed for signature verification)
    * @param {string} sig  The signature of the webhook
    *
    * @returns {Promise<void>}
    */
-  async onReceivedStripeWebhook(rawBody: string, sig: string): Promise<void> {
+  async onReceivedStripeWebhook(rawBody: string | Buffer, sig: string): Promise<void> {
     const stripeWebhookUseCase = new StripeWebhookUseCase();
 
     const result = await stripeWebhookUseCase.execute(rawBody, sig);

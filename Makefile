@@ -90,12 +90,16 @@ dev:
 # - Stripe Webhook Events - payment_intent.succeeded, payment_intent.payment_failed, payment_intent.requires_action
 # - Stripe Webhook Signature - https://dashboard.stripe.com/webhooks/signature
 # - Stripe Webhook Signature Verification - https://dashboard.stripe.com/webhooks/signature-verification
+# Forwards to HOST_DOMAIN (e.g. bigtixnetwork.com from dev-vars.yml), which should resolve to 127.0.0.1 via /etc/hosts (see init.yml).
 #
 stripe-dev:
 	@KEY=$$(grep '^STRIPE_SECRET_KEY:' dev-vars.yml 2>/dev/null | sed 's/^STRIPE_SECRET_KEY: *//' | sed 's/^["'\'']//;s/["'\'']$$//' | tr -d ' '); \
+	HOST=$$(grep '^HOST_DOMAIN:' dev-vars.yml 2>/dev/null | sed 's/^HOST_DOMAIN: *//' | tr -d ' '); \
 	if [ -z "$$KEY" ]; then echo "Error: STRIPE_SECRET_KEY not set in dev-vars.yml"; exit 1; fi; \
+	if [ -z "$$HOST" ]; then echo "Error: HOST_DOMAIN not set in dev-vars.yml"; exit 1; fi; \
+	echo "Forwarding Stripe webhooks to http://$$HOST/api/webhooks/stripe"; \
 	stripe login --api-key "$$KEY"; \
-	stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.requires_action --forward-to http://localhost:3000/api/webhooks/stripe
+	stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.requires_action --forward-to "http://$$HOST/api/webhooks/stripe"
 
 
 ##

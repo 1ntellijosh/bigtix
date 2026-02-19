@@ -36,25 +36,13 @@ export class TicketRepository implements AbstractRepository {
   }
 
   /**
-   * Finds a ticket by given eventId
+   * Finds tickets by event reference (Event document _id).
    *
-   * @param eventId  The eventId of the ticket to find
-   *
-   * @returns The ticket in data store
+   * @param eventId  The Event document _id (MongoDB ObjectId string)
+   * @returns The tickets in data store
    */
   async findByEventId(eventId: string): Promise<SavedTicketDoc[] | null> {
-    return Ticket.find({ eventId });
-  }
-
-  /**
-   * Finds a ticket by given tmEventId (ticketmaster event id)
-   *
-   * @param tmEventId  The tmEventId of the ticket to find
-   *
-   * @returns The ticket in data store
-   */
-  findByTmEventId(tmEventId: string): Promise<SavedTicketDoc | null> {
-    return Ticket.findOne({ tmEventId });
+    return Ticket.find({ event: eventId });
   }
 
   /**

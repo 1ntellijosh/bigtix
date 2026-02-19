@@ -24,6 +24,11 @@ spec:
           env:
             - name: SERVER_API_BASE_URL
               value: "http://ingress-nginx-controller.ingress-nginx.svc.cluster.local"
+            - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-publishable-key
+                  key: STRIPE_PUBLISHABLE_KEY
 
 ---
 

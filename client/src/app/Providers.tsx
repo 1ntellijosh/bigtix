@@ -11,6 +11,7 @@ import Switch from '@mui/material/Switch';
 import { getTheme, type ThemeMode } from './theme';
 import { LS_KEYS, LocalStore } from '../lib/localstorage/LocalStore';
 import { CurrentUserProvider } from './CurrentUserContext';
+import { CartProvider } from './CartContext';
 
 const queryClient = new QueryClient();
 
@@ -42,29 +43,46 @@ export default function Providers({ initialCurrentUser, children }: ProvidersPro
   };
 
   const theme = getTheme(currentTheme);
+  const footerHeight = '50px';
 
   return (
     <QueryClientProvider client={queryClient}>
       <AppRouterCacheProvider options={{ enableCssLayer: true }}>
         <CurrentUserProvider initialCurrentUser={initialCurrentUser}>
+          <CartProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Box component="main" sx={{ position: 'relative', minHeight: '100vh' }}>
+            <Box component="main" sx={{ position: 'relative', minHeight: '100vh', paddingBottom: footerHeight }}>
               {children}
             </Box>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={currentTheme === 'dark'}
-                  onChange={toggleTheme}
-                  color="default"
-                  aria-label="toggle dark mode"
-                />
-              }
-              label={currentTheme === 'dark' ? 'Dark' : 'Light'}
-              sx={{ position: 'fixed', bottom: 20, right: 10, zIndex: 1 }}
-            />
+
+            <Box sx={{
+              position: 'fixed',
+               bottom: 0,
+               right: 0,
+               width: '100%',
+               height: footerHeight,
+               zIndex: 1,
+               backgroundColor: theme.palette.background.default,
+               borderRadius: 1,
+               p: 1,
+              }}
+            >
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={currentTheme === 'dark'}
+                    onChange={toggleTheme}
+                    color="default"
+                    aria-label="toggle dark mode"
+                  />
+                }
+                label={currentTheme === 'dark' ? 'Dark' : 'Light'}
+                sx={{ position: 'fixed', bottom: 8, right: 0, zIndex: 1, mr: '8px' }}
+              />
+            </Box>
           </ThemeProvider>
+          </CartProvider>
         </CurrentUserProvider>
       </AppRouterCacheProvider>
     </QueryClientProvider>

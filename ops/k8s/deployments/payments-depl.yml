@@ -43,11 +43,6 @@ spec:
                 secretKeyRef:
                   name: stripe-secret-key
                   key: STRIPE_SECRET_KEY
-            - name: STRIPE_PUBLISHABLE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: stripe-publishable-key
-                  key: STRIPE_PUBLISHABLE_KEY
             - name: STRIPE_WEBHOOK_SECRET
               valueFrom:
                 secretKeyRef:

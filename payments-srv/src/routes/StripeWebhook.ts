@@ -34,7 +34,7 @@ router.post('/stripe',
       throw new BadRequestError('Raw body and signature are required');
     }
 
-    await paymentSvc.onReceivedStripeWebhook(rawBody as string, sig as string);
+    await paymentSvc.onReceivedStripeWebhook(rawBody as string | Buffer, sig as string);
 
     // Always return a 200 OK response to Stripe so they know we received the event and stop retrying
     res.status(STATUS_CODES.SUCCESS).send({ received: true });
