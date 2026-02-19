@@ -5,7 +5,7 @@
  */
 import express, { Request, Response } from "express";
 import { APIRequest as api } from '@bigtix/middleware';
-import { STATUS_CODES, BadRequestError, NotFoundError } from '@bigtix/common';
+import { STATUS_CODES, BadRequestError } from '@bigtix/common';
 import { TicketMasterAPIService } from '../lib/TicketMasterAPIService';
 
 const router = express.Router();
@@ -30,7 +30,7 @@ router.get('/search/', api.callAsync(async (req: Request, res: Response) => {
 
   const keyword = req.query.keyword as string;
 
-  const response = await TicketMasterAPIService.searchForEvents(keyword)
+  const response = await TicketMasterAPIService.searchForEvents(keyword);
 
   res.status(STATUS_CODES.SUCCESS).send(response);
 }));
@@ -55,7 +55,7 @@ router.get('/details/:tmEventId', api.callAsync(async (req: Request, res: Respon
 
   const tmEventId = req.params.tmEventId as string;
 
-  const response = await TicketMasterAPIService.getEventDetails(tmEventId)
+  const response = await TicketMasterAPIService.getEventDetails(tmEventId);
 
   res.status(STATUS_CODES.SUCCESS).send(response);
 }));

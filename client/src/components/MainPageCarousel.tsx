@@ -1,6 +1,7 @@
 /**
- * Main page hero carousel: event slides with left panel (title + See Tickets) and image.
- * Auto-advances every 6s; dot controls overlay the left panel.
+ * Main page hero carousel
+ * 
+ * @since carousel--JP
  */
 'use client'
 
@@ -11,6 +12,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { useTheme } from '@mui/material/styles';
 
 export interface MainPageCarouselEvent {
+  id: string;
   attractions?: { name: string; externalLinks: Record<string, string>; classifications: string[] };
   image: string | null;
   date: Date;

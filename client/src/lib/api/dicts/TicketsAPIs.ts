@@ -79,4 +79,26 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
   getAllTickets: function (config: Record<string, any> = {}): Promise<Response> {
     return HttpService.get(`/api/tickets/all`, config) as Promise<Response>;
   },
+
+  /**
+   * Gets all tickets for a given event id
+   *
+   * @param {string} eventId  The event id of the event to retrieve tickets for
+   *
+   * @returns {Promise<Response>}
+   */
+  getTicketsByEventId: function (eventId: string, config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.get(`/api/tickets/for-event/${eventId}`, config) as Promise<Response>;
+  },
+
+  /**
+   * Gets all tickets for a given ticketmaster event id
+   *
+   * @param {string} tmEventId  The ticketmaster event id of the event to retrieve tickets for
+   *
+   * @returns {Promise<Response>}
+   */
+  getTicketsByTmEventId: function (tmEventId: string, config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.get(`/api/tickets/tm-event/${tmEventId}`, config) as Promise<Response>;
+  },
 };

@@ -17,8 +17,12 @@ import ListSkeleton from './ListSkeleton';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+export type initialSearchProps = {
+  keywords?: string;
+  initialSearchResults?: any[];
+}
+
 type EventSearchOptions = {
-  initialSearch: string;
   eventItemBtnLabel: string;
   searchPlaceholder: string;
 };
@@ -26,11 +30,13 @@ type EventSearchOptions = {
 type EventSearchProps = {
   onSelect: (event: any) => void;
   options: EventSearchOptions;
+  initialSearchProps?: initialSearchProps;
 };
 
 export default function EventSearch({
   onSelect,
-  options
+  options,
+  initialSearchProps
 }: EventSearchProps) {
   const router = useRouter();
   // Events search results
@@ -47,7 +53,7 @@ export default function EventSearch({
    *
    * @param {SearchedEvent[]} events  The events search results
    */
-  const processEventsSearchResults = (events: any, eventItemBtnLabel: string = 'Buy Tickets') => {
+  const processEventsSearchResults = (events: any) => {
     setIsSearching(false);
     const preparedEvents = [];
     for (const event of events) {
@@ -113,8 +119,9 @@ export default function EventSearch({
   }
 
   useEffect(() => {
-    if (options.initialSearch) {
-      onSearchEntered(options.initialSearch);
+    if (initialSearchProps && initialSearchProps.initialSearchResults && initialSearchProps.initialSearchResults.length) {
+      setKeyword(initialSearchProps.keywords || '');
+      processEventsSearchResults(initialSearchProps.initialSearchResults);
     }
   }, []);
 

@@ -23,6 +23,8 @@ import { useCurrentUser } from '../app/CurrentUserContext';
 import Drawer from '@mui/material/Drawer';
 import AppLink from './AppLink';
 import TopNavSearchBar from './TopNavSearchBar';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import SearchIcon from '@mui/icons-material/Search';
 
 /** Paths where the nav search bar is hidden */
 const SEARCH_BAR_HIDDEN_PATHS = ['/', '/tickets/create', '/tickets/search', '/selltickets'];
@@ -31,6 +33,12 @@ export default function PrimarySearchAppBar() {
   const { currentUser, signOut } = useCurrentUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [searchBarIsOpen, setSearchBarIsOpen] = React.useState(false);
+
+  const handleMobileSearchMenuToggle = () => {
+    setSearchBarIsOpen(!searchBarIsOpen);
+  };
+
   const showSearchBar = !SEARCH_BAR_HIDDEN_PATHS.some(
     (path) => path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(path + '/')
   );
@@ -242,7 +250,7 @@ export default function PrimarySearchAppBar() {
             component="p"
             sx={{ display: { xs: 'block', sm: 'block' }, fontWeight: 400, fontSize: '25px' }}
           >
-            <span style={{ fontSize: '26.5px' }}>B</span>ig<span style={{ marginLeft: '-.5px', fontSize: '26.5px' }}>T</span>ix
+            <span style={{ fontSize: '26.5px' }}>B</span>ig<span style={{ marginLeft: '-1px', fontSize: '26.5px' }}>T</span>ix
           </Typography>
         </AppLink>
       </Box>
@@ -336,7 +344,9 @@ export default function PrimarySearchAppBar() {
             }}
             onClick={handleMobileDrawerOpen}
           >
-            <MenuIcon />
+            {/* <MenuIcon /> */}
+            <Typography variant="body1" fontWeight={500} sx={{ fontSize: '1rem', pr: 1 }}>Menu</Typography>
+            <KeyboardArrowRightIcon fontSize="small" />
           </IconButton>
 
           <Box sx={{ marginRight: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -347,7 +357,7 @@ export default function PrimarySearchAppBar() {
                 component="p"
                 sx={{ display: { xs: 'block', sm: 'block' }, fontWeight: 400, fontSize: '25px' }}
               >
-                <span style={{ fontSize: '26.5px' }}>B</span>ig<span style={{ marginLeft: '-.5px', fontSize: '26.5px' }}>T</span>ix
+                <span style={{ fontSize: '26.5px' }}>B</span>ig<span style={{ marginLeft: '-1px', fontSize: '26.5px' }}>T</span>ix
               </Typography>
             </AppLink>
 
@@ -398,10 +408,23 @@ export default function PrimarySearchAppBar() {
               {currentUser ? <AccountCircle /> : <AccountCircleOutlined />}
             </IconButton>
           </Box>
-          <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
+            {showSearchBar && (
+              <IconButton
+                size="large"
+                aria-label="Search"
+                aria-controls={mobileProfileMenuId}
+                aria-haspopup="true"
+                onClick={handleMobileSearchMenuToggle}
+                color="inherit"
+              >
+                <SearchIcon fontSize="medium" />
+              </IconButton>
+            )}
+
             <IconButton
               size="large"
-              aria-label="show more"
+              aria-label="Profile menu"
               aria-controls={mobileProfileMenuId}
               aria-haspopup="true"
               onClick={handleMobileProfileMenuOpen}
@@ -415,7 +438,7 @@ export default function PrimarySearchAppBar() {
       {renderedMobileProfileMenu}
       {renderedProfileMenu}
       {renderedMobileDrawer}
-      {showSearchBar && (
+      {showSearchBar && searchBarIsOpen && (
         <AppBar
           position="static"
           sx={{ backgroundColor: 'transparent',

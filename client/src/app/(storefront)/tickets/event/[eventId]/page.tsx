@@ -3,110 +3,106 @@
  *
  * @since ticketmaster-api--JP
  */
-'use client';
-import { useState } from 'react';
 import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import Collapse from '@mui/material/Collapse';
+import EventPageContent from './EventPageContent';
+import type { SavedTicketDoc } from '../../../../../../../tickets-srv/src/models/Ticket';
+import { headers } from 'next/headers';
 import { API } from '../../../../../lib/api/dicts/API';
-import EventViewer from '../../../../../components/EventViewer';
-import { STYLE_CONSTS } from '../../../../../styles/consts';
-import { useEffect } from 'react';
-import type { EventDetails } from '@bigtix/common';
-import { useParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { getDateSegments } from '../../../../../lib/DateMethods';
+import type { EventDetails } from '../../../../../../../packages/common/src/contracts';
 
-export default function EventDetailsPage() {
-  const router = useRouter();
-  const params = useParams();
-  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+export default async function EventDetailsPage({ params }: { params: { eventId: string } }) {
+  const { eventId } = await params;
 
-  const onTicketsSelected = async (event: EventDetails) => {
-    console.log('event selected for buying tickets: ', event)
+  let ctxHeaders = await headers();
+  let cookie = ctxHeaders.get('cookie') ?? '';
+  let host = ctxHeaders.get('host') ?? '';
+
+  let event: EventDetails | null = null;
+  try { 
+    ctxHeaders = await headers();
+    cookie = ctxHeaders.get('cookie') ?? '';
+    host = ctxHeaders.get('host') ?? '';
+    const resp = await API.tick!.getEventDetails!(eventId, {
+      headers: { Cookie: cookie, Host: host },
+    });
+    event = (resp as unknown as EventDetails) ?? null;
+  } catch (error) {
+    event = null;
   }
 
-  const headerImages = [ 'c1', 'c2', 'c3', 'c4', 'c5' ];
-  const [headerImage, setHeaderImage] = useState<string | null>(null);
-
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setHeaderImage(headerImages[Math.floor(Math.random() * headerImages.length)] || null);
-
-    const loadEventStates = async () => {
-      const eventId = params.eventId;
-
-      if (!eventId || eventId === 'new') {
-        router.push('/tickets/search');
-
-        return;
-      }
-
-      console.log('loading event:', eventId);
-
-      setSelectedEvent(eventId as unknown as string);
-      setLoaded(true);
+  let availableTickets: SavedTicketDoc[] | null = null;
+  if (event) {
+    try {
+      ctxHeaders = await headers();
+      cookie = ctxHeaders.get('cookie') ?? '';
+      host = ctxHeaders.get('host') ?? '';
+      const resp = await API.tick!.getTicketsByTmEventId!(event.id, {
+        headers: { Cookie: cookie, Host: host },
+      });
+      availableTickets = (resp as unknown as SavedTicketDoc[]) ?? null;
+    } catch (error) {
+      availableTickets = null;
     }
+  }
 
-    loadEventStates();
-  }, []);
+
+  /**
+   * Add date segments to the event details
+   *
+   * @param {EventDetails} event - The event details
+   */
+  const addDateSegmentsToEvent = (event: EventDetails) => {
+    if (event.date == null) {
+      event.description = event.location ?? '';
+      event.dateSegments = { month: '', day: '', weekday: '' };
+      return;
+    }
+    const dateSegments = getDateSegments(new Date(event.date));
+    event.description = `${dateSegments.time} | ${event.location}`;
+    event.dateSegments = { month: dateSegments.month, day: dateSegments.day.toString(), weekday: dateSegments.weekday };
+  };
+
+  /**
+   * Fix empty attractions event
+   *
+   * @param {EventDetails} event - The event details
+   */
+  const fixEmptyAttractionsEvent = (event: EventDetails) => {
+    if (!event.attractions?.length) {
+      const dateSegments = event.dateSegments;
+      const year = event.date ? new Date(event.date).getFullYear() : '';
+      event.attractions = event.attractions ?? [];
+      event.attractions.push({
+        name: dateSegments ? `${dateSegments.month} ${dateSegments.day} ${year}` : 'Event',
+        externalLinks: {},
+        classifications: [],
+      });
+    }
+  };
+
+  if (event) {
+    addDateSegmentsToEvent(event);
+    fixEmptyAttractionsEvent(event);
+  }
+
+  if (!event) {
+    return (
+      <Container sx={{ minWidth: '100%', height: '100%', py: 4 }} disableGutters>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" color="text.secondary">
+            Event not found
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container sx={{ minWidth: '100%', height: '100%' }} disableGutters>
-      {/* VIEWING THE EVENT DETAILS, AND TICKETS AVAILABLE FOR IT */}
-      <Collapse in={loaded && !!selectedEvent} timeout={500} sx={{ minWidth: '100%' }}>
-        <Box
-          sx={{
-            minWidth: '100%',
-            backgroundImage: headerImage ? `url(/${headerImage}.jpg)` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            display: {
-              xs: 'none',
-              sm: 'none',
-              md: 'block',
-              lg: 'block',
-              xl: 'block',
-            },
-            height: {
-              md: STYLE_CONSTS.EVENT_SEARCH_HEADER_HEIGHT,
-              lg: STYLE_CONSTS.EVENT_SEARCH_HEADER_HEIGHT,
-              xl: STYLE_CONSTS.EVENT_SEARCH_HEADER_HEIGHT,
-            },
-            // opacity: (theme) => theme.palette.mode === 'dark' ? 0.35 : 0.15,
-            opacity:  0.3,
-          }}
-        />
-      </Collapse>
-
-      {!!selectedEvent && loaded ? (
-        <Container
-          disableGutters
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            minWidth: '100vw',
-          }}
-        >
-          <Box sx={{
-            mt: 2,
-            width: '100%',
-            // Set a max-width that increases at specific breakpoints
-            maxWidth: {
-              xs: '400px', // max-width on extra-small screens
-              md: '900px', // max-width on medium screens
-              lg: '1200px', // max-width on large screens
-            },
-          }}>
-            <EventViewer eventId={selectedEvent as string}>
-            </EventViewer>
-          </Box>
-        </Container>
-      ) : (
-        null
-      )}
+      <EventPageContent event={event as unknown as React.ComponentProps<typeof EventPageContent>['event']} availableTickets={availableTickets} />
     </Container>
   );
 }
