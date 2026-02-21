@@ -20,17 +20,20 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useRouter, usePathname } from 'next/navigation';
 import { useCurrentUser } from '../app/CurrentUserContext';
+import { useCart } from '../app/CartContext';
 import Drawer from '@mui/material/Drawer';
 import AppLink from './AppLink';
 import TopNavSearchBar from './TopNavSearchBar';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import SearchIcon from '@mui/icons-material/Search';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 /** Paths where the nav search bar is hidden */
 const SEARCH_BAR_HIDDEN_PATHS = ['/', '/tickets/create', '/tickets/search', '/selltickets'];
 
 export default function PrimarySearchAppBar() {
   const { currentUser, signOut } = useCurrentUser();
+  const { cartCount } = useCart();
   const router = useRouter();
   const pathname = usePathname();
   const [searchBarIsOpen, setSearchBarIsOpen] = React.useState(false);
@@ -205,7 +208,7 @@ export default function PrimarySearchAppBar() {
         router.push('/auth/signup');
         break;
       case 'myaccount':
-        // router.push('auth/myaccount');
+        router.push('/auth/myaccount');
         break;
       default:
         break;
@@ -333,21 +336,35 @@ export default function PrimarySearchAppBar() {
             justifyContent: 'space-between'
           }}
         >
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            sx={{
-              mr: 2,
-              display: { xs: 'flex', sm: 'flex', md: 'none', lg: 'none', xl: 'none' }
-            }}
-            onClick={handleMobileDrawerOpen}
-          >
-            {/* <MenuIcon /> */}
-            <Typography variant="body1" fontWeight={500} sx={{ fontSize: '1rem', pr: 1 }}>Menu</Typography>
-            <KeyboardArrowRightIcon fontSize="small" />
-          </IconButton>
+          <Box sx={{ display: { xs: 'flex', sm: 'flex', md: 'none', lg: 'none', xl: 'none', }, alignItems: 'center' }}>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="open drawer"
+              sx={{
+                paddingRight: 0,
+              }}
+              onClick={handleMobileDrawerOpen}
+            >
+              {/* <MenuIcon /> */}
+              <Typography variant="body1" fontWeight={500} sx={{ fontSize: '1rem' }}>Menu</Typography>
+              <KeyboardArrowRightIcon fontSize="small" />
+            </IconButton>
+
+            {showSearchBar && (
+                <IconButton
+                  size="large"
+                  aria-label="Search"
+                  aria-controls={mobileProfileMenuId}
+                  aria-haspopup="true"
+                  onClick={handleMobileSearchMenuToggle}
+                  color="inherit"
+                >
+                  <SearchIcon fontSize="medium" />
+                </IconButton>
+              )}
+          </Box>
 
           <Box sx={{ marginRight: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
             <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
@@ -385,16 +402,23 @@ export default function PrimarySearchAppBar() {
               </Typography>
             </AppLink>
 
-            <AppLink href="/tickets/mytickets" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
-              <Typography
-                variant="caption"
-                noWrap
-                component="span"
-                sx={{ fontFamily: 'oswald', fontWeight: 400, fontSize: '20px', '&:hover': { textDecoration: 'underline' } }}
-              >
-                My Tickets
-              </Typography>
-            </AppLink>
+            <Badge
+              badgeContent={cartCount}
+              color="error"
+              invisible={cartCount === 0}
+              sx={{ '& .MuiBadge-badge': { top: 1, right: 23 } }}
+            >
+              <AppLink href="/tickets/mytickets" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+                <Typography
+                  variant="caption"
+                  noWrap
+                  component="span"
+                  sx={{ fontFamily: 'oswald', fontWeight: 400, fontSize: '20px', '&:hover': { textDecoration: 'underline' } }}
+                >
+                  My Tickets
+                </Typography>
+              </AppLink>
+            </Badge>
 
             <IconButton
               size="large"
@@ -408,19 +432,20 @@ export default function PrimarySearchAppBar() {
               {currentUser ? <AccountCircle /> : <AccountCircleOutlined />}
             </IconButton>
           </Box>
+
           <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
-            {showSearchBar && (
-              <IconButton
-                size="large"
-                aria-label="Search"
-                aria-controls={mobileProfileMenuId}
-                aria-haspopup="true"
-                onClick={handleMobileSearchMenuToggle}
-                color="inherit"
-              >
-                <SearchIcon fontSize="medium" />
-              </IconButton>
-            )}
+            <Badge
+              badgeContent={cartCount}
+              color="error"
+              invisible={cartCount === 0}
+              sx={{ '& .MuiBadge-badge': { top: 10, right: 13 } }}
+            >
+              <AppLink href="/tickets/mytickets" sx={{ color: 'inherit' }}>
+                <IconButton size="large" aria-label="Cart" color="inherit">
+                  <ShoppingCartIcon fontSize="medium" />
+                </IconButton>
+              </AppLink>
+            </Badge>
 
             <IconButton
               size="large"

@@ -26,6 +26,7 @@ import IconButton from '@mui/material/IconButton';
 import MobileEventBanner from '../../../../../components/MobileEventBanner';
 import DateDisplay from '../../../../../components/DateDisplay';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
+import { useCart } from '../../../../../app/CartContext';
 
 type EventPageContentProps = {
   event: {
@@ -44,6 +45,7 @@ type EventPageContentProps = {
 
 export default function EventPageContent({ event, availableTickets }: EventPageContentProps) {
   const theme = useTheme();
+  const { addToCart, cartItems } = useCart();
   const tickets = availableTickets ?? [];
   const [loaded, setLoaded] = useState(false);
   const headerImages = [ 'c1', 'c2', 'c3', 'c4', 'c5' ];
@@ -116,6 +118,15 @@ export default function EventPageContent({ event, availableTickets }: EventPageC
     if (event.info) {
       setDetailedEventInfo(event.info.split('. ').map((info) => info.trim()));
     }
+  };
+
+  /**
+   * Handles the click event for the buy ticket button. Adds the ticket to the cart.
+   *
+   * @param {SavedTicketDoc} ticket  The ticket to buy
+   */
+  const onAddTicketToCart = (ticket: SavedTicketDoc) => {
+    addToCart(ticket);
   };
 
   /**
@@ -416,9 +427,15 @@ export default function EventPageContent({ event, availableTickets }: EventPageC
                                   {detailedEvent?.description ?? ''}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                                  <IconButton color="primary" size="small" aria-label="Add to cart">
-                                    <AddShoppingCartIcon />
-                                  </IconButton>
+                                  {cartItems.some((item) => item.id === ticket.id) ? (
+                                    <Typography variant="body2" color="primary" fontWeight={500}>
+                                      In cart
+                                    </Typography>
+                                  ) : (
+                                    <IconButton color="primary" size="small" aria-label="Add to cart" onClick={() => onAddTicketToCart(ticket)}>
+                                      <AddShoppingCartIcon />
+                                    </IconButton>
+                                  )}
                                 </Box>
                               </Box>
                             </Box>

@@ -5,8 +5,10 @@
  */
 import { AuthAPIs } from './AuthAPIs';
 import { TicketsAPIs } from './TicketsAPIs';
+import { OrdersAPIs } from './OrdersAPIs';
 
 export const API: { [key: string]: { [key: string]: (...args: any[]) => Promise<Response> } } = {
   auth: AuthAPIs,
   tick: TicketsAPIs,
+  ord: OrdersAPIs,
 };

@@ -150,7 +150,6 @@ export default function SellTicketsSearchPage() {
             <EventSearch
               onSelect={onEventSelected}
               options={{
-                initialSearch: '',
                 eventItemBtnLabel: 'Sell Tickets',
                 searchPlaceholder: 'Search your event and start selling...'
               }}

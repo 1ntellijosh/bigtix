@@ -11,6 +11,7 @@ import Switch from '@mui/material/Switch';
 import { getTheme, type ThemeMode } from './theme';
 import { LS_KEYS, LocalStore } from '../lib/localstorage/LocalStore';
 import { CurrentUserProvider } from './CurrentUserContext';
+import { CartProvider } from './CartContext';
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ export default function Providers({ initialCurrentUser, children }: ProvidersPro
     <QueryClientProvider client={queryClient}>
       <AppRouterCacheProvider options={{ enableCssLayer: true }}>
         <CurrentUserProvider initialCurrentUser={initialCurrentUser}>
+          <CartProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <Box component="main" sx={{ position: 'relative', minHeight: '100vh', paddingBottom: footerHeight }}>
@@ -80,6 +82,7 @@ export default function Providers({ initialCurrentUser, children }: ProvidersPro
               />
             </Box>
           </ThemeProvider>
+          </CartProvider>
         </CurrentUserProvider>
       </AppRouterCacheProvider>
     </QueryClientProvider>

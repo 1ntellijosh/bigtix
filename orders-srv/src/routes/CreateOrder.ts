@@ -16,8 +16,8 @@ const orderSvc = new OrderService();
  * Creates a new order
  *
  * @param {array<Object>} tickets  The tickets to order, each with:
- *   @prop {string} ticketId  The id of the ticket to order
- *   @prop {number} price  The price of the ticket
+ *   @prop {string} tickets.id  The id of the ticket to order
+ *   @prop {number} tickets.price  The price of the ticket to order
  *
  * @throws {UnAuthorizedError}  If user is not authenticated
  */

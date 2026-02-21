@@ -113,7 +113,10 @@ export class TicketService {
   async getTicketsByEventId(eventId: string): Promise<SavedTicketDoc[]> {
     let tickets = await this.tickRepo.findByEventId(eventId);
 
-    return tickets || [];
+    if (!tickets) return [];
+
+    // Return only available tickets, aka tickets that are not reserved or paid for in another order
+    return tickets.filter((t) => t.orderId === null || t.orderId === undefined);
   }
 
   /**
@@ -130,7 +133,12 @@ export class TicketService {
 
     const tickets = await this.tickRepo.findByEventId(event.id);
 
-    return tickets || [];
+    if (!tickets) return [];
+
+    // Return only available tickets, aka tickets that are not reserved or paid for in another order
+    const availableTickets = tickets.filter((t) => t.orderId === null || t.orderId === undefined);
+    
+    return availableTickets;
   }
 
   /**

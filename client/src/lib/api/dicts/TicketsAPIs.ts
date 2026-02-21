@@ -101,4 +101,15 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
   getTicketsByTmEventId: function (tmEventId: string, config: Record<string, any> = {}): Promise<Response> {
     return HttpService.get(`/api/tickets/tm-event/${tmEventId}`, config) as Promise<Response>;
   },
+
+  /**
+   * Reserves a ticket for an order
+   *
+   * @param {string} ticketId  The id of the ticket to reserve
+   *
+   * @returns {Promise<Response>}
+   */
+  reserveTicketForOrder: function (ticketId: string, config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.post(`/api/tickets/reserve/${ticketId}`, config) as Promise<Response>;
+  },
 };

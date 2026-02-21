@@ -11,7 +11,6 @@ import { alpha } from '@mui/material/styles';
 import { useMemo } from 'react';
 import type { EventDetails } from '@bigtix/common';
 
-
 export default function MobileEventBanner({ event }: { event: EventDetails }) {
   const theme = useTheme();
   const boxShadow = useMemo(

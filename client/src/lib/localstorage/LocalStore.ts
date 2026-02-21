@@ -5,7 +5,9 @@
  */
 export const LS_KEYS = {
   THEME_MODE: 'bigtix-theme-mode',
-};
+  CART_ITEMS: 'bigtix-cart-items',
+  ORDERS_RESERVED: 'ordersr',
+} as const;
 
 export class LocalStore {
   static getItem(key: typeof LS_KEYS[keyof typeof LS_KEYS]): string | null {
