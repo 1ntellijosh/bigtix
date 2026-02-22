@@ -9,16 +9,16 @@
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import EventSearch from '../../../components/EventSearch';
-import { API } from '../../../lib/api/dicts/API';
+import EventSearch from '../../../../components/EventSearch';
+import { API } from '../../../../lib/api/dicts/API';
 import { useState } from 'react';
-import type { SavedEventDoc } from '../../../../../tickets-srv/src/models/Event';
-import TicketsForm from '../../../components/TicketsForm';
+import type { SavedEventDoc } from '../../../../../../tickets-srv/src/models/Event';
+import TicketsForm from '../../../../components/TicketsForm';
 import Button from '@mui/material/Button';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@mui/material/styles';
-import { getDateSegments } from '../../../lib/DateMethods';
-import EventItem from '../../../components/EventItem';
+import { getDateSegments } from '../../../../lib/DateMethods';
+import EventItem from '../../../../components/EventItem';
 
 export default function SellTicketsSearchPage() {
   const theme = useTheme();

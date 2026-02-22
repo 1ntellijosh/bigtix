@@ -7,7 +7,7 @@
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import type { OrderWithTicketsDto } from '../../../../../../orders-srv/src/services/OrderMapper';
+import type { OrderWithTicketsType } from '../../../../lib/Types';
 import { useMemo } from 'react';
 import CheckoutForm from '../../../../components/CheckoutForm';
 import CartTicket from '../../../../components/CartTicket';
@@ -32,7 +32,7 @@ export type StripeElementsOptions = {
 };
 
 type CheckoutPageContentProps = {
-  order?: OrderWithTicketsDto | null;
+  order?: OrderWithTicketsType | null;
   stripePublishableKey: string;
   stripeElementsOptions: StripeElementsOptions | null;
 };
@@ -145,7 +145,7 @@ export default function CheckoutPageContent({
           <Typography variant="h5">You will receive an email with a link to your tickets.</Typography>
           <Typography variant="h5">Thank you for your purchase!</Typography>
           <Button variant="contained" color="primary" onClick={() => router.push('/')} sx={{ mt: 2 }}>
-            Return to Home Page
+            Return to Home
           </Button>
         </Box>
       )}
@@ -153,8 +153,8 @@ export default function CheckoutPageContent({
         <Box>
           <Typography variant="h2" sx={{ fontFamily: 'oswald', mb: 2 }}>Order {order.status}.</Typography>
           <Typography variant="h5">If you would like to try ordering tickets with a different payment method, please return to my tickets page and try again.</Typography>
-          <Button variant="contained" color="primary" onClick={() => router.push('/tickets/mytickets')} sx={{ mt: 2 }}>
-            Return to My Tickets Page
+          <Button variant="contained" color="primary" onClick={() => router.push('/tickets/mycart')} sx={{ mt: 2 }}>
+            View Tickets My Cart
           </Button>
         </Box>
       )}

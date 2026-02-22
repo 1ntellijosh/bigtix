@@ -13,11 +13,11 @@ const router = express.Router();
 const ticketSvc = new TicketService();
 
 /**
- * Retrieves all tickets
+ * Retrieves all (available)tickets
  *
  */
 router.get('/all', api.callAsync(async (req: Request, res: Response) => {
-  const tickets = await ticketSvc.getAllTickets();
+  const tickets = await ticketSvc.getAllAvailableTickets();
 
   res.status(STATUS_CODES.SUCCESS).send(tickets);
 }));

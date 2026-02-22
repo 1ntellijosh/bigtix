@@ -72,7 +72,7 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
   },
 
   /**
-   * Gets all tickets
+   * Gets all (available)tickets
    *
    * @returns {Promise<Response>}
    */
@@ -103,6 +103,17 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
   },
 
   /**
+   * Gets all listings for a given user id
+   *
+   * @param {string} userId  The user id of the user to retrieve listings for
+   *
+   * @returns {Promise<Response>}
+   */
+  getTicketsByUserId: function (userId: string, config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.get(`/api/tickets/user/${userId}`, config) as Promise<Response>;
+  },
+
+  /**
    * Reserves a ticket for an order
    *
    * @param {string} ticketId  The id of the ticket to reserve
@@ -111,5 +122,19 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
    */
   reserveTicketForOrder: function (ticketId: string, config: Record<string, any> = {}): Promise<Response> {
     return HttpService.post(`/api/tickets/reserve/${ticketId}`, config) as Promise<Response>;
+  },
+
+  /**
+   * Updates a ticket
+   *
+   * @param {string} id  The id of the ticket to update
+   * @param {string} title  The title of the ticket
+   * @param {number} price  The price of the ticket
+   * @param {string} description  The description of the ticket
+   *
+   * @returns {Promise<Response>}
+   */
+  updateTicket: function (id: string, body: any, config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.put(`/api/tickets/update/${id}`, body, config) as Promise<Response>;
   },
 };

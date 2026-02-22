@@ -28,4 +28,24 @@ export const OrdersAPIs: { [key: string]: (body?: any, config?: Record<string, a
   getOrderById: function (orderId: string, config: Record<string, any> = {}): Promise<Response> {
     return HttpService.get(`/api/orders/get-order/${orderId}`, config) as Promise<Response>;
   },
+
+  /**
+   * Gets an order's safe details (id, status, expiresAt) by id
+   *
+   * @param {string} orderId  The id of the order to get
+   *
+   * @returns {Promise<Response>}
+   */
+  getOrderSafeDetailsById: function (orderId: string, config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.get(`/api/orders/get-order-safe-details/${orderId}`, config) as Promise<Response>;
+  },
+
+  /**
+   * Gets all orders for a given user
+   *
+   * @returns {Promise<Response>}
+   */
+  getAllOrders: function (config: Record<string, any> = {}): Promise<Response> {
+    return HttpService.get(`/api/orders/all`, config) as Promise<Response>;
+  },
 };

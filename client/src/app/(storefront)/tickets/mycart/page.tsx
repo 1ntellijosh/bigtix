@@ -1,5 +1,5 @@
 /**
- * My tickets page where a user can view their tickets (cart) and proceed to checkout.
+ * My Cart page where a user can view tickets in their cart and proceed to checkout.
  *
  * @since buy-tickets--JP
  */
@@ -17,7 +17,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import { useRouter } from 'next/navigation';
 import CartTicket from '../../../../components/CartTicket';
-import { useCart } from '../../../../app/CartContext';
+import { useCart } from '../../../CartContext';
 import { API } from '../../../../lib/api/dicts/API';
 import { LS_KEYS, LocalStore } from '../../../../lib/localstorage/LocalStore';
 import type { SavedTicketDoc } from '../../../../../../tickets-srv/src/models/Ticket';
@@ -72,7 +72,7 @@ type OrderCreatedResponse = {
   ticketsNotFound: { id: string; price: number }[];
 };
 
-export default function MyTicketsPage() {
+export default function MyCartPage() {
   const router = useRouter();
   const { cartItems, removeFromCart, clearCart } = useCart();
   const [unavailableDialogOpen, setUnavailableDialogOpen] = useState(false);
@@ -158,7 +158,7 @@ export default function MyTicketsPage() {
   };
 
   return (
-    <Container sx={{ py: 3 }}>
+    <Container sx={{ py: 3, mt: 10 }}>
       <Dialog open={successDialogOpen} onClose={() => setSuccessDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Tickets reserved</DialogTitle>
         <DialogContent>
@@ -231,18 +231,16 @@ export default function MyTicketsPage() {
 
       {/* Title */}
       <Typography variant="h3" sx={{ mb: 0.5, fontFamily: 'oswald' }}>
-        My Tickets
+        My Cart
       </Typography>
 
       {/* In Cart: ticket list (left) and subtotal/checkout (right) */}
-      <Typography variant="h5" sx={{ mt: 2, mb: 0.5, fontFamily: 'oswald' }}>
-        In Cart
-      </Typography>
       <Typography
         component="button"
         variant="body2"
         onClick={() => inCartTickets.forEach((t) => removeFromCart(t.id))}
         sx={{
+          mt: 2,
           background: 'none',
           border: 'none',
           padding: 0,
@@ -312,7 +310,7 @@ export default function MyTicketsPage() {
       </Box>
 
       {/* Reserved for purchase: no right column */}
-      <Typography variant="h5" sx={{ mt: 4, mb: 1, fontFamily: 'oswald' }}>
+      <Typography variant="h4" sx={{ mt: 4, mb: 1, fontFamily: 'oswald' }}>
         Reserved for purchase
       </Typography>
       <Box sx={{ mt: 1 }}>

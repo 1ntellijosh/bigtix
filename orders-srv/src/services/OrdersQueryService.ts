@@ -54,8 +54,10 @@ export class OrdersQueryService {
 
     const result: OrderWithTicketsDto[] = [];
     for (const order of orders) {
-      const tickets = await this.ticketRepo.findAllByOrderId(order.id);
-      if (!tickets || tickets.length === 0) throw new NotFoundError('Tickets for an order not found');
+      let tickets = await this.ticketRepo.findAllByOrderId(order.id);
+
+      if (!tickets) tickets = [];
+
       result.push(OrderMapper.toOrderWithTickets(order, tickets));
     }
     return result;

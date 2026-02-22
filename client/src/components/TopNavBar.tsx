@@ -29,7 +29,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 /** Paths where the nav search bar is hidden */
-const SEARCH_BAR_HIDDEN_PATHS = ['/', '/tickets/create', '/tickets/search', '/selltickets'];
+const SEARCH_BAR_HIDDEN_PATHS = ['/', '/tickets/create', '/tickets/search', 'tickets/sell'];
 
 export default function PrimarySearchAppBar() {
   const { currentUser, signOut } = useCurrentUser();
@@ -88,8 +88,10 @@ export default function PrimarySearchAppBar() {
     )}
   </Menu>;
 
-  const [mobileProfileAnchorEl, setMobileProfileAnchorEl] =
-    React.useState<null | HTMLElement>(null);
+  /**
+   * RENDERED MOBILE PROFILE MENU
+   */
+  const [mobileProfileAnchorEl, setMobileProfileAnchorEl] = React.useState<null | HTMLElement>(null);
   const isMobileProfileMenuOpen = Boolean(mobileProfileAnchorEl);
   const handleMobileProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMobileProfileAnchorEl(event.currentTarget);
@@ -99,10 +101,6 @@ export default function PrimarySearchAppBar() {
 
     await handleProfileMenuAction(action);
   };
-
-  /**
-   * RENDERED MOBILE PROFILE MENU
-   */
   const mobileProfileMenuId = 'primary-search-account-menu-mobile-profile';
   const renderedMobileProfileMenu = (
     <Menu
@@ -216,6 +214,49 @@ export default function PrimarySearchAppBar() {
   };
 
   /**
+   * RENDERED DESKTOP MY TICKETS MENU
+   */
+  const [myTixAnchorEl, setMyTixAnchorEl] = React.useState<null | HTMLElement>(null);
+  const isMyTixMenuOpen = Boolean(myTixAnchorEl);
+  const handleMyTixMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMyTixAnchorEl(event.currentTarget);
+  };
+  const handleMyTixMenuClose = (action?: string) => {
+    // Move focus back to anchor before closing so we don't hide focus with aria-hidden
+    myTixAnchorEl?.focus();
+    setMyTixAnchorEl(null);
+
+    if (action === 'myorders') {
+      router.push('/tickets/myorders');
+      return;
+    }
+    if (action === 'mylistings') {
+      router.push('/tickets/mylistings');
+    }
+  };
+  const myTixMenuId = 'my-tix-menu';
+  const renderedMyTixMenu = <Menu
+    anchorEl={myTixAnchorEl}
+    anchorOrigin={{
+      vertical: 'top',
+      horizontal: 'right',
+    }}
+    id={myTixMenuId}
+    keepMounted
+    transformOrigin={{
+      vertical: 'top',
+      horizontal: 'right',
+    }}
+    open={isMyTixMenuOpen}
+    onClose={() => handleMyTixMenuClose()}
+  >
+    <div>
+      <MenuItem onClick={() => handleMyTixMenuClose('myorders')}>My Orders</MenuItem>
+      <MenuItem onClick={() => handleMyTixMenuClose('mylistings')}>My Listings</MenuItem>
+    </div>
+  </Menu>;
+
+  /**
    * RENDERED MOBILE DRAWER MENU
    */
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
@@ -261,7 +302,9 @@ export default function PrimarySearchAppBar() {
         <div>
           <MenuItem onClick={() => handleDrawerMenuSelect('myaccount')}>My account</MenuItem>
           <MenuItem onClick={() => handleDrawerMenuSelect('sell')}>Sell</MenuItem>
-          <MenuItem onClick={() => handleDrawerMenuSelect('mytickets')}>My tickets</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('mycart')}>My cart</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('myorders')}>My orders</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('mylistings')}>My listings</MenuItem>
           <MenuItem onClick={() => handleDrawerMenuSelect('signout')}>Sign out</MenuItem>
         </div>
       ) : (
@@ -269,7 +312,7 @@ export default function PrimarySearchAppBar() {
           <MenuItem onClick={() => handleDrawerMenuSelect('signin')}>Sign in</MenuItem>
           <MenuItem onClick={() => handleDrawerMenuSelect('signup')}>Sign up</MenuItem>
           <MenuItem onClick={() => handleDrawerMenuSelect('sell')}>Sell</MenuItem>
-          <MenuItem onClick={() => handleDrawerMenuSelect('mytickets')}>My tickets</MenuItem>
+          <MenuItem onClick={() => handleDrawerMenuSelect('mycart')}>My cart</MenuItem>
         </div>
       )}
     </Drawer>
@@ -299,10 +342,16 @@ export default function PrimarySearchAppBar() {
         handleProfileMenuAction(action);
         break;
       case 'sell':
-        router.push('/selltickets');
+        router.push('/tickets/sell');
         break;
-      case 'mytickets':
-        router.push('/tickets/mytickets');
+      case 'mycart':
+        router.push('/tickets/mycart');
+        break;
+      case 'myorders':
+        router.push('/tickets/myorders');
+        break;
+      case 'mylistings':
+        router.push('/tickets/mylistings');
         break;
       default:
         break;
@@ -391,32 +440,37 @@ export default function PrimarySearchAppBar() {
             alignItems: 'center',
             gap: 1,
           }}>
-            <AppLink href="/selltickets" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
+            <AppLink href="/tickets/sell" sx={{ textDecoration: 'none', color: 'inherit', mr: 2 }}>
               <Typography
                 variant="caption"
                 noWrap
                 component="span"
                 sx={{ fontFamily: 'oswald', fontWeight: 400, fontSize: '20px', '&:hover': { textDecoration: 'underline' } }}
               >
-                Sell Tickets
+                Sell
               </Typography>
             </AppLink>
+
+            <Typography
+              variant="caption"
+              noWrap
+              component="span"
+              sx={{ fontFamily: 'oswald', fontWeight: 400, fontSize: '20px', '&:hover': { textDecoration: 'underline' } }}
+              onClick={handleMyTixMenuOpen}
+            >
+              My Tickets
+            </Typography>
 
             <Badge
               badgeContent={cartCount}
               color="error"
               invisible={cartCount === 0}
-              sx={{ '& .MuiBadge-badge': { top: 1, right: 23 } }}
+              sx={{ '& .MuiBadge-badge': { top: 8, right: 10 } }}
             >
-              <AppLink href="/tickets/mytickets" sx={{ textDecoration: 'none', color: 'inherit', mr: 4 }}>
-                <Typography
-                  variant="caption"
-                  noWrap
-                  component="span"
-                  sx={{ fontFamily: 'oswald', fontWeight: 400, fontSize: '20px', '&:hover': { textDecoration: 'underline' } }}
-                >
-                  My Tickets
-                </Typography>
+              <AppLink href="/tickets/mycart" sx={{ color: 'inherit' }}>
+                <IconButton size="large" aria-label="Cart" color="inherit">
+                  <ShoppingCartIcon fontSize="medium" />
+                </IconButton>
               </AppLink>
             </Badge>
 
@@ -440,7 +494,7 @@ export default function PrimarySearchAppBar() {
               invisible={cartCount === 0}
               sx={{ '& .MuiBadge-badge': { top: 10, right: 13 } }}
             >
-              <AppLink href="/tickets/mytickets" sx={{ color: 'inherit' }}>
+              <AppLink href="/tickets/mycart" sx={{ color: 'inherit' }}>
                 <IconButton size="large" aria-label="Cart" color="inherit">
                   <ShoppingCartIcon fontSize="medium" />
                 </IconButton>
@@ -461,6 +515,7 @@ export default function PrimarySearchAppBar() {
         </Toolbar>
       </AppBar>
       {renderedMobileProfileMenu}
+      {renderedMyTixMenu}
       {renderedProfileMenu}
       {renderedMobileDrawer}
       {showSearchBar && searchBarIsOpen && (
