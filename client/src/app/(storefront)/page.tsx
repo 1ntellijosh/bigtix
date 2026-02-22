@@ -8,7 +8,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { API } from '../../lib/api/dicts/API';
 import { headers } from 'next/headers';
-import HomeClientContentWrapper from '../../components/HomeClientContentWrapper';
+import HomePageContent from './HomePageContent';
+import type { SavedTicketDoc } from '../../../../tickets-srv/src/models/Ticket';
 
 export default async function Home() {
   let allTickets: SavedTicketDoc[] | null = null;
@@ -47,12 +48,13 @@ export default async function Home() {
           width: '100%',
           // Set a max-width that increases at specific breakpoints
           maxWidth: {
-            xs: '400px', // max-width on extra-small screens
+            xs: '450px', // max-width on extra-small screens
+            sm: '450px', // max-width on small screens
             md: '900px', // max-width on medium screens
             lg: '1200px', // max-width on large screens
           },
         }}>
-          <HomeClientContentWrapper allTickets={allTickets} />
+          <HomePageContent allTickets={allTickets} />
         </Box>
       </Box>
     </Container>

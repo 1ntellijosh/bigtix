@@ -18,7 +18,6 @@ const startService = async () => {
   if (!process.env.MONGO_URI) throw new Error('MONGO_URI is not defined');
 
   if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is not defined');
-  if (!process.env.STRIPE_PUBLISHABLE_KEY) throw new Error('STRIPE_PUBLISHABLE_KEY is not defined');
   if (!process.env.STRIPE_WEBHOOK_SECRET) throw new Error('STRIPE_WEBHOOK_SECRET is not defined');
 
   await mongoose.connect(process.env.MONGO_URI).catch((err) => {

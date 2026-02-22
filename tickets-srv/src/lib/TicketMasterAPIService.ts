@@ -106,7 +106,7 @@ export class TicketMasterAPIService {
       let image: TicketMasterImage | null = this.extractImageFromSearchedEvent(event, 'ARTIST_PAGE');
       if (!image) image = this.extractImageFromSearchedEvent(event, '640x427');
 
-      let location = this.extractLocationFromSearchedEvent(event);
+      let location = this.extractLocationFromSearchedEventVenue(event);
 
       const formattedEvent: SearchedEvent = {
         name: event.name!,
@@ -166,9 +166,13 @@ export class TicketMasterAPIService {
       }
     }
 
-    let location = this.extractLocationFromSearchedEvent(event, true);
+    let location = this.extractLocationFromSearchedEventVenue(event, true);
+
+    if (!location) location = this.extractLocationFromSearchedEventPlace(event, true);
 
     const attractions = this.extractAttractionsFromSearchedEvent(event);
+
+    const info = event.info ? event.info.trim() : null;
 
     return {
       name: event.name!,
@@ -179,6 +183,7 @@ export class TicketMasterAPIService {
       attractions,
       description: '', // Has to be added at client so local date/time is applied
       dateSegments: null, // Has to be added at client so local date/time is applied
+      info,
     };
   }
 
@@ -204,12 +209,12 @@ export class TicketMasterAPIService {
   }
 
   /**
-   * Extracts a location from a searched event
+   * Extracts a location from a searched event in the 'venues' property
    *
    * @param event 
    * @returns 
    */
-  private static extractLocationFromSearchedEvent(
+  private static extractLocationFromSearchedEventVenue(
     event: { _embedded?: { venues?: { name?: string; address?: { line1?: string }; city?: { name: string }; state?: { name: string }; country?: { name: string } }[] } },
     includeAddress: boolean = false,
   ): string {
@@ -227,6 +232,30 @@ export class TicketMasterAPIService {
   }
 
   /**
+   * Extracts a location from a searched event in the 'place' property
+   *
+   * @param event 
+   * @returns 
+   */
+  private static extractLocationFromSearchedEventPlace(
+    event: { place?: { city?: { name: string }; country?: { name: string }; address?: { line1?: string }; state?: { name: string } } },
+    includeAddress: boolean = false,
+  ): string {
+    const placeData = event.place || null;
+
+    if (!placeData) return '';
+
+    const name = placeData.city?.name ? `${placeData.city.name} | ` : '';
+    const address = includeAddress && placeData.address?.line1 ? `${placeData.address.line1}, ` : '';
+    const city = placeData.city?.name ? `${placeData.city.name}, ` : '';
+    const state = placeData.state?.name ? `${placeData.state.name}, ` : '';
+    const country = placeData.country?.name ? `${placeData.country.name}, ` : '';
+
+    return `${name}${address}${city}${state}${country}`;
+
+  }
+
+  /**
    * Extracts a date from a searched event
    *
    * @param event 
@@ -240,7 +269,7 @@ export class TicketMasterAPIService {
 
   /**
    * Extracts attractions from a searched event
-   *
+   *parseTicketMasterEventDetailsResponse
    * @param event 
    *
    * @returns {Array<{ name: string; externalLinks: Record<string, string> }>}  The attractions from the event
