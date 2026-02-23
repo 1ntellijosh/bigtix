@@ -155,14 +155,14 @@ export class TicketService {
   }
 
   /**
-   * Retrieves all tickets
+   * Retrieves all (available)tickets
    *
    * @returns {Promise<SavedTicketDoc[]>}
    */
-  async getAllTickets(): Promise<SavedTicketDoc[]> {
+  async getAllAvailableTickets(): Promise<SavedTicketDoc[]> {
     const tickets = await this.tickRepo.findAll();
     
-    return tickets || [];
+    return tickets?.filter((t) => t.orderId === null || t.orderId === undefined) || [];
   }
 
   /**

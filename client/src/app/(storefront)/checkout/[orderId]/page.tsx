@@ -7,7 +7,7 @@ import Container from '@mui/material/Container';
 import CheckoutPageContent from './CheckoutPageContent';
 import { API } from '../../../../lib/api/dicts/API';
 import { headers } from 'next/headers';
-import type { OrderWithTicketsDto } from '../../../../../../orders-srv/src/services/OrderMapper';
+import type { OrderWithTicketsType } from '../../../../lib/Types';
 
 export default async function CheckoutPage({ params }: { params: { orderId: string } }) {
   const { orderId } = await params;
@@ -17,7 +17,7 @@ export default async function CheckoutPage({ params }: { params: { orderId: stri
   let cookie;
   let host;
 
-  let order: OrderWithTicketsDto | null = null;
+  let order: OrderWithTicketsType | null = null;
   try {
     ctxHeaders = await headers();
     cookie = ctxHeaders.get('cookie') ?? '';
@@ -25,7 +25,7 @@ export default async function CheckoutPage({ params }: { params: { orderId: stri
     const resp = await API.ord!.getOrderById!(orderId, {
       headers: { Cookie: cookie, Host: host },
     });
-    order = (resp as unknown as OrderWithTicketsDto) ?? null;
+    order = (resp as unknown as OrderWithTicketsType) ?? null;
   } catch (e) {
     console.error('Error getting order', e);
   }
