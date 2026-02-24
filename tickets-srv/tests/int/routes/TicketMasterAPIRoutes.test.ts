@@ -15,17 +15,7 @@ describe('TicketMaster API routes tests', () => {
   });
 
   it('should return a 200 status code', async () => {
-    const response = await request(tickApp).get('/api/events/search/test');
+    const response = await request(tickApp).get('/api/events/search?keyword=test');
     expect(response.status).toBe(200);
   });
-
-  // it('should return a 400 status code if the query is not provided', async () => {
-  //   const response = await request(tickApp).get('/api/events/search');
-  //   expect(response.status).toBe(400);
-  // });
-
-  // it('should return a 400 status code if the query is not a string', async () => {
-  //   const response = await request(tickApp).get('/api/events/search/123');
-  //   expect(response.status).toBe(400);
-  // });
 });

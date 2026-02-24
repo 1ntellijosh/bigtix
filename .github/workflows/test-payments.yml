@@ -1,0 +1,21 @@
+########################################################
+# Payments Service Test workflow for BigTix platform microservices E-Commerce project
+#
+# @since cicd-updates--JP
+########################################################
+
+name: test-payments
+
+on:
+  pull_request:
+    paths:
+      - 'payments-srv/**'
+      - 'packages/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: make bs
+      - run: cd payments-srv && npm install && npm run test:ci

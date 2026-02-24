@@ -21,12 +21,12 @@ const mockValidationErrors: ValidationError[] = [
 const reqBody = { email: 'someguy@someemail.com', password: 'password' };
 
 describe('APIRequest', () => {
-  it('should call the given async function', () => {
+  it('should call the given async function', async () => {
     const fn = jest.fn();
     const { req, res, next } = createMockRequestVars();
     req.body = reqBody;
 
-    APIRequest.callAsync(fn)(req, res, next);
+    await APIRequest.callAsync(fn)(req, res, next);
     expect(fn).toHaveBeenCalledWith(req, res, next);
   });
 

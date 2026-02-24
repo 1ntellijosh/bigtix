@@ -1,0 +1,21 @@
+########################################################
+# Tickets Service Test workflow for BigTix platform microservices E-Commerce project
+#
+# @since cicd-updates--JP
+########################################################
+
+name: test-tickets
+
+on:
+  pull_request:
+    paths:
+      - 'tickets-srv/**'
+      - 'packages/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: make bs
+      - run: cd tickets-srv && npm install && npm run test:ci

@@ -63,13 +63,15 @@ jest.mock('@bigtix/middleware', () => {
   };
 });
 
+const SETUP_TIMEOUT_MS = 30_000; // MongoMemoryServer.create() can be slow in CI (download/start)
+
 beforeAll(async () => {
   process.env.JWT_KEY = 'test-jwt-key';
   mongoMemDbServer = await MongoMemoryServer.create();
   const mongoUri = mongoMemDbServer.getUri();
 
   await mongoose.connect(mongoUri);
-});
+}, SETUP_TIMEOUT_MS);
 
 beforeEach(async () => {
   const collections = await mongoose.connection?.db?.collections();
@@ -83,4 +85,4 @@ beforeEach(async () => {
 afterAll(async () => {
   if (mongoMemDbServer) await mongoMemDbServer.stop();
   await mongoose.connection.close();
-});
+}, SETUP_TIMEOUT_MS);
