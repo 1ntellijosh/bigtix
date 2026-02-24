@@ -1,5 +1,5 @@
 ########################################################
-# Test workflow for BigTix platform microservices E-Commerce project
+# Auth Service Test workflow for BigTix platform microservices E-Commerce project
 #
 # @since cicd-updates--JP
 ########################################################
@@ -16,6 +16,3 @@ jobs:
       - uses: actions/checkout@v2
       - run: make bs
       - run: cd auth-srv && npm install && npm run test:ci
-      - run: cd tickets-srv && npm install && npm run test:ci
-      - run: cd orders-srv && npm install && npm run test:ci
-      - run: cd payments-srv && npm install && npm run test:ci
