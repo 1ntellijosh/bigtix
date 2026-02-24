@@ -70,8 +70,8 @@ describe('Delete (cancel) order routes tests', () => {
     await Ticket.deleteMany({});
   });
 
-  it('has a route handler for /api/orders/:id for delete requests', async () => {
-    await request(ordersApp).delete('/api/orders/123').expect(400);
+  it('has a route handler for /api/orders/delete/:id for delete requests', async () => {
+    await request(ordersApp).delete('/api/orders/delete/123').expect(400);
   });
 
   it('Returns unauthorized error if user is not authenticated', async () => {
@@ -79,7 +79,7 @@ describe('Delete (cancel) order routes tests', () => {
     const ticketsWithOrderId = addOrderIdToTickets(orderId, validTickets);
     savedTickets = await saveTickets(ticketsWithOrderId);
     await request(ordersApp)
-      .delete(`/api/orders/${orderId}`)
+      .delete(`/api/orders/delete/${orderId}`)
       .send()
       .expect(401);
   });
@@ -91,7 +91,7 @@ describe('Delete (cancel) order routes tests', () => {
     const ticketsWithOrderId = addOrderIdToTickets(orderId, validTickets);
     savedTickets = await saveTickets(ticketsWithOrderId);
     await request(ordersApp)
-      .delete(`/api/orders/${orderId}`)
+      .delete(`/api/orders/delete/${orderId}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send()
       .expect(400);
@@ -100,7 +100,7 @@ describe('Delete (cancel) order routes tests', () => {
   it('Returns not found error if order is not found', async () => {
     const orderId = new mongoose.Types.ObjectId().toString();
     const response = await request(ordersApp)
-      .delete(`/api/orders/${orderId}`)
+      .delete(`/api/orders/delete/${orderId}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send()
       .expect(404);
@@ -113,7 +113,7 @@ describe('Delete (cancel) order routes tests', () => {
     const ticketsWithOrderId = addOrderIdToTickets(orderId, validTickets);
     await saveTickets(ticketsWithOrderId);
     await request(ordersApp)
-      .delete(`/api/orders/${orderId}`)
+      .delete(`/api/orders/delete/${orderId}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send()
       .expect(400);
@@ -129,7 +129,7 @@ describe('Delete (cancel) order routes tests', () => {
     expect(savedTickets).toHaveLength(3);
 
     const response = await request(ordersApp)
-      .delete(`/api/orders/${orderId}`)
+      .delete(`/api/orders/delete/${orderId}`)
       .set('Cookie', createSignedInUserCookie(validOrder.userId))
       .send()
       .expect(200);
@@ -165,7 +165,7 @@ describe('Delete (cancel) order routes tests', () => {
     await saveTickets(ticketsWithOrderId);
 
     await request(ordersApp)
-      .delete(`/api/orders/${orderId}`)
+      .delete(`/api/orders/delete/${orderId}`)
       .set('Cookie', createSignedInUserCookie(validOrder.userId))
       .send()
       .expect(200);

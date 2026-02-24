@@ -17,6 +17,9 @@ const validDescription = 'some description!!!!!';
 const validUserId = new mongoose.Types.ObjectId().toString();
 const validEvent = {
   title: 'some title!!!!!',
+  tmEventId: '1234567890',
+  attractions: "['some attraction!!!!!']",
+  image: 'some image!!!!!',
   description: 'some description!!!!!',
   date: new Date(),
   location: 'some location!!!!!',
@@ -48,7 +51,7 @@ describe('Update ticket routes tests', () => {
   });
 
   it('returns a 400 if the ticket id is not a valid MongoDB ID', async () => {
-    await request(tickApp).put('/api/tickets/not-a-valid-id').send({
+    await request(tickApp).put('/api/tickets/update/not-a-valid-id').send({
       title: validTitle,
       price: validPrice,
       description: validDescription
@@ -56,7 +59,7 @@ describe('Update ticket routes tests', () => {
   });
 
   it('can not be accessed if the user is not signed in', async () => {
-    await request(tickApp).put(`/api/tickets/${savedTicket.id}`).send({
+    await request(tickApp).put(`/api/tickets/update/${savedTicket.id}`).send({
       title: validTitle,
       price: validPrice,
       description: validDescription
@@ -66,7 +69,7 @@ describe('Update ticket routes tests', () => {
   it('returns a 404 if the ticket is not found by id', async () => {
     const invalidId = new mongoose.Types.ObjectId().toString();
     await request(tickApp)
-      .put(`/api/tickets/${invalidId}`)
+      .put(`/api/tickets/update/${invalidId}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send({
         title: validTitle,
@@ -77,7 +80,7 @@ describe('Update ticket routes tests', () => {
 
   it('returns a 401 if the user is not the owner of the ticket', async () => {
     await request(tickApp)
-      .put(`/api/tickets/${savedTicket.id}`)
+      .put(`/api/tickets/update/${savedTicket.id}`)
       .set('Cookie', createSignedInUserCookie('not-the-owner-id'))
       .send({
         title: validTitle,
@@ -89,7 +92,7 @@ describe('Update ticket routes tests', () => {
   it('returns a 400 if the ticket is already attached to an order and cannot be edited/updated', async () => {
     await Ticket.findByIdAndUpdate(savedTicket.id, { orderId: new mongoose.Types.ObjectId().toString() });
     await request(tickApp)
-      .put(`/api/tickets/${savedTicket.id}`)
+      .put(`/api/tickets/update/${savedTicket.id}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send({
         title: validTitle,
@@ -100,7 +103,7 @@ describe('Update ticket routes tests', () => {
 
   it('returns the updated ticket if it is found by id', async () => {
     const response = await request(tickApp)
-      .put(`/api/tickets/${savedTicket.id}`)
+      .put(`/api/tickets/update/${savedTicket.id}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send({
         id: savedTicket.id,
@@ -118,7 +121,7 @@ describe('Update ticket routes tests', () => {
   it('publishes updated ticket event to the event bus', async () => {
     const pubSpy = jest.spyOn(EventPublisher.prototype, 'publishEvent').mockResolvedValue(undefined);
     await request(tickApp)
-      .put(`/api/tickets/${savedTicket.id}`)
+      .put(`/api/tickets/update/${savedTicket.id}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send({
         id: savedTicket.id,
