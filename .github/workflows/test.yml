@@ -14,5 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: make bs && cd auth-srv && npm install && npm run test:ci
+      - run: make bs
+      - run: cd auth-srv && npm install && npm run test:ci
       - run: cd tickets-srv && npm install && npm run test:ci
+      - run: cd orders-srv && npm install && npm run test:ci
+      - run: cd payments-srv && npm install && npm run test:ci
