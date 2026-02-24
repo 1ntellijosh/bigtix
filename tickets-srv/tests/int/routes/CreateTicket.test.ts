@@ -156,7 +156,7 @@ describe('Create ticket routes tests', () => {
     expect(tickets[0].price).toBe(validPrice);
     expect(tickets[0].description).toBe(validDescription);
     expect(tickets[0].serialNumber).toBe(validSerialNumber);
-    expect(tickets[0].event).toBe(new mongoose.Types.ObjectId(validEventId));
+    expect(tickets[0].event).toStrictEqual(new mongoose.Types.ObjectId(validEventId));
   });
 
   it('publishes created ticket event to the event bus', async () => {

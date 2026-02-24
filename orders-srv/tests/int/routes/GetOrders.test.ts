@@ -94,13 +94,13 @@ describe('Get orders routes tests', () => {
   });
 
   it('has a route handler for getting all orders for a user (GET /api/orders)', async () => {
-    await request(ordersApp).get('/api/orders').send().expect(401);
+    await request(ordersApp).get('/api/orders/all').send().expect(401);
   });
 
   it('get all users orders route returns unauthorized error if user is not authenticated', async () => {
     await saveOrders(validOrders);
     await request(ordersApp)
-      .get('/api/orders')
+      .get('/api/orders/all')
       .send()
       .expect(401);
   });
@@ -108,7 +108,7 @@ describe('Get orders routes tests', () => {
   it('get all users orders route returns orders for a user', async () => {
     await saveOrders(validOrders);
     const response = await request(ordersApp)
-      .get(`/api/orders`)
+      .get(`/api/orders/all`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send();
 
@@ -126,13 +126,13 @@ describe('Get orders routes tests', () => {
   });
 
   it('has a route handler for getting a single order for a user (GET /api/orders/:id)', async () => {
-    await request(ordersApp).get('/api/orders/123').send().expect(400);
+    await request(ordersApp).get('/api/orders/get-order/123').send().expect(400);
   });
 
   it('get single user order route returns unauthorized error if user is not authenticated', async () => {
     await saveOrders(validOrders);
     await request(ordersApp)
-      .get(`/api/orders/${validOrderIds[0]}`)
+      .get(`/api/orders/get-order/${validOrderIds[0]}`)
       .send()
       .expect(401);
   });
@@ -140,7 +140,7 @@ describe('Get orders routes tests', () => {
   it('get single user order route returns bad request error if order does not belong to the user', async () => {
     await saveOrders(validOrders);
     await request(ordersApp)
-      .get(`/api/orders/${validOrderIds[0]}`)
+      .get(`/api/orders/get-order/${validOrderIds[0]}`)
       .set('Cookie', createSignedInUserCookie(new mongoose.Types.ObjectId().toString()))
       .send()
       .expect(400);
@@ -149,7 +149,7 @@ describe('Get orders routes tests', () => {
   it('get single user order route returns orders for a user', async () => {
     await saveOrders(validOrders);
     const response = await request(ordersApp)
-      .get(`/api/orders/${validOrderIds[0]}`)
+      .get(`/api/orders/get-order/${validOrderIds[0]}`)
       .set('Cookie', createSignedInUserCookie(validUserId))
       .send();
 
