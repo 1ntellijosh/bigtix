@@ -7,10 +7,10 @@
 name: test-orders
 
 on:
-  pull_request
+  pull_request:
     paths:
-     - orders-srv/**
-     - packages/**
+      - 'orders-srv/**'
+      - 'packages/**'
 
 jobs:
   build:

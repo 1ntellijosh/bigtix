@@ -7,10 +7,10 @@
 name: test-tickets
 
 on:
-  pull_request
+  pull_request:
     paths:
-     - tickets-srv/**
-     - packages/**
+      - 'tickets-srv/**'
+      - 'packages/**'
 
 jobs:
   build:

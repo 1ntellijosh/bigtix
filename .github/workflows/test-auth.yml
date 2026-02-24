@@ -7,10 +7,10 @@
 name: test-auth
 
 on:
-  pull_request
+  pull_request:
     paths:
-     - auth-srv/**
-     - packages/**
+      - 'auth-srv/**'
+      - 'packages/**'
 
 jobs:
   build:

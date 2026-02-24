@@ -7,10 +7,10 @@
 name: test-payments
 
 on:
-  pull_request
+  pull_request:
     paths:
-     - payments-srv/**
-     - packages/**
+      - 'payments-srv/**'
+      - 'packages/**'
 
 jobs:
   build:
