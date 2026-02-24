@@ -8,6 +8,9 @@ name: test-auth
 
 on:
   pull_request
+    paths:
+     - auth-srv/**
+     - packages/**
 
 jobs:
   build:

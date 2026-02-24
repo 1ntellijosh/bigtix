@@ -8,6 +8,9 @@ name: test-payments
 
 on:
   pull_request
+    paths:
+     - payments-srv/**
+     - packages/**
 
 jobs:
   build:

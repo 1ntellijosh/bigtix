@@ -31,7 +31,7 @@ router.get('/all',
 );
 
 /**
- * Retrieves a single order by id
+ * Retrieves a single order by id.
  *
  * @param {string} id  The id of the order to retrieve
  *

@@ -8,6 +8,9 @@ name: test-tickets
 
 on:
   pull_request
+    paths:
+     - tickets-srv/**
+     - packages/**
 
 jobs:
   build:

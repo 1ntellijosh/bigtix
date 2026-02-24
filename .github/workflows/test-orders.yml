@@ -8,6 +8,9 @@ name: test-orders
 
 on:
   pull_request
+    paths:
+     - orders-srv/**
+     - packages/**
 
 jobs:
   build:
