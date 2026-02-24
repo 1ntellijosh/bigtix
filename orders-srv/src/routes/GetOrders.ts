@@ -31,7 +31,7 @@ router.get('/all',
 );
 
 /**
- * Retrieves a single order by id.
+ * Retrieves a single order by id
  *
  * @param {string} id  The id of the order to retrieve
  *
@@ -49,6 +49,8 @@ router.get('/get-order/:id', [
     const userId = req.currentUser!.id;
 
     const order = await orderSvc.getOrderById(id);
+
+    console.log('order', order);
     
     if (order.userId !== userId) throw new BadRequestError('You are not authorized to view this order');
 
