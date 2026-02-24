@@ -4,7 +4,7 @@
 # @since cicd-updates--JP
 ########################################################
 
-name: test
+name: test-auth
 
 on:
   pull_request
