@@ -50,6 +50,17 @@
         dest: "{{ project_root }}/dev-vars.yml"
       when: not dev_vars_stat.stat.exists
 
+    - name: Check if ops/terraform/terraform.tfvars exists
+      ansible.builtin.stat:
+        path: "{{ project_root }}/ops/terraform/terraform.tfvars"
+      register: terraform_tfvars_stat
+
+    - name: Generate terraform.tfvars from template
+      ansible.builtin.template:
+        src: "{{ project_root }}/ops/templates/terraform.tfvars-tpl"
+        dest: "{{ project_root }}/ops/terraform/terraform.tfvars"
+      when: not terraform_tfvars_stat.stat.exists
+
     - name: Add {{ host_domain }} domain to /etc/hosts for local development
       block:
         - name: Ensure Bigtix hosts comment in /etc/hosts

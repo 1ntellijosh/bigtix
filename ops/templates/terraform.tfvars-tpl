@@ -1,0 +1,13 @@
+###
+# Terraform AWS EKS config vars
+#
+# @since aws-deployment--JP
+###
+
+state_bucket_name  = ""
+state_lock_table_name = ""
+aws_region = ""
+cluster_name = ""
+ecr_repo_names = []
+github_org = ""
+github_repo = ""
