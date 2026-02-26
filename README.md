@@ -37,6 +37,7 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 
 ## DevOps:
 - AWS
+- Terraform
 - Docker
 - Kubernetes
 - kind

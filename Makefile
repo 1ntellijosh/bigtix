@@ -258,6 +258,29 @@ build-prod-images:
 	$(MAKE) build-payments-prod-image
 
 ##
+# AWS DEPLOYMENT COMMANDS:
+# --------------------------
+# Prerequisites:
+# ---------------
+# - Terraform        - https://www.terraform.io/downloads
+# - AWS CLI          - https://aws.amazon.com/cli/
+# - AWS credentials  - IAM user/role with permissions for
+#                      - EKS
+#                      - ECR
+#                      - VPC
+#                      - S3/DynamoDB (state)
+#                      - IAM roles
+#                      - CloudWatch Logs
+#                      - SSM (Session Manager for debugging)
+#                      - KMS
+# - terraform.tfvars - In ops/terraform/ (e.g. from make init or ops/templates/terraform.tfvars-tpl)
+#
+deploy-aws:
+	cd ops/terraform && terraform init
+	cd ops/terraform && terraform plan
+	cd ops/terraform && terraform apply
+
+##
 # TEST COMMANDS:
 # --------------------------
 

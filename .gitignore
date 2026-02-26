@@ -16,3 +16,12 @@ dist
 **/dist
 *.tsbuildinfo
 **/*.tsbuildinfo
+
+# Terraform
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+
+# Personal in-development docs/notes that don't belong in the repo
+ops/README.md
