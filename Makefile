@@ -51,7 +51,6 @@ init:
 # - Docker         - https://docs.docker.com/get-started/get-docker/#supported-platforms
 # - kubectl  	   - https://kubernetes.io/docs/tasks/tools/
 # - Kind     	   - https://kind.sigs.k8s.io/docs/user/quick-start/#installation
-# - Helm     	   - https://helm.sh/docs/intro/install/
 # - Skaffold 	   - https://skaffold.dev/docs/install/#standalone-binary
 # - Stripe CLI     - https://stripe.com/docs/stripe-cli
 #
@@ -109,7 +108,7 @@ stripe-dev:
 # Load Docker images into Kind cluster
 kload-imgs:
 	kind load docker-image 1ntellijosh/bigtix-auth-srv:latest --name bigtix-cluster
-	kind load docker-image 1ntellijosh/bigtix-client-app:latest --name bigtix-cluster
+	kind load docker-image 1ntellijosh/bigtix-client:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-tickets-srv:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-orders-srv:latest --name bigtix-cluster
 	kind load docker-image 1ntellijosh/bigtix-payments-srv:latest --name bigtix-cluster
@@ -136,19 +135,19 @@ wait-ingress:
 	@sleep 10
 
 apply-deployments:
-	kubectl apply -f ./ops/k8s/deployments/auth-depl.yml
-	kubectl apply -f ./ops/k8s/deployments/tickets-depl.yml
-	kubectl apply -f ./ops/k8s/deployments/orders-depl.yml
-	kubectl apply -f ./ops/k8s/deployments/client-depl.yml
-	kubectl apply -f ./ops/k8s/deployments/payments-depl.yml
+	kubectl apply -f ./ops/k8s/base/deployments/auth-depl.yml
+	kubectl apply -f ./ops/k8s/base/deployments/tickets-depl.yml
+	kubectl apply -f ./ops/k8s/base/deployments/orders-depl.yml
+	kubectl apply -f ./ops/k8s/base/deployments/client-depl.yml
+	kubectl apply -f ./ops/k8s/base/deployments/payments-depl.yml
 
 # Retry apply (admission webhook can be slow to accept connections after controller is ready)
 apply-ingress:
 	@for i in 1 2 3 4 5 6 7 8; do \
 		echo "Applying ingress (attempt $$i)..."; \
-		kubectl apply -f ./ops/k8s/ingresses/ingress-srv.yml && exit 0; \
+		kubectl apply -f ./ops/k8s/overlays/dev/ingress-srv.yml && exit 0; \
 		sleep 8; \
-	done; exit 1
+		done; exit 1
 
 # Create messaging namespace (for RabbitMQ etc.) if missing; idempotent
 add-messaging-namespace:
@@ -195,6 +194,23 @@ cluster-status:
 	kubectl cluster-info --context kind-bigtix-cluster
 	@echo "-------------------------------------------------------------------------"
 
+# Context commands (for managing/switching between local kind cluster and AWS EKS cluster)
+list-ctxs:
+	kubectl config get-contexts
+
+current-ctx:
+	kubectl config current-context
+
+# Switch kubectl context. Usage: make use-context CONTEXT=kind-bigtix-cluster (or CONTEXT=arn:aws:eks:...)
+use-ctx:
+	@if [ -z "$${CTX}" ]; then \
+		echo "Usage: make use-ctx CTX=<context-name>"; \
+		echo ""; \
+		echo "Available contexts:"; \
+		kubectl config get-contexts -o name; \
+		exit 1; \
+	fi
+	kubectl config use-context $${CTX}
 
 ##
 # BUILD COMMANDS:
@@ -225,10 +241,10 @@ build-payments-prod-image:
 	docker build -f ./payments-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-payments-srv:latest .
 
 build-client-dev-image:
-	docker build -f ./client/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-client-app:latest .
+	docker build -f ./client/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-client:latest .
 
 build-client-prod-image:
-	docker build -f ./client/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-client-app:latest .
+	docker build -f ./client/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-client:latest .
 
 build-dev-images:
 	$(MAKE) build-auth-dev-image
@@ -263,6 +279,7 @@ build-prod-images:
 # Prerequisites:
 # ---------------
 # - Terraform        - https://www.terraform.io/downloads
+# - kubectl          - https://kubernetes.io/docs/tasks/tools/
 # - AWS CLI          - https://aws.amazon.com/cli/
 # - AWS credentials  - IAM user/role with permissions for
 #                      - EKS

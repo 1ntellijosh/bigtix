@@ -26,15 +26,21 @@ type ProvidersProps = {
  */
 export default function Providers({ initialCurrentUser, children }: ProvidersProps) {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     let storedTheme = LocalStore.getItem(LS_KEYS.THEME_MODE) as ThemeMode | null;
     if (!storedTheme) {
       storedTheme = 'light';
       LocalStore.setItem(LS_KEYS.THEME_MODE, storedTheme);
     }
     setCurrentTheme(storedTheme);
-  }, []);
+  }, [mounted]);
 
   const toggleTheme = () => {
     const next: ThemeMode = currentTheme === 'light' ? 'dark' : 'light';
@@ -42,7 +48,9 @@ export default function Providers({ initialCurrentUser, children }: ProvidersPro
     LocalStore.setItem(LS_KEYS.THEME_MODE, next);
   };
 
-  const theme = getTheme(currentTheme);
+  // Use default 'light' until mounted so server and first client paint match (avoids hydration mismatch).
+  const effectiveTheme = mounted ? currentTheme : 'light';
+  const theme = getTheme(effectiveTheme);
   const footerHeight = '50px';
 
   return (
@@ -71,13 +79,13 @@ export default function Providers({ initialCurrentUser, children }: ProvidersPro
               <FormControlLabel
                 control={
                   <Switch
-                    checked={currentTheme === 'dark'}
+                    checked={effectiveTheme === 'dark'}
                     onChange={toggleTheme}
                     color="default"
                     aria-label="toggle dark mode"
                   />
                 }
-                label={currentTheme === 'dark' ? 'Dark' : 'Light'}
+                label={effectiveTheme === 'dark' ? 'Dark' : 'Light'}
                 sx={{ position: 'fixed', bottom: 8, right: 0, zIndex: 1, mr: '8px' }}
               />
             </Box>

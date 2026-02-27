@@ -16,3 +16,6 @@ STRIPE_SECRET_KEY:
 STRIPE_PUBLISHABLE_KEY: 
 
 STRIPE_WEBHOOK_SECRET:
+
+# Hard coded for local with ingress-nginx controller service (http://<service-name>.<namespace>.svc.cluster.local)
+SERVER_API_BASE_URL: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local

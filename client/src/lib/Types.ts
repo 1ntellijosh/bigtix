@@ -14,6 +14,28 @@ export interface SavedTicketDoc {
   version: number;
 }
 
+export interface TicketWithEvent extends SavedTicketDoc {
+  event: SavedEventDoc;
+} 
+
+export interface SavedEventDoc {
+  id: string;
+  tmEventId: string;
+  title: string;
+  date: Date;
+  location: string;
+  attractions: string;
+  image: string | null;
+}
+
+export interface SavedOrderDoc {
+  id: string;
+  userId: string;
+  expiresAt: Date | null;
+  status: OrderStatusEnum;
+  version: number;
+}
+
 export type ListingType = {
   id: string;
   title: string;

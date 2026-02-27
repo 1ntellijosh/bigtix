@@ -59,10 +59,11 @@ export default function CheckoutPageContent({
   };
 
   // Style the Stripe elements based on the current dark/light theme
+  const stripeTheme = (theme.palette.mode === 'dark' ? 'night' : 'flat') as 'night' | 'flat' | 'stripe';
   const themedStripeElementsOptions = stripeElementsOptions ? {
     ...stripeElementsOptions,
     appearance: {
-      theme: theme.palette.mode === 'dark' ? 'night' : 'flat',
+      theme: stripeTheme,
     },
   } : null;
 
@@ -96,11 +97,11 @@ export default function CheckoutPageContent({
                   Payment lock expires at {formatReadableTime(order.expiresAt)}
                 </Typography>
               </Box>
-              {stripePromise && stripeElementsOptions && (
+              {stripePromise && themedStripeElementsOptions ? (
                 <Elements stripe={stripePromise} options={themedStripeElementsOptions}>
                   <CheckoutForm orderId={order.id} amount={stripeElementsOptions?.amount ?? 0} onSuccess={onSuccess} />
                 </Elements>
-              )}
+              ) : null}
             </Box>
             {/* Right column: order summary — top lines up with bottom of Checkout h2 */}
             <Box

@@ -11,7 +11,6 @@ import type { OrderWithTicketsType } from '../../../../lib/Types';
 
 export default async function CheckoutPage({ params }: { params: { orderId: string } }) {
   const { orderId } = await params;
-  console.log('orderId', orderId);
 
   let ctxHeaders;
   let cookie;

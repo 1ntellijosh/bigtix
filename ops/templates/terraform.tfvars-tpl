@@ -11,3 +11,4 @@ cluster_name = ""
 ecr_repo_names = []
 github_org = ""
 github_repo = ""
+domain_name = ""

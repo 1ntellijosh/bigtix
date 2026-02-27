@@ -1,0 +1,86 @@
+###
+# Deploy EKS cluster (and nodegroup) to AWS
+#
+# @since github-deploy--JP
+###
+
+name: Deploy EKS Cluster
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+
+jobs:
+  build-and-push-to-ecr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - run: aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+      - name: Build shared packages
+        run: |
+          npm install
+          cd packages/common && npm run build
+          cd ../..
+          cd packages/middleware && npm run build
+
+      - name: Build and push images
+        run: |
+          for svc in auth-srv tickets-srv orders-srv payments-srv client; do
+            docker build -f $svc/deploy/docker/prod.Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/$svc:${{ github.sha }} .
+            docker push ${{ env.ECR_REGISTRY }}/bigtix/$svc:${{ github.sha }}
+          done
+
+      - name: Build and push custom RabbitMQ image
+        run: |
+          docker build -f ops/docker/rabbitmq/Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/rabbitmq:${{ github.sha }} .
+          docker push ${{ env.ECR_REGISTRY }}/bigtix/rabbitmq:${{ github.sha }}
+
+  deploy-to-eks:
+    needs: build-and-push-to-ecr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Ensure messaging namespace exists
+        run: kubectl create namespace messaging --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Sync secrets from AWS Secrets Manager to Kubernetes Secrets
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+        run: |
+          chmod +x ops/scripts/sync-secrets-from-aws.sh
+          ./ops/scripts/sync-secrets-from-aws.sh
+
+      - name: Deploy to EKS (Kustomize)
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          envsubst < ingress-alb.yml > ingress-alb.yml.tmp && mv ingress-alb.yml.tmp ingress-alb.yml
+          kubectl apply -k . --server-side --force-conflicts

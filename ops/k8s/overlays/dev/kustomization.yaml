@@ -1,0 +1,12 @@
+# ------------------------------------------------------------------------------------------------
+# Dev/local overlay (e.g. kind with ingress-nginx). Use overlays/prod for EKS (ALB).
+# @since github-deploy--JP
+# ------------------------------------------------------------------------------------------------
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - storageclass-local.yml
+  - ingress-srv.yml

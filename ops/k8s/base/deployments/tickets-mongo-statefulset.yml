@@ -1,13 +1,15 @@
 # ------------------------------------------------------------------------------------------------
-# tickets-mongo-srv mongo-db k8s deployment file for BigTix platform microservices E-Commerce project
+# tickets-mongo-srv mongo-db k8s StatefulSet file for BigTix platform microservices E-Commerce project
 # @since tickets-srv--JP
 # ------------------------------------------------------------------------------------------------
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: tickets-mongo-dpl
+  namespace: default
 spec:
+  serviceName: tickets-mongo-headless
   replicas: 1
   selector:
     matchLabels:
@@ -20,9 +22,33 @@ spec:
       containers:
         - name: tickets-mongo
           image: mongo
-
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        storageClassName: ebs-csi-gp2
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi
 ---
-
+apiVersion: v1
+kind: Service
+metadata:
+  name: tickets-mongo-headless
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    app: tickets-mongo
+  ports:
+    - name: db
+      port: 27017
+      targetPort: 27017
+---
 apiVersion: v1
 kind: Service
 metadata:

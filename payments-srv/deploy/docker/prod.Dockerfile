@@ -6,6 +6,7 @@
 
     FROM node:alpine
 
+    ENV NODE_ENV=production
     WORKDIR /app
     
     # Copy workspace packages (built dist + package.json)

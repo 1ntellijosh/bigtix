@@ -20,7 +20,7 @@ import Divider from '@mui/material/Divider';
 import Container from '@mui/material/Container';
 import Collapse from '@mui/material/Collapse';
 import { STYLE_CONSTS } from '../../../../../styles/consts';
-import type { SavedTicketDoc } from '../../../../../../../tickets-srv/src/models/Ticket';
+import type { SavedTicketDoc } from '../../../../../lib/Types';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import IconButton from '@mui/material/IconButton';
 import MobileEventBanner from '../../../../../components/MobileEventBanner';
@@ -188,7 +188,7 @@ export default function EventPageContent({ event, availableTickets }: EventPageC
 
     filterExternalLinksInAttractions(event as unknown as EventDetails);
 
-    setDetailedEventInfoIfAvailable(event);
+    setDetailedEventInfoIfAvailable(event as unknown as EventDetails);
 
     setLoaded(true);
 
@@ -242,8 +242,8 @@ export default function EventPageContent({ event, availableTickets }: EventPageC
             width: '100%',
             // Set a max-width that increases at specific breakpoints
             maxWidth: {
-              xs: '450px', // max-width on extra-small screens
-              sm: '450px', // max-width on small screens
+              xs: '375px', // max-width on extra-small screens
+              sm: '500px', // max-width on small screens
               md: '900px', // max-width on medium screens
               lg: '1200px', // max-width on large screens
               xl: '1200px', // max-width on extra-large screens

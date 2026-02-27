@@ -60,8 +60,8 @@ export default function MyOrdersPageContent({ orders }: MyOrdersPageContentProps
         my: 2,
         width: '100%',
         maxWidth: {
-          xs: '450px',
-          sm: '450px',
+          xs: '375px',
+          sm: '500px',
           md: '900px',
           lg: '1200px',
         },

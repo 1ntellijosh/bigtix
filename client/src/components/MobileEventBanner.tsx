@@ -56,7 +56,7 @@ export default function MobileEventBanner({ event }: { event: EventDetails }) {
             borderRadius: '8px 0 0 8px',
           }}
           alt={`${event.name} image`}
-          src={event.image.url}
+          src={event.image?.url || ''}
         />
         <Box ml={1.5} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <Typography variant="h6" sx={{ lineHeight: '20px', fontSize: '1.2rem', fontFamily: 'oswald', fontWeight: 600 }}>{event.name}</Typography>

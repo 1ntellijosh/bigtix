@@ -1,29 +1,30 @@
 # ------------------------------------------------------------------------------------------------
-# orders-srv k8s deployment file for BigTix platform microservices E-Commerce project
-# @since orders-srv-start--JP
+# payments-srv k8s deployment file for BigTix platform microservices E-Commerce project
+# @since payments-srv-start--JP
 # ------------------------------------------------------------------------------------------------
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orders-dpl
+  name: payments-dpl
+  namespace: default
 spec:
   replicas: 1 # for now
   selector:
     matchLabels:
-      app: orders
+      app: payments
   template:
     metadata:
       labels:
-        app: orders
+        app: payments
     spec:
       containers:
-        - name: orders
-          image: 1ntellijosh/bigtix-orders-srv
+        - name: payments
+          image: 1ntellijosh/bigtix-payments-srv
           imagePullPolicy: IfNotPresent
           env:
             - name: MONGO_URI
-              value: mongodb://orders-mongo-srv:27017/orders
+              value: mongodb://payments-mongo-srv:27017/payments
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:
@@ -38,18 +39,28 @@ spec:
                 secretKeyRef:
                   name: rabbitmq-url
                   key: RABBITMQ_URL
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-secret-key
+                  key: STRIPE_SECRET_KEY
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-webhook-key
+                  key: STRIPE_WEBHOOK_SECRET
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: orders-srv
+  name: payments-srv
 spec:
   selector:
-    app: orders
+    app: payments
   ports:
-    - name: orders
+    - name: payments
       protocol: TCP
       port: 3000
       targetPort: 3000

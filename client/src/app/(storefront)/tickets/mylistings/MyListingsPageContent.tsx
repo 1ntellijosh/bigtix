@@ -129,8 +129,8 @@ export default function MyListingsPageContent({ listings }: MyListingsPageConten
         my: 2,
         width: '100%',
         maxWidth: {
-          xs: '450px',
-          sm: '450px',
+          xs: '375px',
+          sm: '500px',
           md: '900px',
           lg: '1200px',
         },

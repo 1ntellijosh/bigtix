@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------------------------
-# k8s ingress file for ingress-nginx controller for BigTix platform microservices E-Commerce project
-# @since auth-micro-start--JP
+# Nginx ingress for local/dev (e.g. kind). For prod EKS use overlays/prod (ALB).
+# @since github-deploy--JP
 # ------------------------------------------------------------------------------------------------
 
 apiVersion: networking.k8s.io/v1
