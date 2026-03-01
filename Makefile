@@ -149,6 +149,24 @@ apply-ingress:
 		sleep 8; \
 		done; exit 1
 
+# Context commands (for managing/switching between local kind cluster and AWS EKS cluster)
+list-ctxs:
+	kubectl config get-contexts
+
+current-ctx:
+	kubectl config current-context
+
+# Switch kubectl context. Usage: make use-context CONTEXT=kind-bigtix-cluster (or CONTEXT=arn:aws:eks:...)
+use-ctx:
+	@if [ -z "$${CTX}" ]; then \
+		echo "Usage: make use-ctx CTX=<context-name>"; \
+		echo ""; \
+		echo "Available contexts:"; \
+		kubectl config get-contexts -o name; \
+		exit 1; \
+	fi
+	kubectl config use-context $${CTX}
+
 # Create messaging namespace (for RabbitMQ etc.) if missing; idempotent
 add-messaging-namespace:
 	kubectl create namespace messaging --dry-run=client -o yaml | kubectl apply -f -
@@ -193,24 +211,6 @@ cluster-status:
 	@echo ""
 	kubectl cluster-info --context kind-bigtix-cluster
 	@echo "-------------------------------------------------------------------------"
-
-# Context commands (for managing/switching between local kind cluster and AWS EKS cluster)
-list-ctxs:
-	kubectl config get-contexts
-
-current-ctx:
-	kubectl config current-context
-
-# Switch kubectl context. Usage: make use-context CONTEXT=kind-bigtix-cluster (or CONTEXT=arn:aws:eks:...)
-use-ctx:
-	@if [ -z "$${CTX}" ]; then \
-		echo "Usage: make use-ctx CTX=<context-name>"; \
-		echo ""; \
-		echo "Available contexts:"; \
-		kubectl config get-contexts -o name; \
-		exit 1; \
-	fi
-	kubectl config use-context $${CTX}
 
 ##
 # BUILD COMMANDS:

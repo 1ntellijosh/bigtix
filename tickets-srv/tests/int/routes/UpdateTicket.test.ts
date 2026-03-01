@@ -45,11 +45,6 @@ describe('Update ticket routes tests', () => {
     savedTicket.id = savedTicket._id.toString();
   });
 
-  afterEach(async () => {
-    await Event.deleteMany({});
-    await Ticket.deleteMany({});
-  });
-
   it('returns a 400 if the ticket id is not a valid MongoDB ID', async () => {
     await request(tickApp).put('/api/tickets/update/not-a-valid-id').send({
       title: validTitle,

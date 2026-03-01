@@ -14,3 +14,4 @@ RUN set -eux; \
   rabbitmq-plugins enable rabbitmq_delayed_message_exchange; \
   apt-get purge -y --auto-remove curl ca-certificates; \
   rm -rf /var/lib/apt/lists/*
+

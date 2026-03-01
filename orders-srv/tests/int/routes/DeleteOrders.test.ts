@@ -65,11 +65,6 @@ const addOrderIdToTickets = (orderId: string, tickets: NewTicketAttrs[]): NewTic
 };
 
 describe('Delete (cancel) order routes tests', () => {
-  afterEach(async () => {
-    await Order.deleteMany({});
-    await Ticket.deleteMany({});
-  });
-
   it('has a route handler for /api/orders/delete/:id for delete requests', async () => {
     await request(ordersApp).delete('/api/orders/delete/123').expect(400);
   });
