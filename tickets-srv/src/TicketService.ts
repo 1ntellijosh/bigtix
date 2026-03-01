@@ -162,6 +162,7 @@ export class TicketService {
   async getAllAvailableTickets(): Promise<SavedTicketDoc[]> {
     const tickets = await this.tickRepo.findAll();
     
+    // Find tickets that are not attached/reserved for an order already
     return tickets?.filter((t) => t.orderId === null || t.orderId === undefined) || [];
   }
 

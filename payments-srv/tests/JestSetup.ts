@@ -65,11 +65,13 @@ jest.mock('@bigtix/middleware', () => {
 
 const SETUP_TIMEOUT_MS = 30_000; // MongoMemoryServer.create() can be slow in CI (download/start)
 
+// Create DB once; clear before each test (no per-test server creation). Avoid redundant afterEach in test files.
+jest.setTimeout(15_000); // Hooks and tests in CI may be slow; 5s default can cause intermittent failures.
+
 beforeAll(async () => {
   process.env.JWT_KEY = 'test-jwt-key';
   mongoMemDbServer = await MongoMemoryServer.create();
   const mongoUri = mongoMemDbServer.getUri();
-
   await mongoose.connect(mongoUri);
 }, SETUP_TIMEOUT_MS);
 

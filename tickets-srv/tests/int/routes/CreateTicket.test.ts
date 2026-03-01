@@ -32,10 +32,6 @@ describe('Create ticket routes tests', () => {
     validEventId = event.id;
   });
 
-  afterEach(async () => {
-    await Event.deleteMany({});
-  });
-
   it('has a route handler for /api/tickets/create for post requests', async () => {
     const response = await request(tickApp).post('/api/tickets/create').send({});
 

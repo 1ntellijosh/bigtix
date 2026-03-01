@@ -63,11 +63,6 @@ const addOrderIdToTickets = (orderId: string, tickets: NewTicketAttrs[]): NewTic
 };
 
 describe('Create order routes tests', () => {
-  afterEach(async () => {
-    await Order.deleteMany({});
-    await Ticket.deleteMany({});
-  });
-
   it('has a route handler for /api/orders/create for post requests', async () => {
     await request(ordersApp).post('/api/orders/create').send({}).expect(400);
   });

@@ -57,11 +57,6 @@ const savePayment = async (payment: NewPaymentAttrs): Promise<string> => {
 };
 
 describe('Create payment routes tests', () => {
-  afterEach(async () => {
-    await Order.deleteMany({});
-    await Payment.deleteMany({});
-  });
-
   it('has a route handler for /api/orders/create for post requests', async () => {
     await request(paymentsApp).post('/api/payments/new').send({}).expect(400);
   });
