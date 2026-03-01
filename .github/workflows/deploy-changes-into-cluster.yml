@@ -83,16 +83,14 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(auth-srv/|packages/)'
-          
+          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(auth-srv/|packages/)' || true)
           if [ -z "$changes" ]; then
             echo "No changes detected in auth-srv or packages"
-            exit 0
+            exit 1
           fi
-          
           echo "Changes detected in auth-srv or packages"
           echo "$changes"
-          exit 1
+          exit 0
       
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -137,16 +135,14 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(tickets-srv/|packages/)'
-          
+          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(tickets-srv/|packages/)' || true)
           if [ -z "$changes" ]; then
             echo "No changes detected in tickets-srv or packages"
-            exit 0
+            exit 1
           fi
-          
           echo "Changes detected in tickets-srv or packages"
           echo "$changes"
-          exit 1
+          exit 0
       
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -245,16 +241,14 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(payments-srv/|packages/)'
-          
+          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(payments-srv/|packages/)' || true)
           if [ -z "$changes" ]; then
             echo "No changes detected in payments-srv or packages"
-            exit 0
+            exit 1
           fi
-          
           echo "Changes detected in payments-srv or packages"
           echo "$changes"
-          exit 1
+          exit 0
       
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -353,16 +347,14 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/docker/rabbitmq/|ops/k8s/.*rabbitmq|ops/k8s/base/namespace-messaging\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
-          
+          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/docker/rabbitmq/|ops/k8s/.*rabbitmq|ops/k8s/base/namespace-messaging\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)' || true)
           if [ -z "$changes" ]; then
             echo "No changes detected in RabbitMQ, messaging namespace, or storageclass"
-            exit 0
+            exit 1
           fi
-          
           echo "Changes detected in RabbitMQ, messaging namespace, or storageclass"
           echo "$changes"
-          exit 1
+          exit 0
       
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -446,16 +438,14 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/k8s/overlays/prod/ingress-alb\.yml)'
-          
+          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/k8s/overlays/prod/ingress-alb\.yml)' || true)
           if [ -z "$changes" ]; then
             echo "No changes detected in ingress"
-            exit 0
+            exit 1
           fi
-          
           echo "Changes detected in ingress"
           echo "$changes"
-          exit 1
+          exit 0
       
       - uses: aws-actions/configure-aws-credentials@v4
         with:
