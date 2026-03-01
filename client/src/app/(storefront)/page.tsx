@@ -9,10 +9,10 @@ import Typography from '@mui/material/Typography';
 import { API } from '../../lib/api/dicts/API';
 import { headers } from 'next/headers';
 import HomePageContent from './HomePageContent';
-import type { SavedTicketDoc } from '../../../../tickets-srv/src/models/Ticket';
+import type { TicketWithEvent } from '../../lib/Types';
 
 export default async function Home() {
-  let allTickets: SavedTicketDoc[] | null = null;
+  let allTickets: TicketWithEvent[] | null = null;
   try {
     const ctxHeaders = await headers();
     const cookie = ctxHeaders.get('cookie') ?? '';
@@ -21,7 +21,7 @@ export default async function Home() {
     const resp = await API.tick!.getAllTickets!({
       headers: { Cookie: cookie, Host: host },
     });
-    allTickets = (resp as unknown as SavedTicketDoc[]) ?? null;
+    allTickets = (resp as unknown as TicketWithEvent[]) ?? null;
   } catch (error) {
     allTickets = null;
   }
@@ -48,13 +48,13 @@ export default async function Home() {
           width: '100%',
           // Set a max-width that increases at specific breakpoints
           maxWidth: {
-            xs: '450px', // max-width on extra-small screens
-            sm: '450px', // max-width on small screens
+            xs: '375px', // max-width on extra-small screens
+            sm: '500px', // max-width on small screens
             md: '900px', // max-width on medium screens
             lg: '1200px', // max-width on large screens
           },
         }}>
-          <HomePageContent allTickets={allTickets} />
+          <HomePageContent allTickets={allTickets as TicketWithEvent[]} />
         </Box>
       </Box>
     </Container>

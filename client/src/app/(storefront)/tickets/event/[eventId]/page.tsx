@@ -7,11 +7,11 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import EventPageContent from './EventPageContent';
-import type { SavedTicketDoc } from '../../../../../../../tickets-srv/src/models/Ticket';
+import type { SavedTicketDoc } from '../../../../../lib/Types';
 import { headers } from 'next/headers';
 import { API } from '../../../../../lib/api/dicts/API';
 import { getDateSegments } from '../../../../../lib/DateMethods';
-import type { EventDetails } from '../../../../../../../packages/common/src/contracts';
+import type { EventDetails } from '@bigtix/common';
 
 export default async function EventDetailsPage({ params }: { params: { eventId: string } }) {
   const { eventId } = await params;

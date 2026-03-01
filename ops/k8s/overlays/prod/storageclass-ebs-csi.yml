@@ -1,0 +1,18 @@
+# ------------------------------------------------------------------------------------------------
+# StorageClass for EKS using the AWS EBS CSI driver. Requires the EBS CSI addon to be installed (ebs-csi-irsa terraform
+# module in ops/terraform).
+#
+# @since github-deploy--JP
+# ------------------------------------------------------------------------------------------------
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-csi-gp2
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp2
+  fsType: ext4
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete

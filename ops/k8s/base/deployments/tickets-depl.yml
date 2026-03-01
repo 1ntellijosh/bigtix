@@ -7,6 +7,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tickets-dpl
+  namespace: default
 spec:
   replicas: 1 # for now
   selector:

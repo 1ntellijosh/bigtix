@@ -1,8 +1,20 @@
 # BigTix
 
+Visit live site **[here](https://bigtixstore.com)**
+
 BigTix is an e-commerce application for users to buy and sell tickets to events. A large motivation behind my making this application was so that I could learn microservices architecture. I also wanted to make my own app that simulates real-world, big-traffic e-commerce sites, so it will be deployed to the cloud on an AWS EKS
 
-## App Details/Technologies:
+**Contents:**
+ - [App Details/Technologies](#app-details-technologies)
+ - [Microservices Details](#microservices)
+ - [FAQs/Instructions](#faqs-instructions)
+ - [Plans and Notes](#plans-notes)
+
+---
+
+<a id="app-details-technologies"></a>
+# App Details/Technologies
+
 - Made in microservices architecture
 - Next.js
     - For server-side rendering
@@ -11,8 +23,9 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - Kubernetes app, will be deployed to AWS EKS cluster
   - To simulate real-world, big-traffic e-commerce sites on the cloud
   - kind instead of minikube on local dev
-    - Lighter weigth
+    - Lighter weight
     - Simulates production cluster applications better
+  - Terraform for AWS infrastructure
 
 ## Languages:
 - Typescript
@@ -29,26 +42,26 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 ## Database:
 - Mongodb
 
-## 3rd Party APIs:
-- Ticketmaster Discovery
-    - So ticket sellers can attached tickets to the event, and so buyers can search for tickets by event, and view event details for tickets
-- Stripe
-    - Used for payments. This is NOT a real app, so obviously payments will not charge. But API is fully implemented to do so if it was real
-
 ## DevOps:
 - AWS
 - Terraform
 - Docker
 - Kubernetes
 - kind
-- Helm
 - Skaffold
 - CI/CD (Github Actions)
 - Ansible
 
+## 3rd Party APIs:
+- Ticketmaster Discovery
+    - So ticket sellers can attached tickets to the event, and so buyers can search for tickets by event, and view event details for tickets
+- Stripe
+    - Used for payments. This is NOT a real app, so obviously payments will not charge. But API is fully implemented to do so if it was real
+
 ---
 
-# Microservices
+<a id="microservices"></a>
+# Microservices Details
 
 ## Auth
 Used for authorizing users
@@ -76,8 +89,12 @@ Used for listing, creating, and managing event tickets.
 | `/api/tickets/user/:userId` | GET | - | Retrieve all tickets from a specific user ID |
 | `/api/events/search` | GET | - | Search for events to the the ticket a user's ticket is for (calls TicketMaster API) |
 | `/api/events/:eventId` | GET | - | Get details about a single event (calls TicketMaster API) |
-| `/api/tickets/create` | POST | `{ title: string, price: number, userId: string, description: string, serialNumber: string, eventId: string }` | Create ticket(s) (auth required) |
-| `/api/tickets` | PUT | `{ id: string, title: string, price: number, description: string }` | Update a ticket |
+| `/api/tickets/create` | POST | `{ title: string, price: number, userId: string, description: string, serialNumber: string, eventId: string }` | Create single ticket (auth required) |
+| `/api/tickets/createmulti` | POST | `{ title: string, price: number, userId: string, description: string, serialNumbers: string[], eventId: string }` | Create multiple tickets (auth required) |
+| `/api/tickets/update/:id` | PUT | `{ id: string, title: string, price: number, description: string }` | Update a ticket |
+| `/api/events/create` | POST | - | Create an event (from Ticketmater API) that ticket(s) belong to |
+| `/api/events/search` | GET | - | Search for events (goes to TicketMaster API) |
+| `/api/events/details/:tmEventId` | GET | - | Gets event details (goes to TicketMaster API) |
 
 ## Orders
 Used for creating and managing ticket orders.
@@ -86,11 +103,11 @@ Used for creating and managing ticket orders.
 
 | Route | Method | Body | Purpose |
 |-------|--------|------|---------|
-| `/api/orders` | GET | - | Retrieve all active orders for the given user making the request |
+| `/api/orders/all` | GET | - | Retrieve all active orders for the given user making the request |
 | `/api/orders/:id` | GET | - | Get details about a specific order |
-| `/api/orders` | POST | `{ tickets: [{ ticketId: string, price: number }] }` | Create an order to purchase the specified tickets |
-| `/api/orders/:id` | PUT | `{ status: string }` | Update an order status |
-| `/api/orders/:id` | DELETE | - | Cancel the order |
+| `/api/orders/create` | POST | `{ tickets: [{ ticketId: string, price: number }] }` | Create an order to purchase the specified tickets |
+| `/api/orders/update/:id` | PUT | `{ status: string }` | Update an order status |
+| `/api/orders/delete/:id` | DELETE | - | Cancel the order |
 
 ## Payments
 Used for paying for tickets (using Stripe API)
@@ -120,7 +137,6 @@ Used for paying for tickets (using Stripe API)
     | Docker | https://docs.docker.com/get-started/get-docker/#supported-platforms |
     | kubectl | https://kubernetes.io/docs/tasks/tools/ |
     | Kind | https://kind.sigs.k8s.io/docs/user/quick-start/#installation |
-    | Helm | https://helm.sh/docs/intro/install/ |
     | Skaffold | https://skaffold.dev/docs/install/#standalone-binary |
 
     You will also need a Stripe account so you can access the developer dashboard.
@@ -174,37 +190,21 @@ Used for paying for tickets (using Stripe API)
 
 ---
 
-# PLANS/NOTES:
+<a id="plans-notes"></a>
+# Plans and Notes:
 
 ## How images will be made/used/deployed on prod and local:
 
 ### LOCAL:
 Shared packages (`packages/common`, `packages/middleware`) are built with `make build-shared-packages`; then service images are built with `make build-dev-images`. All microservices' Dockerfiles copy these packages into their respective image (repo root is build context), so Skaffold watches the `./packages` folder and the microservice folder for each microservice image sync. After editing a shared package source, running `make build-shared-packages` causes Skaffold pick up the new `./packages/**/dist/` folder, and rebuild the images.
-Images are loaded into Kind with `make kload-imgs` (Skaffold uses local images, no push). The `image: 1ntellijosh/bigtix-...` in `ops/k8s/deployments/*.yml` stays the same; the implicit `:latest` tag is used.
+Images are loaded into Kind with `make kload-imgs` (Skaffold uses local images, no push). The `image: 1ntellijosh/bigtix-...` in `ops/k8s/base/deployments/*.yml` stays the same; the implicit `:latest` tag is used.
 
 ### PRODUCTION:
-The service images are built in a Github Actions build workflow, triggered automatically from making a release. The built containers are pushed to either dockerhub or github image repository (doesn't matter right now). Each service's image version/tag will be extracted from the `service-name/deploy/version.json` file in their respective directory using the Github Action's build yaml script.
+The service images are built in a Github Actions build workflow, triggered automatically when you create a release. The built containers are pushed to **AWS ECR** (the registry and all AWS infrastructure is created via Terraform in `ops/terraform`).
 
-Deployments of the built images are triggered in Github Actions by selecting a specific published release. The built service images are deployed to the target server/AWS EKS instance, by using an Ansible script. This script (in relation to images) will:
+Deployments of the built images are triggered in Github Actions by publishing a release. The built service images are deployed to the target server/AWS EKS instance, by using an Ansible script. This script (in relation to images) will:
   1. Extract the version for each service in each service's respective `service-name/version.json` file.
   2. Run "kubectl set image..." (or "envsubst/sed") to update the new image version for each service
   3. Kubernetes sees the Deployment spec changed and starts a rollout.
   4. The kubelet on each node pulls the image from the registry when it needs to start a new pod (if that tag isn’t already on the node).
   5. Old pods are replaced by new pods running the new image, according to the Deployment’s rollout strategy (e.g. rolling update).
-
-## Production TODOS:
-
-**HTTPS**: Remember setups for production:
-
-1. **Environment:** Set `NODE_ENV=production` for the all microservice environments (and client if applicable)
-2. **TLS at the edge:** Terminate HTTPS at ingress or load balancer (e.g. AWS ALB with ACM, or Kubernetes Ingress with a TLS block and a cert secret).
-   - Traffic to pods can stay HTTP inside the cluster since the proxy handles TLS.
-3. **Client SERVER API URL:** **!!! This probaby won't need to be done, but noted here to check.** Build the client-dpl deployment image with updated `SERVER_API_BASE_URL` var for server side API calls if it's different from `http://ingress-nginx-controller.ingress-nginx.svc.cluster.local` (e.g. `SERVER_API_BASE_URL=http://new-ingress-nginx-service-name.new-ingress-nginx-namespace.svc.cluster.local`).
-4. **Subscribe deployed site to Stripe webhooks via Stripe Dashboard:**
-    1. Open Workbench: In Stripe Dashboard, navigate to the Developers section and select the Webhooks tab.
-    2. Add Endpoint: Click Add destination (or Create an event destination).
-    3. Configure URL: Enter server's endpoint URL (e.g., https://bigtixdomain.com).
-    4. Select Events: Click Select events and search for the three events listed above. Check each one and click Add events.
-    5. Save & Secret: Click Create destination. Once created, reveal the Signing secret (starts with whsec_) and add it to server's environment variables as STRIPE_WEBHOOK_SECRET. 
-
----

@@ -9,7 +9,6 @@ import { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -20,9 +19,10 @@ import CartTicket from '../../../../components/CartTicket';
 import { useCart } from '../../../CartContext';
 import { API } from '../../../../lib/api/dicts/API';
 import { LS_KEYS, LocalStore } from '../../../../lib/localstorage/LocalStore';
-import type { SavedTicketDoc } from '../../../../../../tickets-srv/src/models/Ticket';
-import type { SavedOrderDoc } from '../../../../../../orders-srv/src/models/Order';
+import type { SavedTicketDoc } from '../../../../lib/Types';
+import type { SavedOrderDoc } from '../../../../lib/Types';
 import { formatReadableTime } from '../../../../lib/DateMethods';
+import { useTheme } from '@mui/material/styles';
 
 /** expiresAt is ISO date string for comparison; use formatReadableTime() for display */
 type OrdersReservedRecord = Record<string, { orderId: string; expiresAt: string }>;
@@ -73,6 +73,7 @@ type OrderCreatedResponse = {
 };
 
 export default function MyCartPage() {
+  const theme = useTheme();
   const router = useRouter();
   const { cartItems, removeFromCart, clearCart } = useCart();
   const [unavailableDialogOpen, setUnavailableDialogOpen] = useState(false);
@@ -290,6 +291,7 @@ export default function MyCartPage() {
             bottom: { xs: '50px', md: 'auto' },
             left: { xs: 0, md: 'auto' },
             minHeight: { xs: '100px', md: 'auto' },
+            backgroundColor: theme.palette.mode === 'dark' ? '#121212' : '#f9f9f9'
           }}
         >
           <Typography variant="subtitle1" sx={{ mb: 1 }}>

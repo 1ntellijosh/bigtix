@@ -38,14 +38,22 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
-    width: '40ch',
+    [theme.breakpoints.up('xs')]: {
+      width: '35ch',
+    },
+    [theme.breakpoints.up('sm')]: {
+      width: '50ch',
+    },
+    [theme.breakpoints.up('md')]: {
+      width: '70ch',
+    },
     [theme.breakpoints.up('lg')]: {
       width: '90ch',
     },
   },
 }));
 
-export default function SearchBar({ placeholder, onSearch, initialValue }: { placeholder: string, onSearch: (value: string) => void, initialValue?: string }) {
+export default function SearchBar({ placeholder, onSearch, initialValue }: { placeholder: string, onSearch: (value: string) => void, initialValue?: string | null }) {
   const [value, setSearch] = useState(initialValue || '');
 
   return (
@@ -54,6 +62,7 @@ export default function SearchBar({ placeholder, onSearch, initialValue }: { pla
         <SearchIcon />
       </SearchIconWrapper>
       <StyledInputBase
+        
         placeholder={placeholder}
         inputProps={{ 'aria-label': 'search' }}
         value={value}

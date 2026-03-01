@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { API } from '../lib/api/dicts/API';
-import type { SavedEventDoc } from '../../../../../tickets-srv/src/models/Event'; 
+import type { SavedEventDoc } from '../lib/Types'; 
 import FormSubmit from '../hooks/FormSubmit';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';

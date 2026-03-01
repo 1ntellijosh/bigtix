@@ -12,7 +12,6 @@ import Typography from '@mui/material/Typography';
 import Badge from '@mui/material/Badge';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import AccountCircleOutlined from '@mui/icons-material/AccountCircleOutlined';
 import { STYLE_CONSTS } from '../styles/consts';
@@ -37,6 +36,10 @@ export default function PrimarySearchAppBar() {
   const router = useRouter();
   const pathname = usePathname();
   const [searchBarIsOpen, setSearchBarIsOpen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  // Use 0 until mounted so server and first client paint match (avoids hydration mismatch).
+  const badgeCount = mounted ? cartCount : 0;
 
   const handleMobileSearchMenuToggle = () => {
     setSearchBarIsOpen(!searchBarIsOpen);
@@ -382,10 +385,23 @@ export default function PrimarySearchAppBar() {
         <Toolbar
           sx={{
             display: 'flex',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            paddingRight: {
+              xs: '0px',
+              sm: '8px',
+              md: '24px',
+              lg: '24px',
+              xl: '24px',
+            },
           }}
         >
-          <Box sx={{ display: { xs: 'flex', sm: 'flex', md: 'none', lg: 'none', xl: 'none', }, alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: { xs: 'flex', sm: 'flex', md: 'none', lg: 'none', xl: 'none', },
+              alignItems: 'center',
+              minWidth: '110px',
+            }}
+          >
             <IconButton
               size="large"
               edge="start"
@@ -415,7 +431,13 @@ export default function PrimarySearchAppBar() {
               )}
           </Box>
 
-          <Box sx={{ marginRight: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
             <AppLink href="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
               <Typography
                 variant="body2"
@@ -435,11 +457,12 @@ export default function PrimarySearchAppBar() {
           </Box>
 
           <Box sx={{
-            display: { xs: 'none', sm: 'none', md: 'flex', lg: 'flex', xl: 'flex' },
-            alignSelf: 'center',
-            alignItems: 'center',
-            gap: 1,
-          }}>
+              display: { xs: 'none', sm: 'none', md: 'flex', lg: 'flex', xl: 'flex' },
+              alignSelf: 'center',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
             <AppLink href="/tickets/sell" sx={{ textDecoration: 'none', color: 'inherit', mr: 2 }}>
               <Typography
                 variant="caption"
@@ -487,11 +510,18 @@ export default function PrimarySearchAppBar() {
             </IconButton>
           </Box>
 
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: { xs: 'flex', md: 'none' },
+              alignItems: 'center',
+              minWidth: '110px',
+              justifyContent: 'flex-end',
+            }}
+          >
             <Badge
-              badgeContent={cartCount}
+              badgeContent={badgeCount}
               color="error"
-              invisible={cartCount === 0}
+              invisible={badgeCount === 0}
               sx={{ '& .MuiBadge-badge': { top: 10, right: 13 } }}
             >
               <AppLink href="/tickets/mycart" sx={{ color: 'inherit' }}>

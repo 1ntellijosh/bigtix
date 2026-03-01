@@ -1,29 +1,30 @@
 # ------------------------------------------------------------------------------------------------
-# auth-srv k8s deployment file for BigTix platform microservices E-Commerce project
-# @since auth-micro-start--JP
+# orders-srv k8s deployment file for BigTix platform microservices E-Commerce project
+# @since orders-srv-start--JP
 # ------------------------------------------------------------------------------------------------
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-dpl
+  name: orders-dpl
+  namespace: default
 spec:
   replicas: 1 # for now
   selector:
     matchLabels:
-      app: auth
+      app: orders
   template:
     metadata:
       labels:
-        app: auth
+        app: orders
     spec:
       containers:
-        - name: auth
-          image: 1ntellijosh/bigtix-auth-srv
+        - name: orders
+          image: 1ntellijosh/bigtix-orders-srv
           imagePullPolicy: IfNotPresent
           env:
             - name: MONGO_URI
-              value: mongodb://auth-mongo-srv:27017/auth
+              value: mongodb://orders-mongo-srv:27017/orders
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:
@@ -44,12 +45,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-srv
+  name: orders-srv
 spec:
   selector:
-    app: auth
+    app: orders
   ports:
-    - name: auth
+    - name: orders
       protocol: TCP
       port: 3000
       targetPort: 3000

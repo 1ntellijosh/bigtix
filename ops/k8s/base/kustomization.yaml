@@ -1,0 +1,21 @@
+# ------------------------------------------------------------------------------------------------
+# kustomization file for BigTix platform microservices E-Commerce project
+# @since github-deploy--JP
+# ------------------------------------------------------------------------------------------------
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Ingress is overlay-specific: prod uses ingress-alb.yml (ALB), dev uses ingress-srv.yml (nginx).
+resources:
+  - namespace-messaging.yml
+  - deployments/auth-depl.yml
+  - deployments/auth-mongo-statefulset.yml
+  - deployments/client-depl.yml
+  - deployments/tickets-depl.yml
+  - deployments/tickets-mongo-statefulset.yml
+  - deployments/orders-depl.yml
+  - deployments/orders-mongo-statefulset.yml
+  - deployments/payments-depl.yml
+  - deployments/payments-mongo-statefulset.yml
+  - deployments/rabbitmq-statefulset.yml

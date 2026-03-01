@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography';
 import EventSearch from '../../../../components/EventSearch';
 import { API } from '../../../../lib/api/dicts/API';
 import { useState } from 'react';
-import type { SavedEventDoc } from '../../../../../../tickets-srv/src/models/Event';
+import type { SavedEventDoc } from '../../../../lib/Types';
 import TicketsForm from '../../../../components/TicketsForm';
 import Button from '@mui/material/Button';
 import { useRouter } from 'next/navigation';
@@ -140,20 +140,22 @@ export default function SellTicketsSearchPage() {
           width: '100%',
           // Set a max-width that increases at specific breakpoints
           maxWidth: {
-            xs: '450px', // max-width on extra-small screens
-            sm: '450px', // max-width on small screens
+            xs: '375px', // max-width on extra-small screens
+            sm: '500px', // max-width on small screens
             md: '900px', // max-width on medium screens
             lg: '1200px', // max-width on large screens
           },
         }}>
           {!selectedEvent ? (
-            <EventSearch
-              onSelect={onEventSelected}
-              options={{
-                eventItemBtnLabel: 'Sell Tickets',
-                searchPlaceholder: 'Search your event and start selling...'
-              }}
-            />
+            <Box sx={{ maxWidth: '95%', margin: '0 auto' }}>
+              <EventSearch
+                onSelect={onEventSelected}
+                options={{
+                  eventItemBtnLabel: 'Sell Tickets',
+                  searchPlaceholder: 'Search your event and start selling...'
+                }}
+              />
+            </Box>
           ) : (
             null
           )}

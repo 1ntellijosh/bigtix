@@ -22,7 +22,7 @@ export interface MainPageCarouselEvent {
   dateSegments?: { month: string; day: number; weekday: string };
 }
 
-const SLIDE_MIN_WIDTH_PX = 400;
+const SLIDE_MIN_WIDTH_PX = 350;
 const SLIDE_MAX_WIDTH_PX = 750;
 const LEFT_PANEL_WIDTH_PERCENT = 38;
 

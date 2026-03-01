@@ -127,8 +127,11 @@ export default function EventSearch({
 
   return (
     <Box>
-      <SearchBar
-        placeholder={options.searchPlaceholder} onSearch={onSearchEntered} initialValue={options.initialSearch} />
+      <Box sx={{ maxWidth: '95%', margin: '0 auto' }}>
+        <SearchBar
+          placeholder={options.searchPlaceholder} onSearch={onSearchEntered} initialValue={keyword || null}
+        />
+      </Box>
 
       <Box sx={{ mt: 2 }}>  
         {!errors && events !== null && !events.length ?

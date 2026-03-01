@@ -34,6 +34,12 @@
       args:
         chdir: "{{ project_root }}"
 
+    - name: Install Rancher local-path-provisioner for Kind (StatefulSet PVCs; used by storageclass-local.yml)
+      ansible.builtin.shell: >
+        kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
+      args:
+        chdir: "{{ project_root }}"
+
     - name: Apply ingress-nginx controller deployment
       ansible.builtin.shell: >
         make init-ingress
@@ -77,7 +83,7 @@
 
     - name: Apply RabbitMQ Deployment and Service in messaging namespace
       ansible.builtin.shell: >
-        kubectl apply -f {{ project_root }}/ops/k8s/deployments/rabbitmq-depl.yml
+        kubectl apply -f {{ project_root }}/ops/k8s/base/deployments/rabbitmq-statefulset.yml
       args:
         chdir: "{{ project_root }}"
 
@@ -170,6 +176,21 @@
         chdir: "{{ project_root }}"
       register: stripe_webhook_secret_result
       changed_when: "'configured' in stripe_webhook_secret_result.stdout or 'created' in stripe_webhook_secret_result.stdout"
+
+    - name: Set server_api_base_url from dev-vars.yml
+      ansible.builtin.set_fact:
+        server_api_base_url: "{{ SERVER_API_BASE_URL }}"
+
+    - name: Create Kubernetes secret server-api-base-url from dev-vars.yml
+      ansible.builtin.shell: >
+        kubectl create secret generic server-api-base-url
+        --from-literal=SERVER_API_BASE_URL={{ server_api_base_url }}
+        --dry-run=client -o yaml
+        | kubectl apply -f -
+      args:
+        chdir: "{{ project_root }}"
+      register: server_api_base_url_result
+      changed_when: "'configured' in server_api_base_url_result.stdout or 'created' in server_api_base_url_result.stdout"
 
     - name: Build shared packages
       ansible.builtin.shell: >

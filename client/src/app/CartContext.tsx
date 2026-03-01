@@ -7,7 +7,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { SavedTicketDoc } from '../../../tickets-srv/src/models/Ticket';
+import type { SavedTicketDoc } from '../lib/Types';
 import { LS_KEYS, LocalStore } from '../lib/localstorage/LocalStore';
 
 type CartContextType = {

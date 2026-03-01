@@ -7,8 +7,10 @@ import { STATUS_CODES } from '@bigtix/common';
 import { APIError } from '@bigtix/common';
 import axios from 'axios';
 
-/** Server-side base URL (e.g. ingress in cluster). Set via env in the pod, not build. */
-const SERVER_API_BASE = process.env.SERVER_API_BASE_URL ?? 'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local';
+/** Server-side base URL (e.g. ingress in cluster). */
+function getServerApiBase(): string | undefined {
+  return typeof window === 'undefined' ? process.env.SERVER_API_BASE_URL : undefined;
+}
 
 export class HttpService {
   /**
@@ -192,10 +194,11 @@ export class HttpService {
    * @returns {string}  The updated URL
    */
   private static updateUrlForServerSide = (url: string): string => {
-    const baseUrl = this.isOnServer()
-      ? `${SERVER_API_BASE.replace(/\/$/, '')}${url.startsWith('/') ? url : `/${url}`}`
-      : url;
+    if (!this.isOnServer()) return url;
 
-    return baseUrl;
+    const base = getServerApiBase();
+    if (!base) throw new Error('SERVER_API_BASE_URL is not set');
+
+    return `${base.replace(/\/$/, '')}${url.startsWith('/') ? url : `/${url}`}`;
   }
 }

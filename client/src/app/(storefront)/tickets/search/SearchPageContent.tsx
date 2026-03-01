@@ -60,8 +60,8 @@ export default function SearchPageContent({ initialSearchProps }: { initialSearc
               width: '100%',
               // Set a max-width that increases at specific breakpoints
               maxWidth: {
-                xs: '450px', // max-width on extra-small screens
-                sm: '450px', // max-width on small screens
+                xs: '375px', // max-width on extra-small screens
+                sm: '500px', // max-width on small screens
                 md: '900px', // max-width on medium screens
                 lg: '1200px', // max-width on large screens
               },

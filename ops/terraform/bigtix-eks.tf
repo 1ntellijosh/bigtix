@@ -28,11 +28,27 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   enable_cluster_creator_admin_permissions = true
 
-  # Required for nodes to get NetworkReady (CNI plugin). Module does not enable addons by default.
+  # So GitHub Actions (and other off-VPC runners) can reach the API. Without this, kubectl from CI will time out.
+  endpoint_public_access = true
+  # So nodes/pods in the VPC can reach the API without going through the public endpoint (avoids "dial tcp ... i/o timeout" in controllers).
+  endpoint_private_access = true
+
+  # Required addons: vpc-cni (pod networking), coredns (in-cluster DNS), kube-proxy (ClusterIP → API server).
+  # aws-ebs-csi-driver: provisions EBS volumes for PVCs (StatefulSets for Mongo/RabbitMQ); addon attaches recommended IAM.
   addons = {
     vpc-cni = {
-      most_recent   = true
+      most_recent    = true
       before_compute = true
+    }
+    coredns = {
+      most_recent = true
+    }
+    kube-proxy = {
+      most_recent = true
+    }
+    aws-ebs-csi-driver = {
+      most_recent              = true
+      service_account_role_arn = aws_iam_role.ebs_csi_driver.arn
     }
   }
 
@@ -41,8 +57,8 @@ module "eks" {
       instance_types = ["t3.small", "t3a.small"]
       capacity_type  = "SPOT"
       min_size       = 1
-      max_size       = 2
-      desired_size   = 1
+      max_size       = 4
+      desired_size   = 4  # 4 nodes so all pods (4 Mongo + RabbitMQ + 5 app deploys + system) can schedule (t3.small ~17 pods/node)
       # Allow Session Manager for debugging unhealthy nodes
       iam_role_additional_policies = {
         AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -63,4 +79,14 @@ module "eks" {
       }
     }
   }
+}
+
+# Explicitly allow node group to reach cluster API on 443 (avoids "dial tcp ... i/o timeout" if default rules are insufficient)
+resource "aws_vpc_security_group_ingress_rule" "node_to_cluster_api" {
+  security_group_id            = module.eks.cluster_primary_security_group_id
+  referenced_security_group_id = module.eks.node_security_group_id
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  description                  = "Allow nodes to reach EKS API server"
 }

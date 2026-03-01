@@ -8,13 +8,8 @@
 import { Box } from '@mui/material';
 import SearchBarWithNav from '../../components/SearchBarWithNav';
 import MainPageCarousel, { type MainPageCarouselEvent } from '../../components/MainPageCarousel';
-import type { SavedTicketDoc } from '../../../../tickets-srv/src/models/Ticket';
-import type { SavedEventDoc } from '../../../../tickets-srv/src/models/Event';
 import { getDateSegments } from '../../lib/DateMethods';
-
-interface TicketWithEvent extends SavedTicketDoc {
-  event: SavedEventDoc;
-}
+import type { TicketWithEvent } from '../../lib/Types';
 
 export default function HomePageContent({ allTickets }: { allTickets: TicketWithEvent[] | null }) {
   const prepareEventsMapFromTickets = (allTickets: TicketWithEvent[] | null) => {
@@ -43,7 +38,9 @@ export default function HomePageContent({ allTickets }: { allTickets: TicketWith
 
   return (
     <Box>
-      <SearchBarWithNav placeholder="Search for an event" />
+      <Box sx={{ maxWidth: '95%', margin: '0 auto' }}>
+        <SearchBarWithNav placeholder="Search for an event" />
+      </Box>
       
       <Box sx={{ width: '100%', mt: 7 }}>
         <MainPageCarousel events={events} />
