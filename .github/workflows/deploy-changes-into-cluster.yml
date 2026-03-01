@@ -11,7 +11,7 @@ name: Deploy Changed Resources into EKS Cluster
 on:
   push:
     branches:
-      - main
+      - cleanups-and-updates--JP
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
