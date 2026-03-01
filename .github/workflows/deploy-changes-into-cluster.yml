@@ -11,7 +11,7 @@ name: Deploy Changed Resources into EKS Cluster
 on:
   push:
     branches:
-      - cleanups-and-updates--JP
+      - main
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
@@ -73,6 +73,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -81,7 +83,7 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(auth-srv/|packages/)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(auth-srv/|packages/)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in auth-srv or packages"
@@ -125,6 +127,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -133,7 +137,7 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(tickets-srv/|packages/)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(tickets-srv/|packages/)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in tickets-srv or packages"
@@ -177,6 +181,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -185,7 +191,7 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(orders-srv/|packages/)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(orders-srv/|packages/)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in orders-srv or packages"
@@ -229,6 +235,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -237,7 +245,7 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(payments-srv/|packages/)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(payments-srv/|packages/)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in payments-srv or packages"
@@ -281,6 +289,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -289,7 +299,7 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(client/|packages/)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(client/|packages/)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in client or packages"
@@ -333,6 +343,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -341,7 +353,7 @@ jobs:
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(ops/docker/rabbitmq/|ops/k8s/.*rabbitmq|ops/k8s/base/namespace-messaging\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/docker/rabbitmq/|ops/k8s/.*rabbitmq|ops/k8s/base/namespace-messaging\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in RabbitMQ, messaging namespace, or storageclass"
@@ -385,10 +397,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(ops/k8s/.*mongo-statefulset\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/k8s/.*mongo-statefulset\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in mongo statefulsets or storageclass"
@@ -427,10 +441,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect changes
         run: |
-          git diff --name-only origin/main...HEAD | grep -E '^(ops/k8s/overlays/prod/ingress-alb\.yml)'
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/k8s/overlays/prod/ingress-alb\.yml)'
           
           if [ -z "$changes" ]; then
             echo "No changes detected in ingress"
