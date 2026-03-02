@@ -4,7 +4,8 @@
  * @since orders-srv-start--JP
  */
 import { OrderService } from '../OrderService';
-import { EXCHANGE_NAME, DELAYED_EXCHANGE_NAME } from '@bigtix/middleware';
+import { ProcessedEventRepository } from '../repositories/ProcessedEventRepository';
+import { EXCHANGE_NAME, DELAYED_EXCHANGE_NAME, consumeIdempotently } from '@bigtix/middleware';
 import {
   ServiceSubscription,
   EventTypesEnum,
@@ -17,6 +18,7 @@ import {
 } from '@bigtix/middleware';
 
 const orderSvc = new OrderService();
+const processedEventRepo = new ProcessedEventRepository();
 
 /**
  * Subscription for orders-srv to consume ticket events
@@ -33,9 +35,15 @@ export const OrdersTicketEventSubscription: ServiceSubscription = {
      */
     [EventTypesEnum.TICKET_CREATED]: {
       handler: async (envelope) => {
-        const data = envelope.data as TicketCreatedData;
-        console.log('Order Service received TICKET_CREATED event')
-        await orderSvc.onTicketCreatedEvent(data);
+        await consumeIdempotently(
+          envelope,
+          processedEventRepo,
+          async () => {
+            const data = envelope.data as TicketCreatedData;
+            console.log('Order Service received TICKET_CREATED event');
+            await orderSvc.onTicketCreatedEvent(data);
+          }
+        );
       },
       exchange: EXCHANGE_NAME,
     },
@@ -48,9 +56,15 @@ export const OrdersTicketEventSubscription: ServiceSubscription = {
      */
     [EventTypesEnum.TICKET_UPDATED]: {
       handler: async (envelope) => {
-        const data = envelope.data as TicketUpdatedData;
-        console.log('Order Service received TICKET_UPDATED event')
-        await orderSvc.onTicketUpdatedEvent(data);
+        await consumeIdempotently(
+          envelope,
+          processedEventRepo,
+          async () => {
+            const data = envelope.data as TicketUpdatedData;
+            console.log('Order Service received TICKET_UPDATED event');
+            await orderSvc.onTicketUpdatedEvent(data);
+          }
+        );
       },
       exchange: EXCHANGE_NAME,
     },
@@ -71,9 +85,15 @@ export const OrdersOrderEventSubscription: ServiceSubscription = {
      */
     [EventTypesEnum.ORDER_EXPIRED]: {
       handler: async (envelope) => {
-        const data = envelope.data as OrderExpiredData;
-        console.log('Order Service received ORDER_EXPIRED event')
-        await orderSvc.onOrderExpirationEvent(data);
+        await consumeIdempotently(
+          envelope,
+          processedEventRepo,
+          async () => {
+            const data = envelope.data as OrderExpiredData;
+            console.log('Order Service received ORDER_EXPIRED event');
+            await orderSvc.onOrderExpirationEvent(data);
+          }
+        );
       },
       exchange: DELAYED_EXCHANGE_NAME,
     },
@@ -94,25 +114,43 @@ export const OrdersPaymentEventSubscription: ServiceSubscription = {
      */
     [EventTypesEnum.PAYMENT_CREATED]: {
       handler: async (envelope) => {
-        const data = envelope.data as PaymentCreatedData;
-        console.log('Order Service received PAYMENT_CREATED event')
-        await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_CREATED, data);
+        await consumeIdempotently(
+          envelope,
+          processedEventRepo,
+          async () => {
+            const data = envelope.data as PaymentCreatedData;
+            console.log('Order Service received PAYMENT_CREATED event');
+            await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_CREATED, data);
+          }
+        );
       },
       exchange: EXCHANGE_NAME,
     },
     [EventTypesEnum.PAYMENT_SUCCEEDED]: {
       handler: async (envelope) => {
-        const data = envelope.data as PaymentSucceededData;
-        console.log('Order Service received PAYMENT_SUCCEEDED event')
-        await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_SUCCEEDED, data);
+        await consumeIdempotently(
+          envelope,
+          processedEventRepo,
+          async () => {
+            const data = envelope.data as PaymentSucceededData;
+            console.log('Order Service received PAYMENT_SUCCEEDED event');
+            await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_SUCCEEDED, data);
+          }
+        );
       },
       exchange: EXCHANGE_NAME,
     },
     [EventTypesEnum.PAYMENT_FAILED]: {
       handler: async (envelope) => {
-        const data = envelope.data as PaymentFailedData;
-        console.log('Order Service received PAYMENT_FAILED event')
-        await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_FAILED, data);
+        await consumeIdempotently(
+          envelope,
+          processedEventRepo,
+          async () => {
+            const data = envelope.data as PaymentFailedData;
+            console.log('Order Service received PAYMENT_FAILED event');
+            await orderSvc.onPaymentStatusUpdatedEvent(EventTypesEnum.PAYMENT_FAILED, data);
+          }
+        );
       },
       exchange: EXCHANGE_NAME,
     },
