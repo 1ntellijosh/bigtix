@@ -88,11 +88,6 @@ const saveOrders = async (orders: NewOrderAttrs[]): Promise<string[]> => {
 };
 
 describe('Get orders routes tests', () => {
-  afterEach(async () => {
-    await Order.deleteMany({});
-    await Ticket.deleteMany({});
-  });
-
   it('has a route handler for getting all orders for a user (GET /api/orders)', async () => {
     await request(ordersApp).get('/api/orders/all').send().expect(401);
   });

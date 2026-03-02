@@ -1,10 +1,10 @@
 ###
-# Deploy EKS cluster (and nodegroup) to AWS
+# Full deploy EKS cluster (and nodegroup) to AWS. Builds and pushes all images to ECR and deploys to EKS.
 #
 # @since github-deploy--JP
 ###
 
-name: Deploy EKS Cluster
+name: Full Deploy EKS Cluster
 
 on:
   release:

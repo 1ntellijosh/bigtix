@@ -65,11 +65,6 @@ describe('Get tickets routes tests', () => {
     }
   });
 
-  afterEach(async () => {
-    await Event.deleteMany({});
-    await Ticket.deleteMany({});
-  });
-
   it('returns all tickets', async () => {
     const response = await request(tickApp).get('/api/tickets/all');
 

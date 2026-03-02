@@ -1,0 +1,51 @@
+#----------------------------------------------------------------------------------------------------------------------
+# Detect Changes Action
+#
+# This action detects changes in the repository by comparing the before and after SHA of the commit.
+#
+# Inputs:
+#   before: The SHA of the commit before the current commit.
+#   after: The SHA of the commit after the current commit.
+#   OR: If changes touch ops/k8s/overlays/prod/ or ops/terraform/, has_changes is true (all jobs deploy).
+#
+# Outputs:
+#   has_changes: A boolean indicating if there are any changes.
+#
+# @since cleanups-and-updates--JP
+#----------------------------------------------------------------------------------------------------------------------
+
+name: Detect changes
+description: Detects changes between before/after commits and outputs has_changes
+inputs:
+  pattern:
+    description: grep -E pattern (anchored) for paths to match
+    required: true
+outputs:
+  has_changes:
+    description: "true if matching changes exist"
+    value: ${{ steps.detect.outputs.has_changes }}
+runs:
+  using: composite
+  steps:
+    - id: detect
+      shell: bash
+      run: |
+        # Prod overlay or terraform changes → short-circuit: has_changes=true (all jobs deploy)
+        global=$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" | grep -E '^(ops/k8s/overlays/prod/|ops/terraform/)' || true)
+        if [ -n "$global" ]; then
+          echo "Changes in ops/k8s/overlays/prod or ops/terraform; deploying."
+          echo "$global"
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        changes=$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" | grep -E "${{ inputs.pattern }}" || true)
+        if [ -z "$changes" ]; then
+          echo "No matching changes detected (pattern: ${{ inputs.pattern }})"
+          echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        echo "Matching changes detected:"
+        echo "$changes"
+        echo "has_changes=true" >> "$GITHUB_OUTPUT"

@@ -1,0 +1,428 @@
+#----------------------------------------------------------------------------------------------------------------------
+# Deploy EKS cluster (and nodegroup) to AWS. This workflow is triggered by a merge into the main branch
+#
+# @since cleanups-and-updates--JP
+#----------------------------------------------------------------------------------------------------------------------
+
+# - main
+
+name: Deploy Changed Resources into EKS Cluster
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+# Always run first, to ensure cluster is ready
+  deploy-cluster-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Ensure messaging namespace exists
+        run: kubectl create namespace messaging --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Sync secrets from AWS Secrets Manager to Kubernetes Secrets
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+        run: |
+          chmod +x ops/scripts/sync-secrets-from-aws.sh
+          ./ops/scripts/sync-secrets-from-aws.sh
+
+# Build shared packages, and add as artifacts to the workflow
+  build-shared-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build shared packages
+        run: |
+          npm install
+          cd packages/common && npm run build
+          cd ../..
+          cd packages/middleware && npm run build
+
+      - name: Upload shared packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-packages
+          path: |
+            packages/common
+            packages/middleware
+
+# Deploy auth-srv to EKS if changes are detected
+  deploy-auth-to-eks:
+    needs: [deploy-cluster-infra, build-shared-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-packages
+          path: packages
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(auth-srv/|packages/)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup EKS Cluster config and assets for auth-srv deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          docker build -f auth-srv/deploy/docker/prod.Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/auth-srv:${{ github.sha }} .
+          docker push ${{ env.ECR_REGISTRY }}/bigtix/auth-srv:${{ github.sha }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Deploy auth-srv to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "auth-dpl" or .metadata.name == "auth-srv")' - | kubectl apply -f - --server-side
+
+# Deploy tickets-srv to EKS if changes are detected
+  deploy-tickets-to-eks:
+    needs: [deploy-cluster-infra, build-shared-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-packages
+          path: packages
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(tickets-srv/|packages/)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup EKS Cluster config and assets for tickets-srv deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          docker build -f tickets-srv/deploy/docker/prod.Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/tickets-srv:${{ github.sha }} .
+          docker push ${{ env.ECR_REGISTRY }}/bigtix/tickets-srv:${{ github.sha }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Deploy tickets-srv to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "tickets-dpl" or .metadata.name == "tickets-srv")' - | kubectl apply -f - --server-side
+
+# Deploy orders-srv to EKS if changes are detected
+  deploy-orders-to-eks:
+    needs: [deploy-cluster-infra, build-shared-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-packages
+          path: packages
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(orders-srv/|packages/)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup EKS Cluster config and assets for orders-srv deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          docker build -f orders-srv/deploy/docker/prod.Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/orders-srv:${{ github.sha }} .
+          docker push ${{ env.ECR_REGISTRY }}/bigtix/orders-srv:${{ github.sha }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Deploy orders-srv to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "orders-dpl" or .metadata.name == "orders-srv")' - | kubectl apply -f - --server-side
+
+# Deploy payments-srv to EKS if changes are detected
+  deploy-payments-to-eks:
+    needs: [deploy-cluster-infra, build-shared-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-packages
+          path: packages
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(payments-srv/|packages/)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup EKS Cluster config and assets for payments-srv deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          docker build -f payments-srv/deploy/docker/prod.Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/payments-srv:${{ github.sha }} .
+          docker push ${{ env.ECR_REGISTRY }}/bigtix/payments-srv:${{ github.sha }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Deploy payments-srv to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "payments-dpl" or .metadata.name == "payments-srv")' - | kubectl apply -f - --server-side
+
+# Deploy client to EKS if changes are detected
+  deploy-client-to-eks:
+    needs: [deploy-cluster-infra, build-shared-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-packages
+          path: packages
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(client/|packages/)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup EKS Cluster config and assets for client deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          docker build -f client/deploy/docker/prod.Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/client:${{ github.sha }} .
+          docker push ${{ env.ECR_REGISTRY }}/bigtix/client:${{ github.sha }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Deploy client to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "client-dpl" or .metadata.name == "client-srv")' - | kubectl apply -f - --server-side
+
+# Deploy rabbitmq to EKS if changes are detected
+  deploy-rabbitmq-to-eks:
+    needs: deploy-cluster-infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-packages
+          path: packages
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(ops/docker/rabbitmq/|ops/k8s/.*rabbitmq|ops/k8s/base/namespace-messaging\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup EKS Cluster config and assets for rabbitmq deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          docker build -f ops/docker/rabbitmq/Dockerfile -t ${{ env.ECR_REGISTRY }}/bigtix/rabbitmq:${{ github.sha }} .
+          docker push ${{ env.ECR_REGISTRY }}/bigtix/rabbitmq:${{ github.sha }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Deploy RabbitMQ to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "messaging" or .metadata.name == "ebs-csi-gp2" or .metadata.name == "rabbitmq" or .metadata.name == "rabbitmq-headless")' - | kubectl apply -f - --server-side
+
+# Deploy mongo statefulsets to EKS if changes are detected
+  deploy-mongo-statefulsets-to-eks:
+    needs: deploy-cluster-infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(ops/k8s/.*mongo-statefulset\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup EKS Cluster config and assets for mongo statefulsets deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Deploy mongo StatefulSets to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "ebs-csi-gp2" or .metadata.name == "auth-mongo-dpl" or .metadata.name == "auth-mongo-headless" or .metadata.name == "auth-mongo-srv" or .metadata.name == "tickets-mongo-dpl" or .metadata.name == "tickets-mongo-headless" or .metadata.name == "tickets-mongo-srv" or .metadata.name == "orders-mongo-dpl" or .metadata.name == "orders-mongo-headless" or .metadata.name == "orders-mongo-srv" or .metadata.name == "payments-mongo-dpl" or .metadata.name == "payments-mongo-headless" or .metadata.name == "payments-mongo-srv")' - | kubectl apply -f - --server-side
+
+# Apply ingress to EKS if changes are detected
+  apply-ingress-to-eks:
+    needs: deploy-cluster-infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: detect
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(ops/k8s/overlays/prod/ingress-alb\.yml)'
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.detect.outputs.has_changes == 'true'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup EKS Cluster config and assets for ingress deployment
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Apply ingress to EKS
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+          IMAGE_TAG: ${{ github.sha }}
+          ACM_CERTIFICATE_ARN: ${{ vars.ACM_CERTIFICATE_ARN }}
+        run: |
+          cd ops/k8s/overlays/prod
+          envsubst < kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+          kustomize build . | yq eval-all 'select(.metadata.name == "ingress-alb")' - | kubectl apply -f - --server-side
