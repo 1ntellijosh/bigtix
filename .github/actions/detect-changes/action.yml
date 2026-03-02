@@ -6,6 +6,7 @@
 # Inputs:
 #   before: The SHA of the commit before the current commit.
 #   after: The SHA of the commit after the current commit.
+#   OR: If changes touch ops/k8s/overlays/prod/ or ops/terraform/, has_changes is true (all jobs deploy).
 #
 # Outputs:
 #   has_changes: A boolean indicating if there are any changes.
@@ -29,6 +30,15 @@ runs:
     - id: detect
       shell: bash
       run: |
+        # Prod overlay or terraform changes → short-circuit: has_changes=true (all jobs deploy)
+        global=$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" | grep -E '^(ops/k8s/overlays/prod/|ops/terraform/)' || true)
+        if [ -n "$global" ]; then
+          echo "Changes in ops/k8s/overlays/prod or ops/terraform; deploying."
+          echo "$global"
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
         changes=$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" | grep -E "${{ inputs.pattern }}" || true)
         if [ -z "$changes" ]; then
           echo "No matching changes detected (pattern: ${{ inputs.pattern }})"
