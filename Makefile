@@ -259,7 +259,7 @@ build-shared-packages:
 	@echo "Building shared packages..."
 	npm install
 	cd packages/common && npm run build
-	cd packages/middleware && npm run build
+	rm -f packages/middleware/tsconfig.tsbuildinfo && cd packages/middleware && npm run build
 
 clear-dev-images:
 	@echo "Removing app Docker images (intellijosh/bigtix-*)..."

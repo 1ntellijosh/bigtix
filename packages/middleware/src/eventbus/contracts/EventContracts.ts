@@ -15,6 +15,7 @@ import { EXCHANGE_NAME, DELAYED_EXCHANGE_NAME } from '../consts/RabbitConsts';
 export const EVENT_SCHEMA_VERSION = 1;
 
 export interface EventMetadata {
+  /** Unique id for this event, used for idempotency key when consuming */
   eventId: string;
   eventType: EventTypesEnum;
   /** ISO 8601 string (e.g. new Date().toISOString()). Use string on the wire so all consumers parse consistently. */

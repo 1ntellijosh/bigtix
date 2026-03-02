@@ -2,30 +2,55 @@
 
 Visit live site **[here](https://bigtixstore.com)**
 
-BigTix is an e-commerce application for users to buy and sell tickets to events. A large motivation behind my making this application was so that I could learn microservices architecture. I also wanted to make my own app that simulates real-world, big-traffic e-commerce sites, so it will be deployed to the cloud on an AWS EKS
+BigTix is an e-commerce application for users to buy and sell tickets to events. It is created in a microservices architecture, and runs in a Kubernetes cluster, deployed to AWS EKS to simulate real-world, big-traffic e-commerce sites.
 
 **Contents:**
  - [App Details/Technologies](#app-details-technologies)
  - [Microservices Details](#microservices)
- - [FAQs/Instructions](#faqs-instructions)
- - [Plans and Notes](#plans-notes)
+ - [Event Bus (RabbitMQ)](#rabbit)
+ - [Local Development App Setup](#local-setup)
+ - [Shared Packages](#shared-packages)
+ - [Deployments to Production](#production-deploys)
 
 ---
 
 <a id="app-details-technologies"></a>
 # App Details/Technologies
 
-- Made in microservices architecture
-- Next.js
-    - For server-side rendering
-    - Quicker content loading (especially on mobile)
-    - Better for SEO
-- Kubernetes app, will be deployed to AWS EKS cluster
+### Main Details
+
+As mentioned, the app is made in a microservices architecture. Following that design philosophy, each microservice is completely independent of each other, and do not directly communicate with each other. They can run just fine whether another microservice is down, or replaced altogether.
+
+Microservices update each other via asyncronous communication, using the RabbitMQ messaging system as the event-bus. For example, if an order is created, an order created event is published to the RabbitMQ event-bus, and all relevant microservices that are subscribed to that particular event are notified and can update their own databases. To avoid update race conditions, the 'subscribed' databases use version (single database source) tags for concurrency control, and eventId keys for idempotency.
+
+- Microservices:
+  - [Client](#client) microservice for user facing application
+  - [Auth](#auth) microservice for user authorization and data
+  - [Tickets](#tickets) microservice for tickets creation and data
+  - [Orders](#orders) microservice for ticket ordering and order status
+  - [Payments](#payments) microservice for making payments on orders
+- [RabbitMQ](#rabbit):        
+  - Used for event bus, enabling **asyncronous communication** between the microservices
+- Kubernetes cluster deployed to AWS EKS cluster
   - To simulate real-world, big-traffic e-commerce sites on the cloud
-  - kind instead of minikube on local dev
-    - Lighter weight
-    - Simulates production cluster applications better
   - Terraform for AWS infrastructure
+- Next.js
+  - For server-side rendering and quicker content loading (especially on mobile)
+  - Better for SEO
+
+### LOCAL:
+- kind runs cluster
+  - Lighter weight and faster than minikube
+  - Simulates production cluster applications better
+  - Images are locally built and "loaded" into kind cluster
+- Skaffold for development building, syncing, logging etc
+  - Again, local built images, no push to hub or repo
+
+### PRODUCTION:
+- All AWS EKS cluster infrastructure is created via Terraform in `ops/terraform`
+- Production images are built in a Github Actions build workflows, and sent up to AWS Elastic Container service (ECR)
+- Kubernetes assets and configurations for production are set with Kubernetes Kustomize (`ops/k8s/base` and `ops/k8s/overlays/prod`)
+- [Deploys to production](#production-deploys) take place in Github actions, triggered by publishing a release or merging changes into main branch
 
 ## Languages:
 - Typescript
@@ -40,14 +65,14 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 - RabbitMQ
 
 ## Database:
-- Mongodb
+- MongoDB
 
 ## DevOps:
 - AWS
 - Terraform
 - Docker
 - Kubernetes
-- kind
+- Kind
 - Skaffold
 - CI/CD (Github Actions)
 - Ansible
@@ -63,8 +88,19 @@ BigTix is an e-commerce application for users to buy and sell tickets to events.
 <a id="microservices"></a>
 # Microservices Details
 
-## Auth
-Used for authorizing users
+<a id="client"></a>
+## Client
+The client facing application. Obviously, its kept fairly dumb beyond some data transformation and user input validation. Made in Next.js. Material UI for styling, theme and UI.
+
+<a id="auth"></a>
+## Auth Microservice
+Used for user sign up, sign in and session functionality. Made with Express.js, Node.js, and MongoDB
+
+### Publishes Events:
+- None
+
+### Event Subscriptions:
+- None
 
 ### APIs
 
@@ -75,8 +111,17 @@ Used for authorizing users
 | `/api/users/signout` | POST | - | Sign out |
 | `/api/users/currentuser` | GET | - | Return info about the user |
 
+<a id="tickets"></a>
 ## Tickets
-Used for listing, creating, and managing event tickets.
+Used for listing, creating, and managing event tickets. Made with Express.js, Node.js, and MongoDB
+
+### Publishes Events:
+- TICKET_CREATED - Notifies other services of new tickets on sale
+- TICKET_UPDATED - Notifies other services of ticket (price) updates
+
+### Subscriptions
+- ORDER_CREATED - Marks tickets on order so they can't be updated
+- ORDER_STATUS_CHANGED - Marks tickets open for update if order was cancelled, expired, or failed
 
 ### APIs
 
@@ -96,8 +141,22 @@ Used for listing, creating, and managing event tickets.
 | `/api/events/search` | GET | - | Search for events (goes to TicketMaster API) |
 | `/api/events/details/:tmEventId` | GET | - | Gets event details (goes to TicketMaster API) |
 
+<a id="orders"></a>
 ## Orders
-Used for creating and managing ticket orders.
+Used for creating and managing ticket orders. Made with Express.js, Node.js, and MongoDB
+
+### Publishes Events:
+- ORDER_CREATED - Notifies other services order for tickets has been created
+- ORDER_STATUS_CHANGED - Notifies other services that status for an order has officially changed (cancelled, expired, failed, awaiting payment, paid)
+- ORDER_EXPIRED - Sends message to RabbitMQ event bus on delayed queue to be resent to itself (15 minutes) later for order expiration check
+
+### Subscriptions
+- TICKET_CREATED - Adds new ticket to its own tickets database
+- ORDER_STATUS_CHANGED - Updates ticket in its own tickets database
+- ORDER_EXPIRED - On receipt checks the status of given order, and marks the order as expired if it is not in "paid" or any other "already-done" status (like "failed")
+- PAYMENT_CREATED - Updates given order status to "awaiting payment"
+- PAYMENT_SUCCEEDED - Updates given order status to "paid"
+- PAYMENT_FAILED - Updates given order status to "failed"
 
 ### APIs
 
@@ -109,8 +168,9 @@ Used for creating and managing ticket orders.
 | `/api/orders/update/:id` | PUT | `{ status: string }` | Update an order status |
 | `/api/orders/delete/:id` | DELETE | - | Cancel the order |
 
+<a id="payments"></a>
 ## Payments
-Used for paying for tickets (using Stripe API)
+Used for paying for tickets (using Stripe API). Made with Express.js, Node.js, and MongoDB
 
 ### APIs
 
@@ -119,11 +179,38 @@ Used for paying for tickets (using Stripe API)
 | `/api/payments/new` | POST | `{ amount: number, orderId: string, confirmationTokenId: string }` | Create a payment for a ticket order with Stripe API using its PaymentIntent methodology |
 | `/api/webhooks/stripe` | POST | - | API designated for Stripe to send webhooks to app, for updates on payments (success/fail) |
 
+### Publishes Events:
+- PAYMENT_CREATED - Notifies other services of payment being attempted for an order
+- PAYMENT_SUCCEEDED - Notifies other services that payment for an order has succeeded
+- PAYMENT_FAILED - Notifies other services that payment for an order has failed and is closed
+
+### Subscriptions
+- ORDER_CREATED - Adds new order to its own orders database
+- ORDER_STATUS_CHANGED - Updates status of order in its own orders database
+
 ---
 
-# FAQs/Instructions
+<a id="rabbit"></a>
+# Event Bus (RabbitMQ)
 
-## Setup and run app for local development
+Microservices never call each other directly. They communicate asynchronously via **RabbitMQ** as the event bus. Shared logic/assets between microservices lives in `packages/middleware`
+- Microservices Pub-Sub:
+  - **Publish** events and send evelopes using `EventPublisher` class
+  - **Subscribe** to desired dureable microservice event queues (e.g. `orders-srv.payment-events`, `tickets-srv.order-events`) using `Subscriber` class
+  - **Consume** events using `EventConsumer` class
+- Event Envelopes hold:
+  - `eventId` used for idempotency control (see `consumeIdempotently`)
+  - `eventType` as routing key and... event type
+  - `data` payload for all relevant event changes
+    - Database version included for concurrency control
+  - Envelope and event structure validated on publish and consume
+- Failed events nack to requeue into RabbitMQ
+- RabbitMQ itself runs as a StatefulSet in the cluster (see `ops/k8s/base/deployments/rabbitmq-statefulset.yml`);
+
+---
+
+<a id="local-setup"></a>
+# Local Development App Setup
 
 1. **INSTALL DEPENDENCIES:**
     
@@ -178,6 +265,16 @@ Used for paying for tickets (using Stripe API)
 
     You can now develop/use the payment system and order processing area of the application now
 
+<a id="shared-packages"></a>
+# Shared `packages` assets
+
+The packages folder (`packages/common`, `packages/middleware`) holds assets that are used by all the microservices in the application, in one folder.
+
+The repo uses **npm workspaces** (see root `package.json` `workspaces`). When you run `npm install` at the repo root, npm treats `packages/*`, `auth-srv`, `client`, etc. as linked workspaces. Any dependency like `"@bigtix/common": "*"` or `"@bigtix/middleware": "*"` in a service’s `package.json` is satisfied by **symlinking** to the matching workspace package under `packages/`, instead of installing from the registry.
+
+So `import ... from '@bigtix/middleware'` in any microservice resolves to `packages/middleware`. Each service does not copy the package code; it references the same package on disk via the workspace link.
+
+Changes done to the shared packages area are "distributed", or "seen" by the microservices with `make build-shared-packages`, or `make bs` because I don't like to type. See the `packages` folder workflow below:
 
 ## Workflow When Adding/Changing Files in `./packages`
 
@@ -190,21 +287,36 @@ Used for paying for tickets (using Stripe API)
 
 ---
 
-<a id="plans-notes"></a>
-# Plans and Notes:
+<a id="production-deploys"></a>
+# Deployments to Production
 
-## How images will be made/used/deployed on prod and local:
+Deployments of the application takes place with Github Actions, and are triggered in 2 workflow methods:
+  1. **Publishing a Release:**
 
-### LOCAL:
-Shared packages (`packages/common`, `packages/middleware`) are built with `make build-shared-packages`; then service images are built with `make build-dev-images`. All microservices' Dockerfiles copy these packages into their respective image (repo root is build context), so Skaffold watches the `./packages` folder and the microservice folder for each microservice image sync. After editing a shared package source, running `make build-shared-packages` causes Skaffold pick up the new `./packages/**/dist/` folder, and rebuild the images.
-Images are loaded into Kind with `make kload-imgs` (Skaffold uses local images, no push). The `image: 1ntellijosh/bigtix-...` in `ops/k8s/base/deployments/*.yml` stays the same; the implicit `:latest` tag is used.
+         .github/workflows/full-deploy-eks-cluster.yml
+      This triggers the full deployment of all application assets and infrastructure. Slower, but can be used for full app deployment if needed:
+      1. Secrets in AWS Secrets Manager synced into EKS Cluster
+      2. Client app and all microservice pods
+      3. All microservice db statefulSet workloads (e.g. image, pod template)
+      4. RabbitMQ
+      5. ALB ingress
 
-### PRODUCTION:
-The service images are built in a Github Actions build workflow, triggered automatically when you create a release. The built containers are pushed to **AWS ECR** (the registry and all AWS infrastructure is created via Terraform in `ops/terraform`).
+  2. **Merge Into `main`  Branch:**
 
-Deployments of the built images are triggered in Github Actions by publishing a release. The built service images are deployed to the target server/AWS EKS instance, by using an Ansible script. This script (in relation to images) will:
-  1. Extract the version for each service in each service's respective `service-name/version.json` file.
-  2. Run "kubectl set image..." (or "envsubst/sed") to update the new image version for each service
-  3. Kubernetes sees the Deployment spec changed and starts a rollout.
-  4. The kubelet on each node pulls the image from the registry when it needs to start a new pod (if that tag isn’t already on the node).
-  5. Old pods are replaced by new pods running the new image, according to the Deployment’s rollout strategy (e.g. rolling update).
+         .github/workflows/deploy-changes-into-cluster.yml
+      This triggers simultaneous deployment of **only changed** application microservices or infrastructure, and is therefore much faster:
+
+      1. **ALWAYS:** Secrets in AWS Secrets Manager synced into EKS Cluster
+      2. **Client App IF:** Changes are detected in `./client` or shared `.packages`
+      3. **Tickets microservice IF:** Changes are detected in `./tickets-src` or shared `.packages`
+      4. **Orders microservice IF:** Changes are detected in `./orders-src` or shared `.packages`
+      5. **Payments microservice IF:** Changes are detected in `./payments-src` or shared `.packages`
+      6. **Auth microservice IF:** Changes are detected in `./auth-src` or shared `.packages`
+      7. **Microservice db statefulSets IF:** Changes are detected to any assets or configs related to statefulSets
+      8. **RabbitMQ IF:** Changes are detected to any assets or configs related to RabbitMQ
+      9. **ALB ingress IF:** Changes are detected to any assets or configs related to the ingress
+
+      **NOTE:** Everything above will be deployed if changes are detected that affect base EKS cluster infrastructure, like any production Kubernetes assets (`ops/k8s/overlays/prod/**`) or changes in Terraform (`/ops/terraform/**`)
+
+
+
