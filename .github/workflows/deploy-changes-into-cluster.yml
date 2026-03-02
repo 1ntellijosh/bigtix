@@ -1,8 +1,8 @@
-###
+#----------------------------------------------------------------------------------------------------------------------
 # Deploy EKS cluster (and nodegroup) to AWS. This workflow is triggered by a merge into the main branch
 #
 # @since cleanups-and-updates--JP
-###
+#----------------------------------------------------------------------------------------------------------------------
 
 # - main
 
@@ -83,17 +83,9 @@ jobs:
 
       - name: Detect changes
         id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(auth-srv/|packages/)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in auth-srv or packages"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in auth-srv or packages"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+        uses: ./.github/actions/detect-changes
+        with:
+          pattern: '^(auth-srv/|packages/)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
@@ -144,19 +136,11 @@ jobs:
           name: shared-packages
           path: packages
 
-      - name: Detect changes
-        id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(tickets-srv/|packages/)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in tickets-srv or packages"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in tickets-srv or packages"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+        - name: Detect changes
+          id: detect
+          uses: ./.github/actions/detect-changes
+          with:
+            pattern: '^(tickets-srv/|packages/)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
@@ -208,18 +192,10 @@ jobs:
           path: packages
 
       - name: Detect changes
-        id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(orders-srv/|packages/)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in orders-srv or packages"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in orders-srv or packages"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+          id: detect
+          uses: ./.github/actions/detect-changes
+          with:
+            pattern: '^(orders-srv/|packages/)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
@@ -271,18 +247,10 @@ jobs:
           path: packages
 
       - name: Detect changes
-        id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(payments-srv/|packages/)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in payments-srv or packages"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in payments-srv or packages"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+          id: detect
+          uses: ./.github/actions/detect-changes
+          with:
+            pattern: '^(payments-srv/|packages/)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
@@ -332,20 +300,11 @@ jobs:
         with:
           name: shared-packages
           path: packages
-
       - name: Detect changes
-        id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(client/|packages/)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in client or packages"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in client or packages"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+          id: detect
+          uses: ./.github/actions/detect-changes
+          with:
+            pattern: '^(client/|packages/)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
@@ -397,18 +356,10 @@ jobs:
           path: packages
 
       - name: Detect changes
-        id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/docker/rabbitmq/|ops/k8s/.*rabbitmq|ops/k8s/base/namespace-messaging\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in RabbitMQ, messaging namespace, or storageclass"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in RabbitMQ, messaging namespace, or storageclass"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+          id: detect
+          uses: ./.github/actions/detect-changes
+          with:
+            pattern: '^(ops/docker/rabbitmq/|ops/k8s/.*rabbitmq|ops/k8s/base/namespace-messaging\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
@@ -455,18 +406,10 @@ jobs:
           fetch-depth: 0
 
       - name: Detect changes
-        id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/k8s/.*mongo-statefulset\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in mongo statefulsets or storageclass"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in mongo statefulsets or storageclass"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+          id: detect
+          uses: ./.github/actions/detect-changes
+          with:
+            pattern: '^(ops/k8s/.*mongo-statefulset\.yml|ops/k8s/overlays/prod/storageclass-ebs-csi\.yml)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
@@ -504,18 +447,10 @@ jobs:
           fetch-depth: 0
 
       - name: Detect changes
-        id: detect
-        run: |
-          changes=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E '^(ops/k8s/overlays/prod/ingress-alb\.yml)' || true)
-          if [ -z "$changes" ]; then
-            echo "No changes detected in ingress"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Changes detected in ingress"
-          echo "$changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-          exit 0
+          id: detect
+          uses: ./.github/actions/detect-changes
+          with:
+            pattern: '^(ops/k8s/overlays/prod/ingress-alb\.yml)'
       
       - uses: aws-actions/configure-aws-credentials@v4
         if: steps.detect.outputs.has_changes == 'true'
