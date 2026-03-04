@@ -57,20 +57,28 @@ export class TicketService {
   /**
    * Creates multiple tickets
    *
-   * @param {string} title  The title of the tickets
-   * @param {number} price  The price of the tickets
-   * @param {string} description  The description of the tickets
-   * @param {array<string>} serialNumbers  The serial numbers of the tickets
-   * @param {string} eventId  The event id of the tickets
+   * @param {array<Object>} tickets  The tickets to create, each with:
+   *   @prop {string} tickets.title  The title of the ticket
+   *   @prop {number} tickets.price  The price of the ticket
+   *   @prop {string} tickets.description  The description of the ticket
+   *   @prop {string} tickets.serialNumber  The serial number of the ticket
+   *   @prop {string} tickets.eventId  The event id of the ticket
    */
-  async createTickets(title: string, price: number, userId: string, description: string, serialNumbers: string[], eventId: string): Promise<SavedTicketDoc[]> {
-    const tickets = [];
-    for (const serialNumber of serialNumbers) {
-      const ticket = await this.createTicket(title, price, userId, description, serialNumber, eventId);
-      tickets.push(ticket);
+  async createTickets(userId: string, tickets: { title: string, price: number, description: string, serialNumber: string, eventId: string }[]): Promise<SavedTicketDoc[]> {
+    const createdTickets: SavedTicketDoc[] = [];
+    for (const ticket of tickets) {
+      const createdTicket = await this.createTicket(
+        ticket.title,
+        ticket.price,
+        userId,
+        ticket.description,
+        ticket.serialNumber,
+        ticket.eventId
+      );
+      createdTickets.push(createdTicket);
     }
 
-    return tickets;
+    return createdTickets;
   }
 
   /**

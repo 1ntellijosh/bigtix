@@ -30,7 +30,7 @@ export default async function MyOrdersPage() {
   }
 
   if (!currentUser) {
-    redirect('/auth/signin');
+    redirect('/auth/signin?redirect=/tickets/myorders');
   }
 
   try {

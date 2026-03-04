@@ -203,10 +203,10 @@ export default function PrimarySearchAppBar() {
         router.push('/');
         break;
       case 'signin':
-        router.push('/auth/signin');
+        router.push('/auth/signin?redirect=' + pathname);
         break;
       case 'signup':
-        router.push('/auth/signup');
+        router.push('/auth/signup?redirect=' + pathname);
         break;
       case 'myaccount':
         router.push('/auth/myaccount');

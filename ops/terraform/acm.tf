@@ -1,5 +1,5 @@
 ###
-# ACM certificate for TLS at the ALB
+# ACM certificate for TLS at the AWS App Load Balancer (ALB)
 #
 # @since github-deploy--JP
 ###
@@ -16,7 +16,6 @@ resource "aws_acm_certificate" "main" {
   }
 }
 
-# Wait for DNS validation to complete (add the CNAME from ACM to your DNS first).
 resource "aws_acm_certificate_validation" "main" {
   count                   = length(aws_acm_certificate.main) > 0 ? 1 : 0
   certificate_arn         = aws_acm_certificate.main[0].arn
