@@ -39,6 +39,13 @@ module "eks" {
     vpc-cni = {
       most_recent    = true
       before_compute = true
+      # Raise max pods per node (default ~8–11 for t3.small); with prefix delegation, nodes can schedule many more pods and avoid "Too many pods" + EBS AZ affinity issues.
+      configuration_values = jsonencode({
+        env = {
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
     }
     coredns = {
       most_recent = true
@@ -57,8 +64,8 @@ module "eks" {
       instance_types = ["t3.small", "t3a.small"]
       capacity_type  = "SPOT"
       min_size       = 1
-      max_size       = 4
-      desired_size   = 4  # 4 nodes so all pods (4 Mongo + RabbitMQ + 5 app deploys + system) can schedule (t3.small ~17 pods/node)
+      max_size       = 6
+      desired_size   = 4  # prefix delegation gives many pods/node; 4 nodes is enough for app + rolling deploys
       # Allow Session Manager for debugging unhealthy nodes
       iam_role_additional_policies = {
         AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -66,7 +73,7 @@ module "eks" {
     }
   }
 
-  # Grant GitHub Actions role cluster admin via EKS Access Entries (v21 uses this instead of aws-auth ConfigMap)
+  # Grant GitHub Actions role cluster admin
   access_entries = {
     github_actions = {
       principal_arn = aws_iam_role.github_actions.arn
@@ -81,7 +88,6 @@ module "eks" {
   }
 }
 
-# Explicitly allow node group to reach cluster API on 443 (avoids "dial tcp ... i/o timeout" if default rules are insufficient)
 resource "aws_vpc_security_group_ingress_rule" "node_to_cluster_api" {
   security_group_id            = module.eks.cluster_primary_security_group_id
   referenced_security_group_id = module.eks.node_security_group_id

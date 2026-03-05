@@ -23,6 +23,7 @@ import type { SavedTicketDoc } from '../../../../lib/Types';
 import type { SavedOrderDoc } from '../../../../lib/Types';
 import { formatReadableTime } from '../../../../lib/DateMethods';
 import { useTheme } from '@mui/material/styles';
+import { useCurrentUser } from '../../../CurrentUserContext';
 
 /** expiresAt is ISO date string for comparison; use formatReadableTime() for display */
 type OrdersReservedRecord = Record<string, { orderId: string; expiresAt: string }>;
@@ -73,6 +74,7 @@ type OrderCreatedResponse = {
 };
 
 export default function MyCartPage() {
+  const { currentUser } = useCurrentUser();
   const theme = useTheme();
   const router = useRouter();
   const { cartItems, removeFromCart, clearCart } = useCart();
@@ -102,6 +104,12 @@ export default function MyCartPage() {
    * @returns {Promise<void>}
    */
   const onProceedToCheckout = async () => {
+    if (!currentUser) {
+      router.push('/auth/signin?redirect=' + window.location.pathname);
+
+      return;
+    }
+
     try {
       const body = (await API.ord!.createOrderAndReserveTickets!({
         tickets: inCartTickets.map((t) => ({ id: t.id, price: t.price })),

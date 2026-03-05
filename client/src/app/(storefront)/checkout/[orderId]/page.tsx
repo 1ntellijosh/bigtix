@@ -8,6 +8,7 @@ import CheckoutPageContent from './CheckoutPageContent';
 import { API } from '../../../../lib/api/dicts/API';
 import { headers } from 'next/headers';
 import type { OrderWithTicketsType } from '../../../../lib/Types';
+import { redirect } from 'next/navigation';
 
 export default async function CheckoutPage({ params }: { params: { orderId: string } }) {
   const { orderId } = await params;
@@ -17,16 +18,31 @@ export default async function CheckoutPage({ params }: { params: { orderId: stri
   let host;
 
   let order: OrderWithTicketsType | null = null;
+  let currentUser: { id: string } | null = null;
   try {
     ctxHeaders = await headers();
     cookie = ctxHeaders.get('cookie') ?? '';
     host = ctxHeaders.get('host') ?? '';
-    const resp = await API.ord!.getOrderById!(orderId, {
+    const authResp = await API.auth!.getCurrentUser!({
       headers: { Cookie: cookie, Host: host },
     });
-    order = (resp as unknown as OrderWithTicketsType) ?? null;
+    currentUser = (authResp as unknown as { currentUser?: { id: string } })?.currentUser ?? null;
+
+    if (currentUser) {
+      ctxHeaders = await headers();
+      cookie = ctxHeaders.get('cookie') ?? '';
+      host = ctxHeaders.get('host') ?? '';
+      const resp = await API.ord!.getOrderById!(orderId, {
+        headers: { Cookie: cookie, Host: host },
+      });
+      order = (resp as unknown as OrderWithTicketsType) ?? null;
+    }
   } catch (e) {
     console.error('Error getting order', e);
+  }
+
+  if (!currentUser) {
+    redirect('/auth/signin?redirect=/checkout/' + orderId);
   }
 
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
@@ -41,11 +57,13 @@ export default async function CheckoutPage({ params }: { params: { orderId: stri
 
   return (
     <Container sx={{ minWidth: '100%', height: '100%' }} disableGutters>
-      <CheckoutPageContent
-        order={order ?? null}
-        stripePublishableKey={publishableKey}
-        stripeElementsOptions={stripeOptions}
-      />
+      {currentUser && order ? (
+        <CheckoutPageContent
+          order={order ?? null}
+          stripePublishableKey={publishableKey}
+          stripeElementsOptions={stripeOptions}
+        />
+      ) : null}
     </Container>
   );
 }

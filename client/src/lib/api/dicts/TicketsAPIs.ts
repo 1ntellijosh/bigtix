@@ -25,12 +25,12 @@ export const TicketsAPIs: { [key: string]: (body?: any, config?: Record<string, 
   /**
    * Creates multiple tickets
    *
-   * @param {object} body  The body of the request
-   *   @prop {string} title  The title of the tickets
-   *   @prop {number} price  The price of the tickets
-   *   @prop {string} description  The description of the tickets
-   *   @prop {array<string>} serialNumbers  The serial numbers of the tickets
-   *   @prop {string} eventId  The event id of the tickets
+   * @param {array<Object>} tickets  The tickets to create, each with:
+   *   @prop {string} tickets.title  The title of the ticket
+   *   @prop {number} tickets.price  The price of the ticket
+   *   @prop {string} tickets.description  The description of the ticket
+   *   @prop {string} tickets.serialNumber  The serial number of the ticket
+   *   @prop {string} tickets.eventId  The event id of the ticket
    */
   createTickets: function (body: any, config: Record<string, any> = {}): Promise<Response> {
     return HttpService.post(`/api/tickets/createmulti`, body, config) as Promise<Response>;

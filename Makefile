@@ -192,6 +192,10 @@ tickets-db:
 payments-db:
 	kubectl exec -it $$(kubectl get pod -l app=payments-mongo -o jsonpath='{.items[0].metadata.name}') -- mongosh
 
+# Restart microservices pod deployments
+restart-deployments:
+	kubectl rollout restart deployment auth-dpl orders-dpl payments-dpl tickets-dpl
+
 cluster-status:
 	@echo "--------------------------- CLUSTER STATUS ------------------------------"
 	@echo "--- PODS:"
@@ -219,32 +223,17 @@ cluster-status:
 build-auth-dev-image:
 	docker build -f ./auth-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest .
 
-build-auth-prod-image:
-	docker build -f ./auth-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-auth-srv:latest .
-
 build-tickets-dev-image:
 	docker build -f ./tickets-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-tickets-srv:latest .
-
-build-tickets-prod-image:
-	docker build -f ./tickets-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-tickets-srv:latest .
 
 build-orders-dev-image:
 	docker build -f ./orders-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-orders-srv:latest .
 
-build-orders-prod-image:
-	docker build -f ./orders-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-orders-srv:latest .
-
 build-payments-dev-image:
 	docker build -f ./payments-srv/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-payments-srv:latest .
 
-build-payments-prod-image:
-	docker build -f ./payments-srv/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-payments-srv:latest .
-
 build-client-dev-image:
 	docker build -f ./client/deploy/docker/dev.Dockerfile -t 1ntellijosh/bigtix-client:latest .
-
-build-client-prod-image:
-	docker build -f ./client/deploy/docker/prod.Dockerfile -t 1ntellijosh/bigtix-client:latest .
 
 build-dev-images:
 	$(MAKE) build-auth-dev-image
@@ -265,13 +254,6 @@ clear-dev-images:
 	@echo "Removing app Docker images (intellijosh/bigtix-*)..."
 	IMGS=$$(docker images '1ntellijosh/bigtix-*' -q 2>/dev/null); \
 	[ -z "$$IMGS" ] || docker rmi -f $$IMGS 2>/dev/null || true
-
-build-prod-images:
-	$(MAKE) build-auth-prod-image
-	$(MAKE) build-tickets-prod-image
-	$(MAKE) build-client-prod-image
-	$(MAKE) build-orders-prod-image
-	$(MAKE) build-payments-prod-image
 
 ##
 # AWS DEPLOYMENT COMMANDS:
