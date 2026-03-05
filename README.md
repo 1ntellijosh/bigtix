@@ -81,7 +81,7 @@ Microservices update each other via asyncronous communication, using the RabbitM
 - Ticketmaster Discovery
     - So ticket sellers can attached tickets to the event, and so buyers can search for tickets by event, and view event details for tickets
 - Stripe
-    - Used for payments. This is NOT a real app, so obviously payments will not charge. But API is fully implemented to do so if it was real
+    - Used for payments. This is NOT a real app, so obviously payments will not charge. But API is fully implemented, so if it was real, I could simply register the business in Stripe, and paste the real API access keys into AWS Secrets Manager.
 
 ---
 
@@ -91,25 +91,6 @@ Microservices update each other via asyncronous communication, using the RabbitM
 <a id="client"></a>
 ## Client
 The client facing application. Obviously, its kept fairly dumb beyond some data transformation and user input validation. Made in Next.js. Material UI for styling, theme and UI.
-
-<a id="auth"></a>
-## Auth Microservice
-Used for user sign up, sign in and session functionality. Made with Express.js, Node.js, and MongoDB
-
-### Publishes Events:
-- None
-
-### Event Subscriptions:
-- None
-
-### APIs
-
-| Route | Method | Body | Purpose |
-|-------|--------|------|---------|
-| `/api/users/signup` | POST | `{ email: string, password: string }` | Sign up for an account |
-| `/api/users/signin` | POST | `{ email: string, password: string }` | Sign in to an existing account |
-| `/api/users/signout` | POST | - | Sign out |
-| `/api/users/currentuser` | GET | - | Return info about the user |
 
 <a id="tickets"></a>
 ## Tickets
@@ -187,6 +168,25 @@ Used for paying for tickets (using Stripe API). Made with Express.js, Node.js, a
 ### Subscriptions
 - ORDER_CREATED - Adds new order to its own orders database
 - ORDER_STATUS_CHANGED - Updates status of order in its own orders database
+
+<a id="auth"></a>
+## Auth Microservice
+Used for user sign up, sign in and session functionality. Made with Express.js, Node.js, and MongoDB
+
+### Publishes Events:
+- None
+
+### Event Subscriptions:
+- None
+
+### APIs
+
+| Route | Method | Body | Purpose |
+|-------|--------|------|---------|
+| `/api/users/signup` | POST | `{ email: string, password: string }` | Sign up for an account |
+| `/api/users/signin` | POST | `{ email: string, password: string }` | Sign in to an existing account |
+| `/api/users/signout` | POST | - | Sign out |
+| `/api/users/currentuser` | GET | - | Return info about the user |
 
 ---
 
