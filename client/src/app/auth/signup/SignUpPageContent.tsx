@@ -47,8 +47,6 @@ export default function SignUpPageContent({ postSignupRedirect }: { postSignupRe
           </Typography>
         </h1>
 
-        <p style={{ fontSize: '18px', color: 'white' }}>will redirect to: {postSignupRedirect}</p>
-
         <Box>
           <TextField
             label="Email"
