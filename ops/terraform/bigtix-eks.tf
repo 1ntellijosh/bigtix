@@ -33,6 +33,9 @@ module "eks" {
   # So nodes/pods in the VPC can reach the API without going through the public endpoint (avoids "dial tcp ... i/o timeout" in controllers).
   endpoint_private_access = true
 
+  # No control plane logs to CloudWatch (module default is ["audit", "api", "authenticator"]).
+  enabled_log_types = []
+
   # Required addons: vpc-cni (pod networking), coredns (in-cluster DNS), kube-proxy (ClusterIP → API server).
   # aws-ebs-csi-driver: provisions EBS volumes for PVCs (StatefulSets for Mongo/RabbitMQ); addon attaches recommended IAM.
   addons = {
